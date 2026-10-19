@@ -95,7 +95,7 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 </style>
 <header class="top">
-  <div class="eyebrow">A Claude Code plugin · version 0.8.4</div>
+  <div class="eyebrow">A Claude Code plugin · version 0.8.5</div>
   <h1>Using flatpaper</h1>
   <p class="lede">flatpaper makes agent work you can trust and still understand a month later. Part 1 gets you running. Part 2 covers the ideas behind it: how to work with agents so the result holds up. Part 3 shows what to type for the situation you're in.</p>
   <div class="five"><span>goal</span><span>done check</span><span>proof</span><span>what you know</span><span>constraints</span></div>
@@ -512,7 +512,7 @@ raise a draft PR.</pre>
     <tbody>
       <tr><td>A session starts</td><td>Loads the always-on rules (the <code>SessionStart</code> hook) and says if the architecture page is behind</td></tr>
       <tr><td>You send any prompt</td><td>Reminds the agent to be concise and to propose a done check, proof, and constraints. After flatpaper-mode has run, it also reminds the agent to end with the principles footer (the <code>UserPromptSubmit</code> hook)</td></tr>
-      <tr><td>The first <code>gh pr create</code> of a flatpaper-mode session</td><td>Blocks it once and lists the Opening a PR steps that always run: <code>no-comments</code>, <code>blast-radius</code> if the diff is risky, then <code>technical-writing</code> and <code>unslop</code>. The next try goes through (<code>pr-gate.sh</code>, a <code>PreToolUse</code> hook the flatpaper-mode skill registers)</td></tr>
+      <tr><td><code>gh pr create</code> in a flatpaper-mode session</td><td>Blocks it until the session transcript shows a Skill call or slash command for <code>no-comments</code>, <code>technical-writing</code>, and <code>unslop</code>, and lists the Opening a PR steps that always run, including <code>blast-radius</code> if the diff is risky (<code>pr-gate.sh</code>, a <code>PreToolUse</code> hook the flatpaper-mode skill registers)</td></tr>
       <tr><td>A task starts</td><td>Reads the repo's own rules, such as <code>CLAUDE.md</code>, <code>AGENTS.md</code>, and the PR template, and the architecture page if there is one</td></tr>
       <tr><td>Running something would settle a choice</td><td>Builds a quick prototype instead of asking you</td></tr>
       <tr><td>A change has several valid shapes, or the design is contested</td><td>Runs <code>architect</code>, then <code>interrogate</code> before the PR</td></tr>
@@ -693,11 +693,11 @@ new task: review the open PR.</pre>
       <tr><td class="nw">arch-drift.sh</td><td>Runs at session start; run by hand to recheck</td><td><code>scripts/arch-drift.sh</code></td></tr>
       <tr><td class="nw">check-plan.sh</td><td>After writing a multi-phase plan</td><td><code>skills/flatpaper-mode/scripts/check-plan.sh docs/plans/&lt;slug&gt;.md</code></td></tr>
       <tr><td class="nw">worktree-audit.sh</td><td>Before removing worktrees. Holds uncommitted work, open PRs, ignored files such as <code>.env</code>, and commits only the worktree's reflog keeps</td><td><code>skills/flatpaper-mode/scripts/worktree-audit.sh [--self &lt;session-id&gt;] [repo]</code></td></tr>
-      <tr><td class="nw">pr-gate.sh</td><td>Runs as a hook on the first <code>gh pr create</code> after flatpaper-mode starts</td><td><code>skills/flatpaper-mode/scripts/pr-gate.sh</code> (reads hook JSON on stdin)</td></tr>
+      <tr><td class="nw">pr-gate.sh</td><td>Runs as a hook on every <code>gh pr create</code> after flatpaper-mode starts</td><td><code>skills/flatpaper-mode/scripts/pr-gate.sh</code> (reads hook JSON on stdin)</td></tr>
       <tr><td class="nw">log.sh</td><td>Adding a decision row by hand</td><td><code>skills/show-me-your-work/scripts/log.sh &lt;log&gt; &lt;phase&gt; &lt;decision&gt; &lt;why&gt; &lt;evidence&gt; &lt;result&gt;</code></td></tr>
     </tbody>
   </table></div>
 </section>
 </main>
 </div>
-<footer>Built from the flatpaper repo at version 0.8.4 with <code>docs/guide/build.sh</code>.</footer>
+<footer>Built from the flatpaper repo at version 0.8.5 with <code>docs/guide/build.sh</code>.</footer>

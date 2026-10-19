@@ -88,22 +88,39 @@ audit_case reflog hold-reflog
 audit_case rebased safe
 audit_case tagged safe
 
-# pr-gate.sh. The first gh pr create of a session is blocked with the steps,
-# the next one in that session passes, and another session is blocked again.
-gate_case() { # name, want exit, session id
-	printf '{"session_id":"%s","tool_name":"Bash","tool_input":{"command":"gh pr create"}}' "$3" |
-		FLATPAPER_PR_GATE_DIR="$tmp/gate" "$scripts/pr-gate.sh" > /dev/null 2> "$tmp/gate.err"
+# pr-gate.sh. gh pr create is blocked until the transcript shows the
+# no-comments, technical-writing, and unslop Skill calls, with or without a
+# plugin prefix. Without a readable transcript it lets the call through.
+skill_line() { printf '{"type":"tool_use","name":"Skill","input":{"skill":"%s"}}\n' "$1"; }
+gate_case() { # name, want exit, transcript path
+	printf '{"session_id":"s1","transcript_path":"%s","tool_name":"Bash","tool_input":{"command":"gh pr create"}}' "$3" |
+		"$scripts/pr-gate.sh" > /dev/null 2> "$tmp/gate.err"
 	got=$?
 	if [ "$got" = "$2" ]; then ok; else bad "pr-gate $1: want exit $2, got $got"; sed 's/^/  /' "$tmp/gate.err"; fi
 }
-gate_case "first call blocks" 2 s1
-grep -q 'no-comments' "$tmp/gate.err" && grep -q 'opening-a-pr.md' "$tmp/gate.err" && ok || bad "pr-gate: block message lacks the steps"
-gate_case "second call passes" 0 s1
-gate_case "new session blocks" 2 s2
-gate_case "no session id passes" 0 ""
-mkdir -p "$tmp/ro" && chmod 555 "$tmp/ro"
-printf '{"session_id":"s3"}' | FLATPAPER_PR_GATE_DIR="$tmp/ro/gate" "$scripts/pr-gate.sh" 2> /dev/null && ok || bad "pr-gate unwritable marker dir: want exit 0"
-chmod 755 "$tmp/ro"
+: > "$tmp/t-none.jsonl"
+gate_case "no skills ran" 2 "$tmp/t-none.jsonl"
+grep -q 'no-comments technical-writing unslop' "$tmp/gate.err" && grep -q 'opening-a-pr.md' "$tmp/gate.err" && ok || bad "pr-gate: block message lacks the missing skills or the playbook"
+gate_case "retry still blocks" 2 "$tmp/t-none.jsonl"
+skill_line flatpaper-stack:unslop > "$tmp/t-unslop.jsonl"
+gate_case "only unslop ran" 2 "$tmp/t-unslop.jsonl"
+grep -q 'not run no-comments technical-writing\.' "$tmp/gate.err" && ok || bad "pr-gate: message should name only the missing skills"
+{ skill_line flatpaper-stack:no-comments; skill_line technical-writing; skill_line flatpaper:unslop; } > "$tmp/t-all.jsonl"
+gate_case "all three ran" 0 "$tmp/t-all.jsonl"
+skill_line flatpaper-stack:no-comments-extra > "$tmp/t-near.jsonl"
+skill_line technical-writing >> "$tmp/t-near.jsonl"; skill_line unslop >> "$tmp/t-near.jsonl"
+gate_case "near-miss skill name" 2 "$tmp/t-near.jsonl"
+printf '%s\n' '{"type":"user","message":{"content":"\\"name\\":\\"Skill\\",\\"input\\":{\\"skill\\":\\"unslop\\""}}' > "$tmp/t-quoted.jsonl"
+skill_line no-comments >> "$tmp/t-quoted.jsonl"; skill_line technical-writing >> "$tmp/t-quoted.jsonl"
+gate_case "skill name only in quoted text" 2 "$tmp/t-quoted.jsonl"
+{ printf '{"type":"tool_use","id":"toolu_1","name":"Skill","input":{"skill":"flatpaper-stack:no-comments","args":"diff"}}\n'
+	printf '{"type":"user","message":{"content":"<command-name>/flatpaper-stack:technical-writing</command-name>"}}\n'
+	printf '{"type":"user","message":{"content":"<command-name>/unslop</command-name>"}}\n'; } > "$tmp/t-mixed.jsonl"
+gate_case "real-shaped call and slash commands" 0 "$tmp/t-mixed.jsonl"
+printf '{"transcript_path":"%s"}' "$tmp/t-none.jsonl" | FLATPAPER_PR_GATE_OFF=1 "$scripts/pr-gate.sh" 2> /dev/null && ok || bad "pr-gate FLATPAPER_PR_GATE_OFF: want exit 0"
+gate_case "missing transcript passes" 0 "$tmp/absent.jsonl"
+gate_case "directory transcript passes" 0 "$tmp"
+printf '{"session_id":"s1"}' | "$scripts/pr-gate.sh" 2> /dev/null && ok || bad "pr-gate no transcript_path: want exit 0"
 
 [ "$fail" -eq 0 ] && echo "test-scripts: ok ($pass cases)"
 exit "$fail"
