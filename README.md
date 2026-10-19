@@ -16,6 +16,7 @@ Three ideas carry it:
 |---|---|
 | `guidelines.md` | Always-on rules, loaded at session start by a hook |
 | `UserPromptSubmit` hook | One-line reminder on every prompt: concise replies, a done check, proof, and constraints, and the principles footer in flatpaper-mode sessions |
+| `gh pr create` gate | In a flatpaper-mode session, blocks the first `gh pr create` once and lists the Opening a PR steps that always run. A `PreToolUse` hook in the flatpaper-mode skill's frontmatter |
 | `/flatpaper-stack:flatpaper-mode` | Rigorous mode. Matches the task to a playbook (investigation, bug fix, feature, refactoring, prototype, autonomous run, architecture page, perf, babysit, session pickup, pause safely, worktree cleanup, multi-phase plan, runtime forensics, trace forensics, opening a PR) |
 | Architecture drift line | At session start, says when `docs/architecture/` is behind this repo's commits, or behind the latest release of the repo it describes. Silent otherwise. |
 | `/flatpaper-stack:show-me-your-work` | Decision log (TSV), audited against the transcript, with an Attention section from a fresh reviewer |
@@ -151,7 +152,7 @@ fix the wrong items. show me a before/after table with evidence. no PR yet.
 raise a draft PR.
 ```
 
-Every playbook ends with the same finish steps: run the repo's tests, follow its PR rules, and read the PR back with `gh pr view`. Where a repo sets no PR rules, the Opening a PR playbook supplies defaults: Conventional Commits titles, a short PR body with fixed headings, and draft unless you say ready. The repo's rules files (`AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, `docs/README.md`, the PR template) are read at the start of every task.
+Every playbook ends with the same finish steps: run the repo's tests, follow its PR rules, and read the PR back with `gh pr view`. Where a repo sets no PR rules, the Opening a PR playbook supplies defaults: Conventional Commits titles, a short PR body with fixed headings, and draft unless you say ready. Written repo rules replace only those format defaults. `no-comments`, the risk call (`blast-radius` if the diff is risky), `technical-writing`, and `unslop` always run. A hook blocks the first `gh pr create` of a flatpaper-mode session once, as a reminder of these steps. The repo's rules files (`AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, `docs/README.md`, the PR template) are read at the start of every task.
 
 ### Steering a run
 

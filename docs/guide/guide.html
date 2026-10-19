@@ -95,7 +95,7 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 </style>
 <header class="top">
-  <div class="eyebrow">A Claude Code plugin · version 0.8.3</div>
+  <div class="eyebrow">A Claude Code plugin · version 0.8.4</div>
   <h1>Using flatpaper</h1>
   <p class="lede">flatpaper makes agent work you can trust and still understand a month later. Part 1 gets you running. Part 2 covers the ideas behind it: how to work with agents so the result holds up. Part 3 shows what to type for the situation you're in.</p>
   <div class="five"><span>goal</span><span>done check</span><span>proof</span><span>what you know</span><span>constraints</span></div>
@@ -471,7 +471,7 @@ raise a draft PR.</pre>
       <tr><td>Have fresh reviewers try to break a change</td><td><code>/flatpaper-stack:interrogate the diff on this branch</code></td></tr>
       <tr><td>Find what a change breaks outside its diff</td><td><code>/flatpaper-stack:blast-radius PR 123</code></td></tr>
       <tr><td>Strip comments that narrate or excuse code</td><td><code>/flatpaper-stack:no-comments src/billing/</code></td></tr>
-      <tr id="cp-opening-a-pr"><td>Open a PR after the work is done</td><td><code>raise a draft PR.</code> as a follow-up. Without repo rules, flatpaper uses its own PR defaults.</td></tr>
+      <tr id="cp-opening-a-pr"><td>Open a PR after the work is done</td><td><code>raise a draft PR.</code> as a follow-up. Written repo rules replace flatpaper's format defaults. Its review steps always run.</td></tr>
       <tr id="cp-babysit"><td>Get a PR green and answer its review comments</td><td><code>/flatpaper-stack:flatpaper-mode babysit PR 123</code></td></tr>
     </tbody>
   </table></div>
@@ -512,6 +512,7 @@ raise a draft PR.</pre>
     <tbody>
       <tr><td>A session starts</td><td>Loads the always-on rules (the <code>SessionStart</code> hook) and says if the architecture page is behind</td></tr>
       <tr><td>You send any prompt</td><td>Reminds the agent to be concise and to propose a done check, proof, and constraints. After flatpaper-mode has run, it also reminds the agent to end with the principles footer (the <code>UserPromptSubmit</code> hook)</td></tr>
+      <tr><td>The first <code>gh pr create</code> of a flatpaper-mode session</td><td>Blocks it once and lists the Opening a PR steps that always run: <code>no-comments</code>, <code>blast-radius</code> if the diff is risky, then <code>technical-writing</code> and <code>unslop</code>. The next try goes through (<code>pr-gate.sh</code>, a <code>PreToolUse</code> hook the flatpaper-mode skill registers)</td></tr>
       <tr><td>A task starts</td><td>Reads the repo's own rules, such as <code>CLAUDE.md</code>, <code>AGENTS.md</code>, and the PR template, and the architecture page if there is one</td></tr>
       <tr><td>Running something would settle a choice</td><td>Builds a quick prototype instead of asking you</td></tr>
       <tr><td>A change has several valid shapes, or the design is contested</td><td>Runs <code>architect</code>, then <code>interrogate</code> before the PR</td></tr>
@@ -687,15 +688,16 @@ new task: review the open PR.</pre>
     <thead><tr><th>Script</th><th>When</th><th>Command</th></tr></thead>
     <tbody>
       <tr><td class="nw">check-skills.sh</td><td>After editing any skill, agent, or playbook</td><td><code>scripts/check-skills.sh</code></td></tr>
-      <tr><td class="nw">test-scripts.sh</td><td>After editing <code>check-plan.sh</code> or <code>worktree-audit.sh</code>. CI runs it with <code>check-skills.sh</code> on Linux and macOS</td><td><code>scripts/test-scripts.sh</code></td></tr>
+      <tr><td class="nw">test-scripts.sh</td><td>After editing <code>check-plan.sh</code>, <code>worktree-audit.sh</code>, or <code>pr-gate.sh</code>. CI runs it with <code>check-skills.sh</code> on Linux and macOS</td><td><code>scripts/test-scripts.sh</code></td></tr>
       <tr><td class="nw">docs/guide/build.sh</td><td>After editing this guide</td><td><code>docs/guide/build.sh</code></td></tr>
       <tr><td class="nw">arch-drift.sh</td><td>Runs at session start; run by hand to recheck</td><td><code>scripts/arch-drift.sh</code></td></tr>
       <tr><td class="nw">check-plan.sh</td><td>After writing a multi-phase plan</td><td><code>skills/flatpaper-mode/scripts/check-plan.sh docs/plans/&lt;slug&gt;.md</code></td></tr>
       <tr><td class="nw">worktree-audit.sh</td><td>Before removing worktrees. Holds uncommitted work, open PRs, ignored files such as <code>.env</code>, and commits only the worktree's reflog keeps</td><td><code>skills/flatpaper-mode/scripts/worktree-audit.sh [--self &lt;session-id&gt;] [repo]</code></td></tr>
+      <tr><td class="nw">pr-gate.sh</td><td>Runs as a hook on the first <code>gh pr create</code> after flatpaper-mode starts</td><td><code>skills/flatpaper-mode/scripts/pr-gate.sh</code> (reads hook JSON on stdin)</td></tr>
       <tr><td class="nw">log.sh</td><td>Adding a decision row by hand</td><td><code>skills/show-me-your-work/scripts/log.sh &lt;log&gt; &lt;phase&gt; &lt;decision&gt; &lt;why&gt; &lt;evidence&gt; &lt;result&gt;</code></td></tr>
     </tbody>
   </table></div>
 </section>
 </main>
 </div>
-<footer>Built from the flatpaper repo at version 0.8.3 with <code>docs/guide/build.sh</code>.</footer>
+<footer>Built from the flatpaper repo at version 0.8.4 with <code>docs/guide/build.sh</code>.</footer>

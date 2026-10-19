@@ -88,5 +88,22 @@ audit_case reflog hold-reflog
 audit_case rebased safe
 audit_case tagged safe
 
+# pr-gate.sh. The first gh pr create of a session is blocked with the steps,
+# the next one in that session passes, and another session is blocked again.
+gate_case() { # name, want exit, session id
+	printf '{"session_id":"%s","tool_name":"Bash","tool_input":{"command":"gh pr create"}}' "$3" |
+		FLATPAPER_PR_GATE_DIR="$tmp/gate" "$scripts/pr-gate.sh" > /dev/null 2> "$tmp/gate.err"
+	got=$?
+	if [ "$got" = "$2" ]; then ok; else bad "pr-gate $1: want exit $2, got $got"; sed 's/^/  /' "$tmp/gate.err"; fi
+}
+gate_case "first call blocks" 2 s1
+grep -q 'no-comments' "$tmp/gate.err" && grep -q 'opening-a-pr.md' "$tmp/gate.err" && ok || bad "pr-gate: block message lacks the steps"
+gate_case "second call passes" 0 s1
+gate_case "new session blocks" 2 s2
+gate_case "no session id passes" 0 ""
+mkdir -p "$tmp/ro" && chmod 555 "$tmp/ro"
+printf '{"session_id":"s3"}' | FLATPAPER_PR_GATE_DIR="$tmp/ro/gate" "$scripts/pr-gate.sh" 2> /dev/null && ok || bad "pr-gate unwritable marker dir: want exit 0"
+chmod 755 "$tmp/ro"
+
 [ "$fail" -eq 0 ] && echo "test-scripts: ok ($pass cases)"
 exit "$fail"

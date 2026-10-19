@@ -2,6 +2,13 @@
 name: flatpaper-mode
 description: FlatPaper's rigorous engineering mode. Matches the task to a playbook, creates a task per step with TaskCreate, and drives it to verified, evidenced work. Use when the user types /flatpaper-mode or asks for this style.
 disable-model-invocation: true
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          if: "Bash(gh pr create*)"
+          command: "${CLAUDE_PLUGIN_ROOT}/skills/flatpaper-mode/scripts/pr-gate.sh"
 ---
 
 # flatpaper mode
@@ -22,7 +29,7 @@ Re-match on every prompt. When the kind of work changes (review, then fix, then 
 Run these once, after the playbook's last step and before the reply. Pause safely is the exception: it skips the Finish steps with the reason `pause`, and its open steps stay open for the resume. When one playbook runs inside another, they run after the outer playbook's last step.
 
 1. Run the repo's tests in the checkout you changed, with the command its rules name, or the one its CI or manifest runs. Paste the result. Skip when this task changed no files, or when the repo has no test command, and say which. A prototype skips this step because its scratch code does not ship.
-2. If the task commits or opens or updates a PR, follow the repo's rules: commit message format, branch name, PR title format, template, draft or ready, and required labels. Where the repo sets no rule, use the defaults in `playbooks/opening-a-pr.md`. Without a PR in scope, skip with that reason.
+2. If the task commits or opens or updates a PR, open `playbooks/opening-a-pr.md` and call `TaskCreate` once per step. A repo rule is one written in the files Start step 2 reads or in the PR template. Past PRs and commits are precedent, not rules. Repo rules replace only the playbook's format defaults: commit message format, branch name, title format, body headings, draft or ready, and labels. The `no-comments` commit, the risk call (state whether the diff is risky, and run `blast-radius` if it is), and the `technical-writing` and `unslop` pass always run. A hook blocks only the session's first `gh pr create` with these steps, and only until the session restarts. It does not cover `gh pr edit` or pushes. Run the steps before you retry. Without a PR in scope, skip with that reason.
 3. Read the PR back after creating or editing it: `gh pr view --json title,body,baseRefName,isDraft,labels` and `gh pr checks`. Check each against the rules and fix what is off. Pending checks are pending, not passed. Without `gh`, mark the read-back inconclusive and say why. Skip when step 2 was skipped. A PR you did not read back is not done.
 
 ## Playbooks
@@ -39,7 +46,7 @@ Run these once, after the playbook's last step and before the reply. Pause safel
 - **Session pickup.** Continue work another session started ("pick up", "take over this branch", "continue from the log"). `playbooks/session-pickup.md`.
 - **Pause safely.** Stop mid-task so the work can resume later ("pause", "stop for now", "pick this up tomorrow"). `playbooks/pause-safely.md`.
 - **Worktree cleanup.** Find and remove stale git worktrees ("clean up worktrees"). `playbooks/worktree-cleanup.md`.
-- **Opening a PR.** Not matched by prompt. Finish step 2 uses its defaults for commits, title, body, and draft state when the repo sets no rule. `playbooks/opening-a-pr.md`.
+- **Opening a PR.** Not matched by prompt. Finish step 2 runs its steps, and written repo rules replace its format defaults. `playbooks/opening-a-pr.md`.
 - **Multi-phase plan.** Write a plan for a migration or multi-PR change without building it ("plan this migration", "break this into PRs"). `playbooks/multi-phase-plan.md`.
 - **Runtime forensics.** Diagnose a live process by instrumenting it ("why is this process hung", "what is it doing right now"). `playbooks/runtime-forensics.md`.
 - **Trace forensics.** Diagnose from a captured artifact: a trace, profile, core dump, HAR, or log bundle ("read this trace", "what does this profile show"). `playbooks/trace-forensics.md`.
