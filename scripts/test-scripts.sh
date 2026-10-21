@@ -88,10 +88,12 @@ audit_case reflog hold-reflog
 audit_case rebased safe
 audit_case tagged safe
 
-# pr-gate.sh. gh pr create is blocked until the transcript shows the
-# no-comments, technical-writing, and unslop Skill calls, with or without a
-# plugin prefix. Without a readable transcript it lets the call through.
+# pr-gate.sh. gh pr create is blocked until the transcript shows a Skill call
+# for each gated skill, with or without a plugin prefix. Without a readable
+# transcript it lets the call through.
+gated="tidy no-comments technical-writing unslop"
 skill_line() { printf '{"type":"tool_use","name":"Skill","input":{"skill":"%s"}}\n' "$1"; }
+skills_except() { local s; for s in $gated; do [ "$s" = "$1" ] || skill_line "flatpaper-stack:$s"; done; }
 gate_case() { # name, want exit, transcript path
 	printf '{"session_id":"s1","transcript_path":"%s","tool_name":"Bash","tool_input":{"command":"gh pr create"}}' "$3" |
 		"$scripts/pr-gate.sh" > /dev/null 2> "$tmp/gate.err"
@@ -100,22 +102,27 @@ gate_case() { # name, want exit, transcript path
 }
 : > "$tmp/t-none.jsonl"
 gate_case "no skills ran" 2 "$tmp/t-none.jsonl"
-grep -q 'no-comments technical-writing unslop' "$tmp/gate.err" && grep -q 'opening-a-pr.md' "$tmp/gate.err" && ok || bad "pr-gate: block message lacks the missing skills or the playbook"
+grep -q "$gated" "$tmp/gate.err" && grep -q 'opening-a-pr.md' "$tmp/gate.err" && ok || bad "pr-gate: block message lacks the missing skills or the playbook"
 gate_case "retry still blocks" 2 "$tmp/t-none.jsonl"
 skill_line flatpaper-stack:unslop > "$tmp/t-unslop.jsonl"
 gate_case "only unslop ran" 2 "$tmp/t-unslop.jsonl"
-grep -q 'not run no-comments technical-writing\.' "$tmp/gate.err" && ok || bad "pr-gate: message should name only the missing skills"
-{ skill_line flatpaper-stack:no-comments; skill_line technical-writing; skill_line flatpaper:unslop; } > "$tmp/t-all.jsonl"
-gate_case "all three ran" 0 "$tmp/t-all.jsonl"
-skill_line flatpaper-stack:no-comments-extra > "$tmp/t-near.jsonl"
-skill_line technical-writing >> "$tmp/t-near.jsonl"; skill_line unslop >> "$tmp/t-near.jsonl"
+grep -q 'not run tidy no-comments technical-writing\.' "$tmp/gate.err" && ok || bad "pr-gate: message should name only the missing skills"
+for s in $gated; do
+	skills_except "$s" > "$tmp/t-but.jsonl"
+	gate_case "all but $s ran" 2 "$tmp/t-but.jsonl"
+	grep -q "not run $s\." "$tmp/gate.err" && ok || bad "pr-gate: message should name only $s"
+done
+skills_except none > "$tmp/t-all.jsonl"
+gate_case "all gated skills ran" 0 "$tmp/t-all.jsonl"
+{ skills_except no-comments; skill_line flatpaper-stack:no-comments-extra; } > "$tmp/t-near.jsonl"
 gate_case "near-miss skill name" 2 "$tmp/t-near.jsonl"
-printf '%s\n' '{"type":"user","message":{"content":"\\"name\\":\\"Skill\\",\\"input\\":{\\"skill\\":\\"unslop\\""}}' > "$tmp/t-quoted.jsonl"
-skill_line no-comments >> "$tmp/t-quoted.jsonl"; skill_line technical-writing >> "$tmp/t-quoted.jsonl"
+{ skills_except unslop
+	printf '%s\n' '{"type":"user","message":{"content":"\\"name\\":\\"Skill\\",\\"input\\":{\\"skill\\":\\"unslop\\""}}'; } > "$tmp/t-quoted.jsonl"
 gate_case "skill name only in quoted text" 2 "$tmp/t-quoted.jsonl"
 { printf '{"type":"tool_use","id":"toolu_1","name":"Skill","input":{"skill":"flatpaper-stack:no-comments","args":"diff"}}\n'
 	printf '{"type":"user","message":{"content":"<command-name>/flatpaper-stack:technical-writing</command-name>"}}\n'
-	printf '{"type":"user","message":{"content":"<command-name>/unslop</command-name>"}}\n'; } > "$tmp/t-mixed.jsonl"
+	printf '{"type":"user","message":{"content":"<command-name>/unslop</command-name>"}}\n'
+	printf '{"type":"user","message":{"content":"<command-name>/flatpaper-stack:tidy</command-name>"}}\n'; } > "$tmp/t-mixed.jsonl"
 gate_case "real-shaped call and slash commands" 0 "$tmp/t-mixed.jsonl"
 printf '{"transcript_path":"%s"}' "$tmp/t-none.jsonl" | FLATPAPER_PR_GATE_OFF=1 "$scripts/pr-gate.sh" 2> /dev/null && ok || bad "pr-gate FLATPAPER_PR_GATE_OFF: want exit 0"
 gate_case "missing transcript passes" 0 "$tmp/absent.jsonl"

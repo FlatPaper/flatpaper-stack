@@ -63,6 +63,7 @@ The default answer is `/flatpaper-stack:flatpaper-mode`, which runs most of the 
 | Get several attempts at one brief, merged into the best one | `arena` |
 | Run parallel checks over slices, or race workers | `swarm` |
 | Have different models review a diff and try to break it | `interrogate` |
+| Clean up a diff for reuse, simplicity, and efficiency without changing behavior | `tidy` |
 | Strip comments before review, using a reviewer that didn't write them | `no-comments` |
 | Clean AI tells out of prose | `unslop` |
 | Write docs, an RFC, a README, a PR description, or a commit message to a standard | `technical-writing` |
@@ -81,14 +82,14 @@ Close calls:
 - `/flatpaper-stack:arena` gives every worker the same brief and merges the best parts. `/flatpaper-stack:swarm` splits work into slices or a race and returns one table.
 - `/flatpaper-stack:architect` implements right after it settles the design. Add "with checkpoint" to review the design before it writes code.
 - `/flatpaper-stack:interrogate` reviews the diff. `/flatpaper-stack:blast-radius` looks for breakage outside the diff and proves the one fact that makes the change safe.
-- Before a PR, the Opening a PR playbook runs `no-comments` on every push and `blast-radius` for a risky diff. The Feature and Refactoring playbooks run `interrogate` when the design is contested. Type any of them to run it regardless. Claude Code's built-in `/code-review` reviews the diff for correctness bugs without a multi-model panel.
+- Before a PR, the Opening a PR playbook runs `tidy`, then `no-comments`, on every push and `blast-radius` for a risky diff. The Feature and Refactoring playbooks run `interrogate` when the design is contested. Type any of them to run it regardless. Claude Code's built-in `/code-review` reviews the diff for correctness bugs without a multi-model panel.
 - `/flatpaper-stack:recall` rebuilds context across this project's recent sessions. `/flatpaper-stack:ketchup` covers only this chat since the user's last message. Resuming one specific branch is the Session pickup playbook.
 - `/flatpaper-stack:correct` makes one repeated mistake impossible in the repo. `/flatpaper-stack:reflect` mines a whole session for lessons.
 
 Not in flatpaper:
 
 - flatpaper has no skill for explaining how code works, for restating an ask, or for vetting a benchmark. Use the Investigation playbook, ask flatpaper-mode to restate the issue in plain words first, or use the Perf playbook. For a large or cross-cutting run, use the Autonomous run or Multi-phase plan playbook.
-- `/loop`, `/code-review`, and `/simplify` are Claude Code built-ins. The Autonomous run playbook uses `/loop`.
+- `/loop`, `/code-review`, and `/simplify` are Claude Code built-ins. The Autonomous run playbook uses `/loop`. `/flatpaper-stack:tidy` is flatpaper's version of `/simplify`, and the one the Opening a PR playbook runs.
 - Plan mode is a Claude Code feature and works alongside flatpaper.
 
 ## Playbooks and principles

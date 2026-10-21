@@ -69,6 +69,7 @@ raise a draft PR.</pre>
     <tbody>
       <tr><td>Have fresh reviewers try to break a change</td><td><code>/flatpaper-stack:interrogate the diff on this branch</code></td></tr>
       <tr><td>Find what a change breaks outside its diff</td><td><code>/flatpaper-stack:blast-radius PR 123</code></td></tr>
+      <tr><td>Clean up the diff without changing behavior</td><td><code>/flatpaper-stack:tidy</code></td></tr>
       <tr><td>Strip comments that narrate or excuse code</td><td><code>/flatpaper-stack:no-comments src/billing/</code></td></tr>
       <tr id="cp-opening-a-pr"><td>Open a PR after the work is done</td><td><code>raise a draft PR.</code> as a follow-up. Written repo rules replace flatpaper's format defaults. Its review steps always run.</td></tr>
       <tr id="cp-babysit"><td>Get a PR green and answer its review comments</td><td><code>/flatpaper-stack:flatpaper-mode babysit PR 123</code></td></tr>
@@ -111,7 +112,7 @@ raise a draft PR.</pre>
     <tbody>
       <tr><td>A session starts</td><td>Loads the always-on rules (the <code>SessionStart</code> hook) and says if the architecture page is behind</td></tr>
       <tr><td>You send any prompt</td><td>Reminds the agent to be concise and to propose a done check, proof, and constraints. After flatpaper-mode has run, it also reminds the agent to end with the principles footer (the <code>UserPromptSubmit</code> hook)</td></tr>
-      <tr><td><code>gh pr create</code> in a flatpaper-mode session</td><td>Blocks it until the session transcript shows a Skill call or slash command for <code>no-comments</code>, <code>technical-writing</code>, and <code>unslop</code>, and lists the Opening a PR steps that always run, including <code>blast-radius</code> if the diff is risky (<code>pr-gate.sh</code>, a <code>PreToolUse</code> hook the flatpaper-mode skill registers)</td></tr>
+      <tr><td><code>gh pr create</code> in a flatpaper-mode session</td><td>Blocks it until the session transcript shows a Skill call or slash command for <code>tidy</code>, <code>no-comments</code>, <code>technical-writing</code>, and <code>unslop</code>, and lists the Opening a PR steps that always run, including <code>blast-radius</code> if the diff is risky (<code>pr-gate.sh</code>, a <code>PreToolUse</code> hook the flatpaper-mode skill registers)</td></tr>
       <tr><td>A task starts</td><td>Reads the repo's own rules, such as <code>CLAUDE.md</code>, <code>AGENTS.md</code>, and the PR template, and the architecture page if there is one</td></tr>
       <tr><td>Running something would settle a choice</td><td>Builds a quick prototype instead of asking you</td></tr>
       <tr><td>A change has several valid shapes, or the design is contested</td><td>Runs <code>architect</code>, then <code>interrogate</code> before the PR</td></tr>
@@ -119,7 +120,7 @@ raise a draft PR.</pre>
       <tr><td>A step hands code or a helper task to a subagent</td><td>Spawns <code>flatpaper-agent</code>, which reads the mode's rules before it starts</td></tr>
       <tr><td>A change needs review or verification</td><td>Gives it to a fresh subagent that did not write it</td></tr>
       <tr><td>A step must drive the real app</td><td>Uses your <code>verify-&lt;app&gt;</code> skill, or offers once to create one</td></tr>
-      <tr><td>Commits are ready to push</td><td>Runs <code>no-comments</code>, which spawns the <code>comment-sicko</code> agent on the diff</td></tr>
+      <tr><td>Commits are ready to push</td><td>Runs <code>tidy</code>, then <code>no-comments</code>, which spawns the <code>comment-sicko</code> agent on the diff</td></tr>
       <tr><td>A PR diff is risky</td><td>Runs <code>blast-radius</code> for the PR body</td></tr>
       <tr><td>You say "going to bed" or "run until done"</td><td>Decides reversible calls itself and logs each one with <code>show-me-your-work</code></td></tr>
       <tr><td>A force-push, deploy, data deletion, or message to people is next</td><td>Always stops and asks you</td></tr>
@@ -186,6 +187,12 @@ raise a draft PR.</pre>
     <h4>/flatpaper-stack:blast-radius <span class="tag">by hand</span></h4>
     <p><b>Use it when</b> a change might break callers outside its diff, or before design when a brief claims something about existing code ("make X public"). It finds the consumers and proves the key safety fact with a script you can rerun. Defaults to the current branch.</p>
 <pre>/flatpaper-stack:blast-radius PR 123</pre>
+  </div>
+
+  <div class="cmd" id="c-tidy">
+    <h4>/flatpaper-stack:tidy</h4>
+    <p><b>Use it</b> when a diff works but could be smaller or cheaper. Fresh reviewers look for reused helpers, simpler forms, wasted work, and fixes at the wrong depth. It applies the fixes that hold up and lists the ones it skipped. It does not hunt bugs; use <code>interrogate</code> for that. It also runs before every PR push.</p>
+<pre>/flatpaper-stack:tidy</pre>
   </div>
 
   <div class="cmd" id="c-no-comments">
