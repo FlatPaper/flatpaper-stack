@@ -6,7 +6,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/FlatPaper/flatpaper-stack",
-      "revision": "1b9d70096b9c8a2b447e8d9d0f4681b4ce796c92"
+      "revision": "86c64dce84f66ff50dfb9982d931f89571bc2468"
     }
   },
   "components": [
@@ -326,7 +326,7 @@
       "id": "called",
       "type": "database",
       "label": "Playbook-called skills",
-      "sublabel": "why, architect, no-comments, +5",
+      "sublabel": "why, architect, tidy, +6",
       "pos": [
         990,
         30
@@ -592,7 +592,7 @@
         "Start: restate, read repo rules, match one of 15 playbooks, read principles.md",
         "Each playbook step and Finish step becomes a task",
         "Finish step 2 runs Opening a PR; written repo rules replace only its format defaults",
-        "A PreToolUse hook blocks gh pr create until no-comments, technical-writing, and unslop ran",
+        "A PreToolUse hook blocks gh pr create until tidy, no-comments, technical-writing, and unslop ran",
         "Re-match on every prompt when the kind of work changes"
       ]
     },
@@ -600,7 +600,7 @@
       "dot": "violet",
       "title": "Standalone skills",
       "items": [
-        "Playbook steps call why, architect, interrogate, swarm, arena, no-comments, unslop, technical-writing",
+        "Playbook steps call why, architect, interrogate, swarm, arena, tidy, no-comments, unslop, technical-writing",
         "By hand only: correct, reflect, recall, ketchup, sharpen, flatpaper-help, blast-radius, the verification skills",
         "show-me-your-work keeps the decision log",
         "Subagents run on opus, sonnet, haiku, or fable, with effort set per spawn"
