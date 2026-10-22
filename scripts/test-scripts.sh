@@ -127,7 +127,11 @@ gate_case "real-shaped call and slash commands" 0 "$tmp/t-mixed.jsonl"
 printf '{"transcript_path":"%s"}' "$tmp/t-none.jsonl" | FLATPAPER_PR_GATE_OFF=1 "$scripts/pr-gate.sh" 2> /dev/null && ok || bad "pr-gate FLATPAPER_PR_GATE_OFF: want exit 0"
 gate_case "missing transcript passes" 0 "$tmp/absent.jsonl"
 gate_case "directory transcript passes" 0 "$tmp"
-printf '{"session_id":"s1"}' | "$scripts/pr-gate.sh" 2> /dev/null && ok || bad "pr-gate no transcript_path: want exit 0"
+printf '{"session_id":"s1","tool_input":{"command":"gh pr create"}}' | "$scripts/pr-gate.sh" 2> /dev/null && ok || bad "pr-gate no transcript_path: want exit 0"
+printf '{"transcript_path":"%s","tool_name":"Bash","tool_input":{"command":"momentum-api --no-browser https://x/api -H \\"Accept: application/json\\""}}' "$tmp/t-none.jsonl" |
+	"$scripts/pr-gate.sh" 2> /dev/null && ok || bad "pr-gate non-PR command: want exit 0"
+printf '{"transcript_path":"%s","tool_name":"Bash","tool_input":{"command":"git push && gh  pr create --fill"}}' "$tmp/t-none.jsonl" |
+	"$scripts/pr-gate.sh" 2> /dev/null; [ $? -eq 2 ] && ok || bad "pr-gate chained gh pr create: want exit 2"
 
 [ "$fail" -eq 0 ] && echo "test-scripts: ok ($pass cases)"
 exit "$fail"

@@ -299,7 +299,7 @@ new task: review the open PR.</pre>
       <tr><td class="nw">arch-drift.sh</td><td>Runs at session start; run by hand to recheck</td><td><code>scripts/arch-drift.sh</code></td></tr>
       <tr><td class="nw">check-plan.sh</td><td>After writing a multi-phase plan</td><td><code>skills/flatpaper-mode/scripts/check-plan.sh docs/plans/&lt;slug&gt;.md</code></td></tr>
       <tr><td class="nw">worktree-audit.sh</td><td>Before removing worktrees. Holds uncommitted work, open PRs, ignored files such as <code>.env</code>, and commits only the worktree's reflog keeps</td><td><code>skills/flatpaper-mode/scripts/worktree-audit.sh [--self &lt;session-id&gt;] [repo]</code></td></tr>
-      <tr><td class="nw">pr-gate.sh</td><td>Runs as a hook on every <code>gh pr create</code> after flatpaper-mode starts</td><td><code>skills/flatpaper-mode/scripts/pr-gate.sh</code> (reads hook JSON on stdin)</td></tr>
+      <tr><td class="nw">pr-gate.sh</td><td>Runs as a hook on every <code>gh pr create</code> after flatpaper-mode starts. Lets through any command that does not run <code>gh pr create</code></td><td><code>skills/flatpaper-mode/scripts/pr-gate.sh</code> (reads hook JSON on stdin)</td></tr>
       <tr><td class="nw">log.sh</td><td>Adding a decision row by hand</td><td><code>skills/show-me-your-work/scripts/log.sh &lt;log&gt; &lt;phase&gt; &lt;decision&gt; &lt;why&gt; &lt;evidence&gt; &lt;result&gt;</code></td></tr>
     </tbody>
   </table></div>

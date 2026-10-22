@@ -2,11 +2,14 @@
 # PreToolUse hook that flatpaper-mode registers for `gh pr create`. Blocks the
 # call until the session transcript shows each skill in the loop below ran, as
 # Skill calls or typed slash commands. Reads the hook JSON on stdin. Without a readable transcript, or with FLATPAPER_PR_GATE_OFF
-# set, it lets the call through.
+# set, it lets the call through. The hook's `if` filter runs the hook on any
+# command it cannot parse, so a call that does not run gh pr create passes.
 set -uo pipefail
 
 [ -n "${FLATPAPER_PR_GATE_OFF:-}" ] && exit 0
-transcript=$(sed -n 's/.*"transcript_path" *: *"\([^"]*\)".*/\1/p' | head -1)
+input=$(cat)
+grep -qE 'gh[[:space:]]+pr[[:space:]]+create' <<< "$input" || exit 0
+transcript=$(sed -n 's/.*"transcript_path" *: *"\([^"]*\)".*/\1/p' <<< "$input" | head -1)
 [ -f "$transcript" ] && [ -r "$transcript" ] || exit 0
 
 missing=()
