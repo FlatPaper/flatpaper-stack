@@ -106,7 +106,7 @@ Playbooks are step lists inside `/flatpaper-stack:flatpaper-mode`, not skills, s
 
 The Playbooks section of `${CLAUDE_PLUGIN_ROOT}/skills/flatpaper-mode/SKILL.md` lists every playbook and when it applies. The README's "Words that steer the playbook" table and [guide 3.2](https://claude.ai/artifact/UtoWgg52numPjfmQg2r27P#c-mode) give the trigger words for each.
 
-Principles are named rules in `${CLAUDE_PLUGIN_ROOT}/skills/flatpaper-mode/references/principles.md`. flatpaper-mode reads them and names each one that changed a decision. The user rarely reads the file. They steer with the names instead, as in "apply prove it works. show me the real output." [Guide 2.9](https://claude.ai/artifact/UtoWgg52numPjfmQg2r27P#i-principles) covers steering with them.
+Principles are named rules in `${CLAUDE_PLUGIN_ROOT}/skills/flatpaper-mode/references/principles.md`. flatpaper-mode reads them and names each one that changed a decision. The user rarely reads the file. They steer with the names instead, as in "apply prove it works. show me the real output." [Guide 2.10](https://claude.ai/artifact/UtoWgg52numPjfmQg2r27P#i-principles) covers steering with them.
 
 ## Fix a run that went wrong
 

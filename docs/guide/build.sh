@@ -68,9 +68,10 @@ nav() { cat <<'EOF'
     <li><a href="#i-build"><span class="n">2.6</span>Pin, build, clean</a></li>
     <li><a href="#i-verify"><span class="n">2.7</span>Prove it</a></li>
     <li><a href="#i-away"><span class="n">2.8</span>Earn the loop</a></li>
-    <li><a href="#i-principles"><span class="n">2.9</span>Steer with names</a></li>
-    <li><a href="#i-encode"><span class="n">2.10</span>Fix the repo</a></li>
-    <li><a href="#i-map"><span class="n">2.11</span>Keep a map</a></li>
+    <li><a href="#i-delegate"><span class="n">2.9</span>Hand off work</a></li>
+    <li><a href="#i-principles"><span class="n">2.10</span>Steer with names</a></li>
+    <li><a href="#i-encode"><span class="n">2.11</span>Fix the repo</a></li>
+    <li><a href="#i-map"><span class="n">2.12</span>Keep a map</a></li>
   </ol>
   <div class="grp">3 · Commands</div>
   <ol>
