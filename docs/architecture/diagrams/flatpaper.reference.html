@@ -44,7 +44,7 @@
 </style>
     <!-- Reference sections, appended below the cards by docs/architecture/build.sh. -->
     <div class="ref-sections">
-      <p class="ref-intro">Verified 2026-10-23 against flatpaper-stack b5279f9 (v0.8.8). flatpaper is a local Claude Code plugin with no deployed environments. Each row cites the file it comes from.</p>
+      <p class="ref-intro">Verified 2026-10-23 against flatpaper-stack c2ef657 (v0.8.9). flatpaper is a local Claude Code plugin with no deployed environments. Each row cites the file it comes from.</p>
 
       <section class="ref-section">
         <div class="ref-head"><span class="ref-num">01</span><h2>Playbooks</h2></div>
@@ -135,8 +135,8 @@
       <section class="ref-section">
         <div class="ref-head"><span class="ref-num">04</span><h2>Sources</h2></div>
         <ul>
-          <li>Repository <code>FlatPaper/flatpaper-stack</code> at <code>b5279f90d7c356cae4396a5bcb403b8eaab44071</code> (branch <code>main</code>, v0.8.8)</li>
-          <li>Changes since the last page: <code>git diff --stat be33c1c..b5279f9</code>: flatpaper-mode's Subagents rules keep code-writing delegates on the session model and do not split one sequential change into a planning agent and cheaper writers, which shifts the SKILL.md citations from line 77 on by one. The guide gains Part 2.9 on subagents</li>
+          <li>Repository <code>FlatPaper/flatpaper-stack</code> at <code>c2ef657f3e1cd3ea542c663f45587f85c442177f</code> (branch <code>main</code>, v0.8.9)</li>
+          <li>Changes since the last page: <code>git diff --stat b5279f9..c2ef657</code>: flatpaper-mode's Subagents rule says only skills that name their own models, such as <code>swarm</code>, <code>arena</code>, and <code>interrogate</code>, use other models. Guide Part 2.9 drops the advice to review on a different model</li>
           <li>Diagram spec <code>docs/architecture/diagrams/flatpaper.archify.json</code>, rebuilt with <code>docs/architecture/build.sh</code></li>
         </ul>
       </section>
