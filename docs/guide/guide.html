@@ -357,7 +357,7 @@ keep a decision log. don't ask me before committing.
     <li><b>Delegate to keep the main thread small.</b> Bulk reading, independent slices, and fresh review go to subagents. The main thread keeps the summaries and the decisions.</li>
     <li><b>Write a brief a stranger could run.</b> Goal, scope, context, acceptance, verify commands, timebox, what's forbidden, and the report shape. A field you can't fill is a unit you haven't scoped.</li>
     <li><b>Keep code on the session model.</b> Don't split one change into a planning agent and cheaper writers. To write a plan detailed enough for them, the planner writes the code itself. The split then costs more, and one bug in the plan reaches every writer.</li>
-    <li><b>Mix models only where a skill says to.</b> <code>swarm</code>, <code>arena</code>, and <code>interrogate</code> pick their own models. Everything else runs on the session model.</li>
+    <li><b>Mix models only where a skill says to.</b> <code>swarm</code>, <code>arena</code>, <code>interrogate</code>, <code>reflect</code>, <code>why</code>, and <code>recall</code> pick their own models. Everything else runs on the session model.</li>
     <li><b>Read the diff yourself.</b> A subagent's report is a claim. Check its work and write your own summary.</li>
   </ul>
   <div class="tbl"><table>
@@ -365,7 +365,7 @@ keep a decision log. don't ask me before committing.
     <tbody>
       <tr><td>One change, step by step</td><td>One agent on the session model</td></tr>
       <tr><td>Independent slices</td><td>Parallel workers on the session model, each in its own worktree</td></tr>
-      <tr><td>Races, model panels, and bulk reading</td><td>The models that <code>swarm</code>, <code>arena</code>, or <code>interrogate</code> name</td></tr>
+      <tr><td>Races, model panels, and bulk reading inside those skills</td><td>The models each skill names</td></tr>
       <tr><td>Review</td><td>A fresh agent that didn't write the change</td></tr>
     </tbody>
   </table></div>
