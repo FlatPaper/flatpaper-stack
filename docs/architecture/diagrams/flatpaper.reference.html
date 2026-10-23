@@ -44,7 +44,7 @@
 </style>
     <!-- Reference sections, appended below the cards by docs/architecture/build.sh. -->
     <div class="ref-sections">
-      <p class="ref-intro">Verified 2026-10-23 against flatpaper-stack 301aea8 (v0.8.9). flatpaper is a local Claude Code plugin with no deployed environments. Each row cites the file it comes from.</p>
+      <p class="ref-intro">Verified 2026-10-23 against flatpaper-stack b7164c7 (v0.8.10). flatpaper is a local Claude Code plugin with no deployed environments. Each row cites the file it comes from.</p>
 
       <section class="ref-section">
         <div class="ref-head"><span class="ref-num">01</span><h2>Playbooks</h2></div>
@@ -135,8 +135,8 @@
       <section class="ref-section">
         <div class="ref-head"><span class="ref-num">04</span><h2>Sources</h2></div>
         <ul>
-          <li>Repository <code>FlatPaper/flatpaper-stack</code> at <code>301aea8220c9435ccba620c32b10c3cc634c1d7b</code> (branch <code>main</code>, v0.8.9)</li>
-          <li>Changes since the last page: <code>git diff --stat b5279f9..301aea8</code>: flatpaper-mode's Subagents rule says only skills that name their own models use other models: <code>swarm</code>, <code>arena</code>, <code>interrogate</code>, <code>reflect</code>, <code>why</code>, and <code>recall</code>. Guide Part 2.9 drops the advice to review on a different model</li>
+          <li>Repository <code>FlatPaper/flatpaper-stack</code> at <code>b7164c7763d3b8aa3592b505aa74347ce0cc3383</code> (branch <code>main</code>, v0.8.10)</li>
+          <li>Changes since the last page: <code>git diff --stat 301aea8..b7164c7</code>: <code>show-me-your-work</code>'s fresh review runs on the session model. The reviewer must be a separate subagent, not a different model</li>
           <li>Diagram spec <code>docs/architecture/diagrams/flatpaper.archify.json</code>, rebuilt with <code>docs/architecture/build.sh</code></li>
         </ul>
       </section>
