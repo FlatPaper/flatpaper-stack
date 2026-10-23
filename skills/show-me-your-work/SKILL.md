@@ -69,14 +69,12 @@ At the end of the run, check that the log told the truth. Audit only this run's 
 
 ## Fresh review
 
-Spawn a subagent that did not do the work. Use a different model from the one that did the work when one is available. It reads the log and the transcript and flags:
+Spawn a subagent that did not do the work. It runs on the session model. What matters is that it is separate from the work, not which model it uses. It reads the log and the transcript and flags:
 
 - decisions with weak or missing evidence
 - verification claimed without proof in the transcript
 - choices that look risky in hindsight
 - open items nothing closed
-
-Same-family review is weaker than a different model family. Say which model reviewed.
 
 ## The reply
 
