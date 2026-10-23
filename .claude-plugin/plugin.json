@@ -1,6 +1,6 @@
 {
   "name": "flatpaper-stack",
-  "version": "0.8.8",
+  "version": "0.8.9",
   "description": "FlatPaper's agent workflow: checkable goals, proof over claims, and a decision trail. Adapted from poteto's pstack.",
   "author": {
     "name": "FlatPaper"
