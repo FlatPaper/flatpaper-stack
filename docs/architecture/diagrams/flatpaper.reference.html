@@ -44,7 +44,7 @@
 </style>
     <!-- Reference sections, appended below the cards by docs/architecture/build.sh. -->
     <div class="ref-sections">
-      <p class="ref-intro">Verified 2026-10-22 against flatpaper-stack be33c1c (v0.8.7). flatpaper is a local Claude Code plugin with no deployed environments. Each row cites the file it comes from.</p>
+      <p class="ref-intro">Verified 2026-10-23 against flatpaper-stack b5279f9 (v0.8.8). flatpaper is a local Claude Code plugin with no deployed environments. Each row cites the file it comes from.</p>
 
       <section class="ref-section">
         <div class="ref-head"><span class="ref-num">01</span><h2>Playbooks</h2></div>
@@ -87,8 +87,8 @@
           <tr><td class="dir">Finish 1</td><td>Run the repo's tests</td><td><code>skills/flatpaper-mode/SKILL.md:31</code></td></tr>
           <tr><td class="dir">Finish 2</td><td>Open <code>playbooks/opening-a-pr.md</code> with a task per step. Written repo rules replace only its format defaults. The flatpaper-mode hook blocks <code>gh pr create</code> until the transcript shows <code>tidy</code>, <code>no-comments</code>, <code>technical-writing</code>, and <code>unslop</code> ran</td><td><code>skills/flatpaper-mode/SKILL.md:32</code></td></tr>
           <tr><td class="dir">Finish 3</td><td>Read the PR back with <code>gh pr view</code> and <code>gh pr checks</code></td><td><code>skills/flatpaper-mode/SKILL.md:33</code></td></tr>
-          <tr><td class="dir">Reply</td><td>Apply <code>unslop</code> to every reply, and <code>technical-writing</code> to docs, READMEs, and PR text</td><td><code>skills/flatpaper-mode/SKILL.md:83</code></td></tr>
-          <tr><td class="dir">Subagents</td><td>Code-writing delegates and helpers spawn as <code>flatpaper-stack:flatpaper-agent</code> with this skill's path in the brief; read-only search stays on <code>Explore</code>; skills that name their own <code>subagent_type</code> keep it. Read every subagent's output yourself, fresh subagents for review, briefs per <code>references/subagent-brief.md</code>, and the Agent tool's <code>effort</code> set per spawn: <code>high</code> by default, higher for subtle work, lower for routine work. With no independent reviewer, the review is recorded <code>BLOCKED: independent review</code>. A <code>completed</code> agent may still be running, so stop it and confirm before reusing its worktree</td><td><code>skills/flatpaper-mode/SKILL.md:71-79</code></td></tr>
+          <tr><td class="dir">Reply</td><td>Apply <code>unslop</code> to every reply, and <code>technical-writing</code> to docs, READMEs, and PR text</td><td><code>skills/flatpaper-mode/SKILL.md:84</code></td></tr>
+          <tr><td class="dir">Subagents</td><td>Code-writing delegates and helpers spawn as <code>flatpaper-stack:flatpaper-agent</code> with this skill's path in the brief; read-only search stays on <code>Explore</code>; skills that name their own <code>subagent_type</code> keep it. Read every subagent's output yourself, fresh subagents for review, code-writing delegates on the session model with no split of one sequential change into a planning agent and cheaper writers, briefs per <code>references/subagent-brief.md</code>, and the Agent tool's <code>effort</code> set per spawn: <code>high</code> by default, higher for subtle work, lower for routine work. With no independent reviewer, the review is recorded <code>BLOCKED: independent review</code>. A <code>completed</code> agent may still be running, so stop it and confirm before reusing its worktree</td><td><code>skills/flatpaper-mode/SKILL.md:71-80</code></td></tr>
         </table></div>
       </section>
 
@@ -114,7 +114,7 @@
           <tr><td class="dir">arena</td><td>Playbook-called: Prototype step 3, when one attempt would lock in the wrong shape</td><td>Runs candidates on <code>opus</code>, <code>sonnet</code>, and <code>fable</code>, picks a base, grafts the best parts of the others</td><td><code>skills/arena/SKILL.md:16</code>, <code>playbooks/prototype.md:9</code></td></tr>
           <tr><td class="dir">tidy</td><td>Playbook-called: Opening a PR step 2, before <code>no-comments</code></td><td>Fresh reviewers check the diff for reuse, simplification, efficiency, and altitude, one per angle, or one for all four on a small or non-code diff. The caller applies the fixes that hold up, lists skips, and runs the tests if it changed anything. Quality only, not bugs</td><td><code>skills/tidy/SKILL.md:8,16-20</code>, <code>playbooks/opening-a-pr.md:8</code></td></tr>
           <tr><td class="dir">no-comments</td><td>Playbook-called: Opening a PR step 2, before pushing</td><td>Spawns the <code>comment-sicko</code> agent on the diff, reviews its edits, fixes accepted flags, and offers to encode claimed constraints as a type, test, or lint</td><td><code>skills/no-comments/SKILL.md:16-20</code>, <code>playbooks/opening-a-pr.md:8</code></td></tr>
-          <tr><td class="dir">unslop</td><td>Playbook-called: every reply, Opening a PR step 5, Multi-phase plan step 5</td><td>Cuts AI tells from prose</td><td><code>skills/unslop/SKILL.md</code>, <code>skills/flatpaper-mode/SKILL.md:83</code></td></tr>
+          <tr><td class="dir">unslop</td><td>Playbook-called: every reply, Opening a PR step 5, Multi-phase plan step 5</td><td>Cuts AI tells from prose</td><td><code>skills/unslop/SKILL.md</code>, <code>skills/flatpaper-mode/SKILL.md:84</code></td></tr>
           <tr><td class="dir">technical-writing</td><td>Playbook-called: docs, READMEs, PR text. Opening a PR step 5, Multi-phase plan step 5</td><td>Layered writing standard for docs, READMEs, PR descriptions, and commit messages</td><td><code>skills/technical-writing/SKILL.md</code>, <code>playbooks/opening-a-pr.md:19</code></td></tr>
           <tr><td class="dir">show-me-your-work</td><td>Playbook-called and by hand: <code>/flatpaper-stack:show-me-your-work</code>, its own description, Autonomous run, Perf step 6, Session pickup step 1, Pause safely step 4, Architecture page step 9, session overrides, and the guidelines</td><td>TSV decision log, audited before hand-back</td><td><code>skills/show-me-your-work/SKILL.md</code></td></tr>
           <tr><td class="dir">blast-radius</td><td>By hand: <code>/flatpaper-stack:blast-radius</code> on a diff, branch, or PR. Opening a PR step 4 asks for it on a risky diff</td><td>Finds breakage outside the diff and proves the safety facts with a rerunnable script</td><td><code>skills/blast-radius/SKILL.md:4</code>, <code>playbooks/opening-a-pr.md:15</code></td></tr>
@@ -135,8 +135,8 @@
       <section class="ref-section">
         <div class="ref-head"><span class="ref-num">04</span><h2>Sources</h2></div>
         <ul>
-          <li>Repository <code>FlatPaper/flatpaper-stack</code> at <code>be33c1c2ff01e7955a62aa03e7c7a70c1af5b870</code> (branch <code>main</code>, v0.8.7)</li>
-          <li>Changes since the last page: <code>git diff --stat 86c64dc..be33c1c</code>: <code>pr-gate.sh</code> now checks the command and lets through any Bash call that does not run <code>gh pr create</code>. Before, a command the hook's <code>if</code> filter could not parse was blocked like a PR</li>
+          <li>Repository <code>FlatPaper/flatpaper-stack</code> at <code>b5279f90d7c356cae4396a5bcb403b8eaab44071</code> (branch <code>main</code>, v0.8.8)</li>
+          <li>Changes since the last page: <code>git diff --stat be33c1c..b5279f9</code>: flatpaper-mode's Subagents rules keep code-writing delegates on the session model and do not split one sequential change into a planning agent and cheaper writers, which shifts the SKILL.md citations from line 77 on by one. The guide gains Part 2.9 on subagents</li>
           <li>Diagram spec <code>docs/architecture/diagrams/flatpaper.archify.json</code>, rebuilt with <code>docs/architecture/build.sh</code></li>
         </ul>
       </section>
