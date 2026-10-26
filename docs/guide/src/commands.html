@@ -98,6 +98,8 @@ raise a draft PR.</pre>
       <tr><td>Turn a long session into lessons</td><td><code>/flatpaper-stack:reflect</code></td></tr>
       <tr><td>Let the agent drive your app to prove its work</td><td><code>/flatpaper-stack:create-verification-skill</code></td></tr>
       <tr><td>Recheck that verification skill after the app changed</td><td><code>/flatpaper-stack:maintain-verification-skill</code></td></tr>
+      <tr><td>Prove a race or invariant holds past what tests reach</td><td><code>/flatpaper-stack:create-formal-verification-skill</code></td></tr>
+      <tr><td>Bring a formal verification back in line after the code changed</td><td><code>/flatpaper-stack:maintain-formal-verification-skill</code></td></tr>
       <tr id="cp-worktree-cleanup"><td>Remove finished worktrees safely</td><td><code>/flatpaper-stack:flatpaper-mode clean up worktrees</code></td></tr>
     </tbody>
   </table></div>
@@ -254,6 +256,18 @@ column -s$'\t' -t decisions.tsv          # read the log in a terminal</pre>
     <h4>/flatpaper-stack:maintain-verification-skill <span class="tag">by hand</span></h4>
     <p><b>Use it</b> after the app changes. It rechecks every feature the verification skill knows about and opens at most one PR of fixes. To run it on a schedule, ask <code>/schedule</code>.</p>
 <pre>/flatpaper-stack:maintain-verification-skill</pre>
+  </div>
+
+  <div class="cmd" id="c-create-formal-verification-skill">
+    <h4>/flatpaper-stack:create-formal-verification-skill <span class="tag">by hand</span></h4>
+    <p><b>Use it</b> when a race, a retry, a state machine, or an invariant needs more than tests. It picks the property where a bug costs the most and tests reach the least, verifies it with a tool that fits, shows the check failing on a broken variant, and writes a project skill the next agent reruns.</p>
+<pre>/flatpaper-stack:create-formal-verification-skill prove a job is never claimed by two workers, even when claims retry</pre>
+  </div>
+
+  <div class="cmd" id="c-maintain-formal-verification-skill">
+    <h4>/flatpaper-stack:maintain-formal-verification-skill <span class="tag">by hand</span></h4>
+    <p><b>Use it</b> after merges or refactors that touched verified code without rechecking it. It updates the model to match the code, reruns, and says whether each failure is drift or a bug.</p>
+<pre>/flatpaper-stack:maintain-formal-verification-skill</pre>
   </div>
 </section>
 

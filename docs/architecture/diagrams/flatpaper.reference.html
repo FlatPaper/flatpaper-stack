@@ -44,7 +44,7 @@
 </style>
     <!-- Reference sections, appended below the cards by docs/architecture/build.sh. -->
     <div class="ref-sections">
-      <p class="ref-intro">Verified 2026-10-23 against flatpaper-stack b7164c7 (v0.8.10). flatpaper is a local Claude Code plugin with no deployed environments. Each row cites the file it comes from.</p>
+      <p class="ref-intro">Verified 2026-10-26 against flatpaper-stack b6fde92 (v0.8.11). flatpaper is a local Claude Code plugin with no deployed environments. Each row cites the file it comes from.</p>
 
       <section class="ref-section">
         <div class="ref-head"><span class="ref-num">01</span><h2>Playbooks</h2></div>
@@ -94,7 +94,7 @@
 
       <section class="ref-section">
         <div class="ref-head"><span class="ref-num">03</span><h2>Hooks, skills, and scripts</h2></div>
-        <p>20 skills and 2 plugin agents. Playbook-called skills run from a playbook step without being typed, and can still be called directly. By-hand skills set <code>disable-model-invocation: true</code>, so only the user starts them with <code>/flatpaper-stack:&lt;skill&gt;</code>. Subagents use only <code>opus</code>, <code>sonnet</code>, <code>haiku</code>, and <code>fable</code> (<code>README.md:41</code>, enforced by <code>scripts/check-skills.sh</code>).</p>
+        <p>22 skills and 2 plugin agents. Playbook-called skills run from a playbook step without being typed, and can still be called directly. By-hand skills set <code>disable-model-invocation: true</code>, so only the user starts them with <code>/flatpaper-stack:&lt;skill&gt;</code>. Subagents use only <code>opus</code>, <code>sonnet</code>, <code>haiku</code>, and <code>fable</code> (<code>README.md:41</code>, enforced by <code>scripts/check-skills.sh</code>).</p>
         <div class="ref-table-wrap"><table>
           <tr><th>Piece</th><th>How it runs</th><th>Effect</th><th>File</th></tr>
           <tr><td class="dir">SessionStart</td><td>Hook, every session</td><td>Prints <code>guidelines.md</code>, then runs <code>scripts/arch-drift.sh</code></td><td><code>hooks/hooks.json:3-16</code></td></tr>
@@ -120,6 +120,8 @@
           <tr><td class="dir">blast-radius</td><td>By hand: <code>/flatpaper-stack:blast-radius</code> on a diff, branch, or PR. Opening a PR step 4 asks for it on a risky diff</td><td>Finds breakage outside the diff and proves the safety facts with a rerunnable script</td><td><code>skills/blast-radius/SKILL.md:4</code>, <code>playbooks/opening-a-pr.md:15</code></td></tr>
           <tr><td class="dir">create-verification-skill</td><td>By hand: <code>/flatpaper-stack:create-verification-skill</code>, once per repo</td><td>Writes <code>.claude/skills/verify-&lt;app&gt;/</code>, which flatpaper-mode playbooks use to reproduce and verify on the live surface. Ready means usable from an empty data dir, not just a process answering</td><td><code>skills/create-verification-skill/SKILL.md:4,25,27</code></td></tr>
           <tr><td class="dir">maintain-verification-skill</td><td>By hand: <code>/flatpaper-stack:maintain-verification-skill</code>, or on a schedule</td><td>Rechecks each feature file from source and live. At most one PR of proven corrections</td><td><code>skills/maintain-verification-skill/SKILL.md:4</code></td></tr>
+          <tr><td class="dir">create-formal-verification-skill</td><td>By hand: <code>/flatpaper-stack:create-formal-verification-skill</code></td><td>Verifies the property where a bug costs the most and tests reach the least, with the tool that fits (TLA+ by default for ordering bugs), shows it failing on a broken variant, and writes <code>.claude/skills/&lt;area&gt;/</code> with the covered code and its sync commit. Never named <code>verify</code> or <code>verify-*</code></td><td><code>skills/create-formal-verification-skill/SKILL.md:4,15,19,33</code></td></tr>
+          <tr><td class="dir">maintain-formal-verification-skill</td><td>By hand: <code>/flatpaper-stack:maintain-formal-verification-skill</code></td><td>Reads commits to covered code since the sync commit, updates the model or harness, reruns, and calls each check in sync, updated, bug, or blocked. Edits only the verification</td><td><code>skills/maintain-formal-verification-skill/SKILL.md:4,13-20,24,28</code></td></tr>
           <tr><td class="dir">correct</td><td>By hand: <code>/flatpaper-stack:correct</code></td><td>Makes a repeated agent mistake impossible: architecture, types, a lint, a hook, a test, docs last. Each check is shown failing on the mistake and passing on the fix</td><td><code>skills/correct/SKILL.md:4</code></td></tr>
           <tr><td class="dir">reflect</td><td>By hand: <code>/flatpaper-stack:reflect</code></td><td>Three reviewers mine this session's transcript. Each learning becomes a proposed edit to a skill, <code>CLAUDE.md</code>, or memory, shown for approval</td><td><code>skills/reflect/SKILL.md:4</code></td></tr>
           <tr><td class="dir">recall</td><td>By hand: <code>/flatpaper-stack:recall</code></td><td>Rebuilds recent context from this project's sessions, decision logs, git, and open PRs into a short brief</td><td><code>skills/recall/SKILL.md:4</code></td></tr>
@@ -135,8 +137,8 @@
       <section class="ref-section">
         <div class="ref-head"><span class="ref-num">04</span><h2>Sources</h2></div>
         <ul>
-          <li>Repository <code>FlatPaper/flatpaper-stack</code> at <code>b7164c7763d3b8aa3592b505aa74347ce0cc3383</code> (branch <code>main</code>, v0.8.10)</li>
-          <li>Changes since the last page: <code>git diff --stat 301aea8..b7164c7</code>: <code>show-me-your-work</code>'s fresh review runs on the session model. The reviewer must be a separate subagent, not a different model</li>
+          <li>Repository <code>FlatPaper/flatpaper-stack</code> at <code>b6fde927a2a898b42bb07f942129e097dd5dd8bf</code> (branch <code>port-formal-verification</code>, v0.8.11)</li>
+          <li>Changes since the last page: <code>git diff --stat b7164c7..b6fde92</code>: new by-hand skills <code>create-formal-verification-skill</code> and <code>maintain-formal-verification-skill</code></li>
           <li>Diagram spec <code>docs/architecture/diagrams/flatpaper.archify.json</code>, rebuilt with <code>docs/architecture/build.sh</code></li>
         </ul>
       </section>

@@ -22,6 +22,8 @@ Three ideas carry it:
 | `/flatpaper-stack:show-me-your-work` | Decision log (TSV), audited against the transcript, with an Attention section from a fresh reviewer |
 | `/flatpaper-stack:create-verification-skill` | Generates a project-local `verify-<app>` skill (launch, doctor, drive, evidence, cleanup, feature map) and proves it once, including that Doctor can fail. flatpaper-mode playbooks drive the app through it and offer to create one when a task needs it |
 | `/flatpaper-stack:maintain-verification-skill` | Rechecks the `verify-<app>` feature map against the code and the live app, and opens at most one PR of proven corrections |
+| `/flatpaper-stack:create-formal-verification-skill` | Picks the property where a bug costs the most and tests reach the least, verifies it with the tool that fits (TLA+ by default for ordering bugs), shows it failing on a broken variant, and leaves a project skill that records the code it covers and the commit it was last in sync with |
+| `/flatpaper-stack:maintain-formal-verification-skill` | Reads the commits that touched verified code since the commit the skill records as last in sync, updates the model or harness, reruns, and says whether each failure is drift in the verification or a bug in the code |
 | `/flatpaper-stack:blast-radius` | Finds what a change breaks outside its diff, and proves the facts it is safe because of with a rerunnable script |
 
 ### Skills flatpaper-mode calls for you
