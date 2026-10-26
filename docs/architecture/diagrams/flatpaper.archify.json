@@ -6,7 +6,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/FlatPaper/flatpaper-stack",
-      "revision": "b7164c7763d3b8aa3592b505aa74347ce0cc3383"
+      "revision": "b6fde927a2a898b42bb07f942129e097dd5dd8bf"
     }
   },
   "components": [
@@ -601,7 +601,7 @@
       "title": "Standalone skills",
       "items": [
         "Playbook steps call why, architect, interrogate, swarm, arena, tidy, no-comments, unslop, technical-writing",
-        "By hand only: correct, reflect, recall, ketchup, sharpen, flatpaper-help, blast-radius, the verification skills",
+        "By hand only: correct, reflect, recall, ketchup, sharpen, flatpaper-help, blast-radius, the verification and formal verification skills",
         "show-me-your-work keeps the decision log",
         "Subagents run on opus, sonnet, haiku, or fable, with effort set per spawn"
       ]
