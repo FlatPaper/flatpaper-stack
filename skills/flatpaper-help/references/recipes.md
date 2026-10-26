@@ -18,6 +18,7 @@ Swap in the real paths, skills, and done checks. Informal wording works. `/fp` b
 - Feature: `/fp add <behavior>. <current output> stays byte-identical. verify both.`
 - Refactor: `/fp move <code> into one module, zero behavior change. record the current output first and prove it's unchanged after.`
 - Perf: `/fp <operation> takes <time> on <fixture>. trace it, fix the measured cause, show me before and after.`
+- Race or invariant: `/flatpaper-stack:create-formal-verification-skill prove <property> holds in <module>, even when <steps> interleave or retry.` After merges or refactors in that code: `/flatpaper-stack:maintain-formal-verification-skill`.
 
 ## Design and plan
 

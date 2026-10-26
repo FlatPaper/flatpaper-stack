@@ -25,6 +25,7 @@ Check the state that changes the answer, and mention it only when it does:
 
 - `CLAUDE_CODE_ENABLE_TODO_TOOLS` not set to `1` in `~/.claude/settings.json` means flatpaper-mode can't put playbook steps in the task list and falls back to a checklist in its replies.
 - No `verify-*` skill under the project's `.claude/skills/` means agents have no scripted way to drive the app. Mention `/flatpaper-stack:create-verification-skill` when the question is about proving a change works.
+- No project skill under `.claude/skills/` that runs a model checker, prover, or other verifier against named code means no property is checked past what tests reach. Mention `/flatpaper-stack:create-formal-verification-skill` when the question is about a race, an invariant, or another case tests rarely hit. If such a skill exists, check whether its covered code changed after its sync commit. If it did and the question touches that code, mention `/flatpaper-stack:maintain-formal-verification-skill`.
 - No `docs/architecture/` in the project means agents have no map to read first. Mention the Architecture page playbook when the question is about onboarding an agent to a repo.
 
 ## Get set up
@@ -69,6 +70,8 @@ The default answer is `/flatpaper-stack:flatpaper-mode`, which runs most of the 
 | Write docs, an RFC, a README, a PR description, or a commit message to a standard | `technical-writing` |
 | Give agents a scripted way to drive the app and prove behavior | `create-verification-skill` |
 | Bring a verification skill and its feature map back in line with the app | `maintain-verification-skill` |
+| Formally verify a race, an invariant, or another property tests rarely reach | `create-formal-verification-skill` |
+| Bring a formal verification back in line after the code it covers changed, and learn whether a failure is drift or a bug | `maintain-formal-verification-skill` |
 | Keep a decision log during a run, and review it afterward | `show-me-your-work` |
 | Turn what a session taught into skill, `CLAUDE.md`, or memory edits | `reflect` |
 | Stop agents from repeating the same mistake in this repo | `correct` |
@@ -84,6 +87,7 @@ Close calls:
 - `/flatpaper-stack:interrogate` reviews the diff. `/flatpaper-stack:blast-radius` looks for breakage outside the diff and proves the one fact that makes the change safe.
 - Before a PR, the Opening a PR playbook runs `tidy`, then `no-comments`, on every push and `blast-radius` for a risky diff. The Feature and Refactoring playbooks run `interrogate` when the design is contested. Type any of them to run it regardless. Claude Code's built-in `/code-review` reviews the diff for correctness bugs without a multi-model panel.
 - `/flatpaper-stack:recall` rebuilds context across this project's recent sessions. `/flatpaper-stack:ketchup` covers only this chat since the user's last message. Resuming one specific branch is the Session pickup playbook.
+- `/flatpaper-stack:create-verification-skill` drives the app to prove behavior on the cases you run. `/flatpaper-stack:create-formal-verification-skill` checks one property over every case in a stated scope, such as every order of steps in a model.
 - `/flatpaper-stack:correct` makes one repeated mistake impossible in the repo. `/flatpaper-stack:reflect` mines a whole session for lessons.
 
 Not in flatpaper:
