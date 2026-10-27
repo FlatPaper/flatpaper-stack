@@ -59,7 +59,7 @@ raise a draft PR.</pre>
       <tr><td>Compare designs before writing code</td><td><code>/flatpaper-stack:architect a plugin system for export formats</code></td></tr>
       <tr><td>Get a few independent attempts and keep the best parts</td><td><code>/flatpaper-stack:arena a parser for the legacy fixed-width format</code></td></tr>
       <tr id="cp-multi-phase-plan"><td>Plan work that spans several PRs</td><td><code>/flatpaper-stack:flatpaper-mode plan the move from REST to gRPC. break it into PRs. don't build anything.</code></td></tr>
-      <tr><td>Start from a fuzzy ask</td><td><code>/flatpaper-stack:sharpen write onboarding docs for the billing service</code></td></tr>
+      <tr><td>Get a deeper prompt before you send it</td><td><code>/flatpaper-stack:sharpen write onboarding docs for the billing service</code></td></tr>
     </tbody>
   </table></div>
 
@@ -100,6 +100,7 @@ raise a draft PR.</pre>
       <tr><td>Recheck that verification skill after the app changed</td><td><code>/flatpaper-stack:maintain-verification-skill</code></td></tr>
       <tr><td>Prove a race or invariant holds past what tests reach</td><td><code>/flatpaper-stack:create-formal-verification-skill</code></td></tr>
       <tr><td>Bring a formal verification back in line after the code changed</td><td><code>/flatpaper-stack:maintain-formal-verification-skill</code></td></tr>
+      <tr><td>Show how a system moves between states, with each bug as a path</td><td><code>/flatpaper-stack:statechart chart specs/Checkout.tla for the PM</code></td></tr>
       <tr id="cp-worktree-cleanup"><td>Remove finished worktrees safely</td><td><code>/flatpaper-stack:flatpaper-mode clean up worktrees</code></td></tr>
     </tbody>
   </table></div>
@@ -150,7 +151,7 @@ raise a draft PR.</pre>
 
   <div class="cmd" id="c-sharpen">
     <h4>/flatpaper-stack:sharpen <span class="tag">by hand</span></h4>
-    <p><b>Use it when</b> you can't state the task crisply. It frames the task the way an expert would, then does it.</p>
+    <p><b>Use it when</b> you want a deeper version of a prompt, not a bigger one. It names what a top professional would add, the raw material and methods they would use, and an outside check, then rewrites your prompt. It doesn't do the task.</p>
 <pre>/flatpaper-stack:sharpen figure out why our nightly job got slower this month</pre>
   </div>
 
@@ -268,6 +269,12 @@ column -s$'\t' -t decisions.tsv          # read the log in a terminal</pre>
     <h4>/flatpaper-stack:maintain-formal-verification-skill <span class="tag">by hand</span></h4>
     <p><b>Use it</b> after merges or refactors that touched verified code without rechecking it. It updates the model to match the code, reruns, and says whether each failure is drift or a bug.</p>
 <pre>/flatpaper-stack:maintain-formal-verification-skill</pre>
+  </div>
+
+  <div class="cmd" id="c-statechart">
+    <h4>/flatpaper-stack:statechart</h4>
+    <p><b>Use it</b> to show a PM, a designer, or a reviewer how a system moves between states. It draws a chart from a TLA+ model with each bug as a numbered path to a state that breaks a rule, turns an agreed chart into a TLA+ skeleton, or audits code against its spec. The first run installs TLC and Java with mise.</p>
+<pre>/flatpaper-stack:statechart chart the checkout flow from specs/Checkout.tla and show each bug as a path</pre>
   </div>
 </section>
 

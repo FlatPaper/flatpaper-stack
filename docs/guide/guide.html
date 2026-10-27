@@ -95,7 +95,7 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 </style>
 <header class="top">
-  <div class="eyebrow">A Claude Code plugin · version 0.8.11</div>
+  <div class="eyebrow">A Claude Code plugin · version 0.8.12</div>
   <h1>Using flatpaper</h1>
   <p class="lede">flatpaper makes agent work you can trust and still understand a month later. Part 1 gets you running. Part 2 covers the ideas behind it: how to work with agents so the result holds up. Part 3 shows what to type for the situation you're in.</p>
   <div class="five"><span>goal</span><span>done check</span><span>proof</span><span>what you know</span><span>constraints</span></div>
@@ -221,7 +221,7 @@ claude plugin update flatpaper-stack@flatpaper-stack   # after edits; bump the v
   </div>
   <p>Try it:</p>
 <pre>/flatpaper-stack:flatpaper-mode read this thread. restate the underlying issue in plain words. don't change any code yet.</pre>
-  <p><b>In flatpaper-stack:</b> the five-part prompt, the per-prompt reminder, flatpaper-mode's first start step, and <code>sharpen</code> for tasks you can't state crisply.</p>
+  <p><b>In flatpaper-stack:</b> the five-part prompt, the per-prompt reminder, flatpaper-mode's first start step, and <code>sharpen</code> to deepen a prompt before you send it.</p>
 </section>
 
 <section class="ch" id="i-router">
@@ -320,7 +320,7 @@ claude plugin update flatpaper-stack@flatpaper-stack   # after edits; bump the v
     <div><span class="mark fail">ALL GREEN, NOTHING THERE</span><p>Dashboard loaded. Daemon restarted. WebSocket <code>101</code>. <code>/api/runs</code> returned <code>200</code>, with body <code>[]</code>.</p></div>
     <div><span class="mark pass">THE REAL CHECK</span><p>A smoke run actually appears in the dashboard through the Coder URL.</p></div>
   </div>
-  <p><b>In flatpaper-stack:</b> <code>create-verification-skill</code>, <code>maintain-verification-skill</code>, <code>create-formal-verification-skill</code>, <code>maintain-formal-verification-skill</code>, "Driving the app" in flatpaper-mode, <code>blast-radius</code>, the Perf playbook's number vetting, Babysit, and a fresh reviewer in every playbook.</p>
+  <p><b>In flatpaper-stack:</b> <code>create-verification-skill</code>, <code>maintain-verification-skill</code>, <code>create-formal-verification-skill</code>, <code>maintain-formal-verification-skill</code>, <code>statechart</code>, "Driving the app" in flatpaper-mode, <code>blast-radius</code>, the Perf playbook's number vetting, Babysit, and a fresh reviewer in every playbook.</p>
 </section>
 
 <section class="ch" id="i-away">
@@ -485,7 +485,7 @@ raise a draft PR.</pre>
       <tr><td>Compare designs before writing code</td><td><code>/flatpaper-stack:architect a plugin system for export formats</code></td></tr>
       <tr><td>Get a few independent attempts and keep the best parts</td><td><code>/flatpaper-stack:arena a parser for the legacy fixed-width format</code></td></tr>
       <tr id="cp-multi-phase-plan"><td>Plan work that spans several PRs</td><td><code>/flatpaper-stack:flatpaper-mode plan the move from REST to gRPC. break it into PRs. don't build anything.</code></td></tr>
-      <tr><td>Start from a fuzzy ask</td><td><code>/flatpaper-stack:sharpen write onboarding docs for the billing service</code></td></tr>
+      <tr><td>Get a deeper prompt before you send it</td><td><code>/flatpaper-stack:sharpen write onboarding docs for the billing service</code></td></tr>
     </tbody>
   </table></div>
 
@@ -526,6 +526,7 @@ raise a draft PR.</pre>
       <tr><td>Recheck that verification skill after the app changed</td><td><code>/flatpaper-stack:maintain-verification-skill</code></td></tr>
       <tr><td>Prove a race or invariant holds past what tests reach</td><td><code>/flatpaper-stack:create-formal-verification-skill</code></td></tr>
       <tr><td>Bring a formal verification back in line after the code changed</td><td><code>/flatpaper-stack:maintain-formal-verification-skill</code></td></tr>
+      <tr><td>Show how a system moves between states, with each bug as a path</td><td><code>/flatpaper-stack:statechart chart specs/Checkout.tla for the PM</code></td></tr>
       <tr id="cp-worktree-cleanup"><td>Remove finished worktrees safely</td><td><code>/flatpaper-stack:flatpaper-mode clean up worktrees</code></td></tr>
     </tbody>
   </table></div>
@@ -576,7 +577,7 @@ raise a draft PR.</pre>
 
   <div class="cmd" id="c-sharpen">
     <h4>/flatpaper-stack:sharpen <span class="tag">by hand</span></h4>
-    <p><b>Use it when</b> you can't state the task crisply. It frames the task the way an expert would, then does it.</p>
+    <p><b>Use it when</b> you want a deeper version of a prompt, not a bigger one. It names what a top professional would add, the raw material and methods they would use, and an outside check, then rewrites your prompt. It doesn't do the task.</p>
 <pre>/flatpaper-stack:sharpen figure out why our nightly job got slower this month</pre>
   </div>
 
@@ -695,6 +696,12 @@ column -s$'\t' -t decisions.tsv          # read the log in a terminal</pre>
     <p><b>Use it</b> after merges or refactors that touched verified code without rechecking it. It updates the model to match the code, reruns, and says whether each failure is drift or a bug.</p>
 <pre>/flatpaper-stack:maintain-formal-verification-skill</pre>
   </div>
+
+  <div class="cmd" id="c-statechart">
+    <h4>/flatpaper-stack:statechart</h4>
+    <p><b>Use it</b> to show a PM, a designer, or a reviewer how a system moves between states. It draws a chart from a TLA+ model with each bug as a numbered path to a state that breaks a rule, turns an agreed chart into a TLA+ skeleton, or audits code against its spec. The first run installs TLC and Java with mise.</p>
+<pre>/flatpaper-stack:statechart chart the checkout flow from specs/Checkout.tla and show each bug as a path</pre>
+  </div>
 </section>
 
 <section class="ch" id="c-steer">
@@ -746,4 +753,4 @@ new task: review the open PR.</pre>
 </section>
 </main>
 </div>
-<footer>Built from the flatpaper repo at version 0.8.11 with <code>docs/guide/build.sh</code>.</footer>
+<footer>Built from the flatpaper repo at version 0.8.12 with <code>docs/guide/build.sh</code>.</footer>
