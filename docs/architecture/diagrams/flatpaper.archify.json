@@ -6,7 +6,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/FlatPaper/flatpaper-stack",
-      "revision": "b6fde927a2a898b42bb07f942129e097dd5dd8bf"
+      "revision": "c67e8d6108535115e5065304610e311e94320bee"
     }
   },
   "components": [
@@ -326,7 +326,7 @@
       "id": "called",
       "type": "database",
       "label": "Playbook-called skills",
-      "sublabel": "why, architect, tidy, +6",
+      "sublabel": "why, architect, tidy, +7",
       "pos": [
         990,
         30
@@ -338,8 +338,8 @@
       "sources": [
         {
           "path": "README.md",
-          "line": 26,
-          "end_line": 41
+          "line": 29,
+          "end_line": 44
         },
         {
           "path": "skills/flatpaper-mode/SKILL.md",
@@ -366,8 +366,8 @@
       "sources": [
         {
           "path": "README.md",
-          "line": 52,
-          "end_line": 63
+          "line": 57,
+          "end_line": 68
         },
         {
           "path": "skills/correct/SKILL.md",
@@ -600,7 +600,7 @@
       "dot": "violet",
       "title": "Standalone skills",
       "items": [
-        "Playbook steps call why, architect, interrogate, swarm, arena, tidy, no-comments, unslop, technical-writing",
+        "Playbook steps call why, architect, interrogate, swarm, arena, tidy, no-comments, unslop, technical-writing, statechart",
         "By hand only: correct, reflect, recall, ketchup, sharpen, flatpaper-help, blast-radius, the verification and formal verification skills",
         "show-me-your-work keeps the decision log",
         "Subagents run on opus, sonnet, haiku, or fable, with effort set per spawn"
