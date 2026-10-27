@@ -6,6 +6,20 @@ set -uo pipefail
 
 LC_ALL=C awk -v F="$1" '
 function fail(n, m) { print F ":" n ": " m; bad++ }
+# Replace each code span with one backtick. A span opens on a run of backticks
+# and closes on the next run of the same length. Text after an unclosed run is prose.
+function nocode(s,   out, run, rest) {
+  out = ""
+  while (match(s, /`+/)) {
+    out = out substr(s, 1, RSTART - 1) "`"; run = RLENGTH; s = substr(s, RSTART + RLENGTH)
+    rest = s
+    while (match(rest, /`+/)) {
+      if (RLENGTH == run) { s = substr(rest, RSTART + RLENGTH); break }
+      rest = substr(rest, RSTART + RLENGTH)
+    }
+  }
+  return out s
+}
 function boxes(b) { return gsub(/(^|\n)[ \t]*- \[[ x]\] /, "&", b) }
 function endblock() { if (blk != "") { body[blk] = cur; cnt[blk] = boxes(cur) } cur = "" }
 function endpr(   i, want, got, b, n, lines, k, m) {
@@ -57,7 +71,7 @@ match($0, /^(   |  | )?(```+|~~~+)/) {
   if (!(substr(f, 1, 1) == "`" && index(substr($0, RSTART + RLENGTH), "`"))) { fence = f; fenceat = NR; next }
 }
 {
-  prose = $0; gsub(/`[^`]*`/, "`", prose)
+  prose = nocode($0)
   if (prose ~ /\xe2\x80[\x93\x94]/) fail(NR, "long dash")
   if (prose ~ /\xe2\x80[\x98\x99\x9c\x9d]/) fail(NR, "curly quote")
   if (prose ~ /<[A-Za-z][^>]*>/) fail(NR, "unfilled placeholder")

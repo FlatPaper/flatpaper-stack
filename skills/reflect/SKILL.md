@@ -40,6 +40,8 @@ Move any Accepted item that a lint, test, hook, or script would enforce more rel
 
 Show the synthesizer's full output. Wait for explicit approval before applying any Accepted row, unless the user already said to apply them. The user picks the subset and may redirect routings. Skill and `CLAUDE.md` changes affect every future session.
 
+Never edit a skill under `plugins/cache/`. Before approval, show its destination, `.claude/skills/<skill>/` or `~/.claude/skills/<skill>/`. After approval, copy the skill folder there and edit the copy. The copy registers under its bare name, so flatpaper's own steps still load the plugin version. Say so, and rewrite any `${CLAUDE_PLUGIN_ROOT}` path in the copy as an absolute path. Never open a PR or push.
+
 Follow each approved row's routing:
 
 - **Skill body edit.** A one-line fix: make it and show the diff. A larger change, such as a new section: draft it, show the diff, and apply after approval. Use the `skill-creator` skill if it is installed.

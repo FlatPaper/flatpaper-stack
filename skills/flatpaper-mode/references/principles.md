@@ -13,7 +13,7 @@ Names to steer by. The user may say a name mid-task ("apply prove it works"). Ea
 - **Outcome-oriented execution.** Planned migrations. Converge on the target design. Don't keep throwaway compatibility layers alive. Declare up front where temporary breakage is acceptable, and run full static and runtime verification when the plan completes.
 - **Experience first.** Scope tradeoffs. Choose the user's result over implementation convenience.
 - **Exhaust the design space.** A decision with no precedent. Build two or three prototypes and compare before committing.
-- **Build the lever.** Any non-trivial work, not just repeated work. Build the script, codemod, or check that does or proves it. The tool is what a reviewer reruns. Do the first unit by hand, then prove the lever by rerunning it on that unit and diffing. If you cite this and the diff has no script, codemod, or check, you didn't apply it.
+- **Build the lever.** Any non-trivial work, not just repeated work. Build the script, codemod, or check that does or proves it. The tool is what a reviewer reruns. Do the first unit by hand, then prove the lever by rerunning it on that unit and diffing. For a comparison tool, seed one known-bad change for each output it claims to compare, and confirm it reports each mismatch. If required input is missing, it must refuse or report inconclusive, never a match. Keep these controls and rerun them before you trust its results. If you cite this and the diff has no script, codemod, or check, you didn't apply it.
 
 ## Architecture
 

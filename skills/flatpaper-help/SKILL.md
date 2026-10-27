@@ -55,7 +55,7 @@ The default answer is `/flatpaper-stack:flatpaper-mode`, which runs most of the 
 | The user wants to | Skill |
 |---|---|
 | Do any non-trivial task with rigor | `flatpaper-mode` |
-| Aim a task higher before starting: more expert, more outcome-focused, not overspecified | `sharpen` |
+| Get a prompt rewritten deeper, not bigger, before sending it: what a top professional would add, their raw material and methods, and an outside check. It returns the prompt and doesn't do the task | `sharpen` |
 | Know why code is shaped this way, or where a number came from | `why` |
 | Catch up on their own recent work in this project | `recall` |
 | Catch up on what changed in this chat since their last message | `ketchup` |
@@ -72,6 +72,7 @@ The default answer is `/flatpaper-stack:flatpaper-mode`, which runs most of the 
 | Bring a verification skill and its feature map back in line with the app | `maintain-verification-skill` |
 | Formally verify a race, an invariant, or another property tests rarely reach | `create-formal-verification-skill` |
 | Bring a formal verification back in line after the code it covers changed, and learn whether a failure is drift or a bug | `maintain-formal-verification-skill` |
+| Show a PM or designer what the user sees as a chart checked by a model, with each bug drawn as a numbered path, turn an agreed chart into a TLA+ skeleton, or audit the code against its TLA+ spec | `statechart` |
 | Keep a decision log during a run, and review it afterward | `show-me-your-work` |
 | Turn what a session taught into skill, `CLAUDE.md`, or memory edits | `reflect` |
 | Stop agents from repeating the same mistake in this repo | `correct` |

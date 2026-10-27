@@ -37,6 +37,7 @@ You don't type these. A playbook step runs them. You can still call one directly
 | `/flatpaper-stack:interrogate` | Feature, Refactoring | Adversarial review by three fresh reviewers on `opus`, `sonnet`, and `fable`, then one verdict |
 | `/flatpaper-stack:swarm` | Feature, Perf, Multi-phase plan | Fans out parallel workers and returns one table |
 | `/flatpaper-stack:arena` | Prototype | Runs candidates on `opus`, `sonnet`, and `fable`, picks a base, and grafts the best parts of the others |
+| `/flatpaper-stack:statechart` | Bug fix, and the skills `create-formal-verification-skill` writes | Draws how a system moves between states as a Mermaid statechart from a TLA+ model, with each bug as a numbered path to a state that breaks a rule. Also turns an agreed chart into a TLA+ skeleton, or audits code against its spec. Installs TLC and Java with mise on first run |
 | `/flatpaper-stack:tidy` | Opening a PR | Fresh reviewers check the diff for reuse, simplification, efficiency, and altitude. Applies the fixes that hold up and reports what it skipped. Quality only, not bugs |
 | `/flatpaper-stack:no-comments` | Opening a PR | A fresh reviewer deletes comments that don't earn their place and flags code that needs prose to make sense. Fixes the accepted flags and offers to turn claimed constraints into a type, test, or lint |
 | `/flatpaper-stack:unslop` | Every reply | Cuts AI tells from prose |
@@ -64,7 +65,7 @@ These act on your session or your repo at a time you choose.
 | `/flatpaper-stack:recall` | Rebuilds recent context from this project's sessions, decision logs, git, and open PRs into a short current-state brief |
 | `/flatpaper-stack:ketchup` | Catches you up on what changed since your last message in under 150 words, with each action item laid out so you can decide |
 | `/flatpaper-stack:flatpaper-help` | Answers how-to questions about flatpaper: setup, wording a flatpaper-mode prompt, which skill or playbook fits, and fixes for a run that went wrong. Hands back a prompt to send instead of starting the work |
-| `/flatpaper-stack:sharpen` | Before starting, asks how a top expert would do the task, what you are really after, and whether the ask is over- or underspecified, then does the work |
+| `/flatpaper-stack:sharpen` | Rewrites a prompt deeper, not bigger: what a top professional would add, the raw material and methods they would use, and an outside check that the result is right. Returns the prompt and does not do the task |
 
 ## Install
 

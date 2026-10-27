@@ -5,7 +5,7 @@ Swap in the real paths, skills, and done checks. Informal wording works. `/fp` b
 ## Understand
 
 - `/fp read <thread>. restate the underlying issue in your own words, in plain english.`
-- `/flatpaper-stack:sharpen <your task>`
+- `/flatpaper-stack:sharpen <the prompt you're about to send>`
 - `/fp investigate why <symptom>. give me what we know, what data you used, and your best hypotheses. don't change any code yet.`
 - `/fp how does <subsystem> work? read-only.` then `/flatpaper-stack:why did <behavior> change recently?`
 - `/flatpaper-stack:recall my work on <topic> from last week`

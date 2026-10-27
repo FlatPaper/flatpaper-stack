@@ -48,6 +48,15 @@ plan_case "indented code is not a fence" fail "$tmp/indented.md"
 { cat "$tmp/base.md"; printf '\n```x``` is inline\n## Example heading\n'; } > "$tmp/inline.md"
 plan_case "inline code at line start is not a fence" fail "$tmp/inline.md"
 
+{ cat "$tmp/base.md"; printf '\nUse ``a \342\200\224 `b`` here.\n'; } > "$tmp/dashcode.md"
+plan_case "long dash inside a double-backtick span" pass "$tmp/dashcode.md"
+
+{ cat "$tmp/base.md"; printf '\nUse ``a `b`` \342\200\224 here.\n'; } > "$tmp/dashprose.md"
+plan_case "long dash after a double-backtick span" fail "$tmp/dashprose.md"
+
+{ cat "$tmp/base.md"; printf '\nUse ``a \342\200\224 here.\n'; } > "$tmp/dashopen.md"
+plan_case "long dash after an unclosed double-backtick run" fail "$tmp/dashopen.md"
+
 # worktree-audit.sh. One repo with a worktree per case. The bucket comes from
 # the BUCKET column of the row whose WORKTREE column ends in the case name.
 r="$tmp/repo"
