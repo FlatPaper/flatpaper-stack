@@ -63,7 +63,7 @@ The default answer is `/flatpaper-stack:flatpaper-mode`, which runs most of the 
 | Settle types and module shape before code that crosses a module boundary | `architect` |
 | Get several attempts at one brief, merged into the best one | `arena` |
 | Run parallel checks over slices, or race workers | `swarm` |
-| Have different models review a diff and try to break it | `interrogate` |
+| Have different models try to break a diff, keeping only findings a run proves | `interrogate` |
 | Clean up a diff for reuse, simplicity, and efficiency without changing behavior | `tidy` |
 | Strip comments before review, using a reviewer that didn't write them | `no-comments` |
 | Clean AI tells out of prose | `unslop` |
@@ -72,7 +72,7 @@ The default answer is `/flatpaper-stack:flatpaper-mode`, which runs most of the 
 | Bring a verification skill and its feature map back in line with the app | `maintain-verification-skill` |
 | Formally verify a race, an invariant, or another property tests rarely reach | `create-formal-verification-skill` |
 | Bring a formal verification back in line after the code it covers changed, and learn whether a failure is drift or a bug | `maintain-formal-verification-skill` |
-| Show a PM or designer what the user sees as a chart checked by a model, with each bug drawn as a numbered path, turn an agreed chart into a TLA+ skeleton, or audit the code against its TLA+ spec | `statechart` |
+| Show a PM or designer what the user sees as a chart checked by a TLA+ model, with the shortest path to each state that breaks a rule | `statechart` |
 | Keep a decision log during a run, and review it afterward | `show-me-your-work` |
 | Turn what a session taught into skill, `CLAUDE.md`, or memory edits | `reflect` |
 | Stop agents from repeating the same mistake in this repo | `correct` |

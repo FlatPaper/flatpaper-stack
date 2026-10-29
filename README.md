@@ -34,10 +34,10 @@ You don't type these. A playbook step runs them. You can still call one directly
 |---|---|---|
 | `/flatpaper-stack:why` | Investigation | Finds why code is the way it is, from git, PRs, and whichever trackers, docs, chat, and observability connectors the session can reach. Every claim gets a confidence tier |
 | `/flatpaper-stack:architect` | Feature | Sketches types, signatures, and module structure in competing designs before code |
-| `/flatpaper-stack:interrogate` | Feature, Refactoring | Adversarial review by three fresh reviewers on `opus`, `sonnet`, and `fable`, then one verdict |
+| `/flatpaper-stack:interrogate` | Feature, Refactoring | Three fresh adversaries on `opus`, `sonnet`, and `fable` try to break the change. Keeps only findings whose run fails when rerun |
 | `/flatpaper-stack:swarm` | Feature, Perf, Multi-phase plan | Fans out parallel workers and returns one table |
 | `/flatpaper-stack:arena` | Prototype | Runs candidates on `opus`, `sonnet`, and `fable`, picks a base, and grafts the best parts of the others |
-| `/flatpaper-stack:statechart` | Bug fix, and the skills `create-formal-verification-skill` writes | Draws how a system moves between states as a Mermaid statechart from a TLA+ model, with each bug as a numbered path to a state that breaks a rule. Also turns an agreed chart into a TLA+ skeleton, or audits code against its spec. Installs TLC and Java with mise on first run |
+| `/flatpaper-stack:statechart` | Bug fix, and the skills `create-formal-verification-skill` writes | Checks a TLA+ model and draws how the system moves between states as a Mermaid statechart. The report gives the shortest path to each state that breaks a rule. Needs Node 22.18+ (23.6+ on 23.x), Bun 1.1.5+, or Deno 2.0+. Installs TLC and Java with mise on first run |
 | `/flatpaper-stack:tidy` | Opening a PR | Fresh reviewers check the diff for reuse, simplification, efficiency, and altitude. Applies the fixes that hold up and reports what it skipped. Quality only, not bugs |
 | `/flatpaper-stack:no-comments` | Opening a PR | A fresh reviewer deletes comments that don't earn their place and flags code that needs prose to make sense. Fixes the accepted flags and offers to turn claimed constraints into a type, test, or lint |
 | `/flatpaper-stack:unslop` | Every reply | Cuts AI tells from prose |
