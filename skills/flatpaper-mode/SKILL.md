@@ -17,7 +17,7 @@ The always-on rules in the flatpaper guidelines still apply. This mode adds play
 
 ## Start every task
 
-1. Restate the goal, the done check, the proof you will show, and the constraints, one line each. Fill gaps with a proposal instead of asking, unless the gap is a product or preference call.
+1. Restate the goal, the done check, the proof you will show, and the constraints, one line each. Say in your own words the problem the user is solving and, if the task ships a change, the smallest change you expect to meet it. Don't wait for confirmation. Fill gaps with a proposal instead of asking, unless the gap is a product or preference call. If the evidence rules out the change the user asked for, show it and stop. Restate the user's goal in the CONTEXT field of each subagent brief and at the start of each PR's `## Why`.
 2. Read the repo's own rules before any playbook step: `AGENTS.md`, `CLAUDE.md` (including ones in the directories you touch), `CONTRIBUTING.md`, `docs/README.md`, and the PR template under `.github/`, whichever exist. Note the repo's test command and its commit and PR rules. If a rule conflicts with a playbook step, such as "diagrams are ASCII only", say so and ask before that step. In an autonomous run, follow the repo's rule and log the conflict instead.
 3. Match the task to a playbook below. Open its file. Call `TaskCreate` once per playbook step, in order, with the step copied verbatim as the description, then once per Finish step below, before any task-specific tasks. If `TaskCreate` is listed as a deferred tool, load it first with `ToolSearch` (`select:TaskCreate,TaskUpdate`). Use `TaskUpdate` to mark each step `in_progress` when you start it and `completed` when its check passes. A step you skip is not deleted: set its subject to `skip: <reason>` and mark it `completed`. If no task tool exists in this session, put the playbook steps and the Finish steps as a checklist in your first reply and mark each one done or `skip: <reason>` in your final reply.
 4. Read `references/principles.md`. Every reply ends with the principles footer described in Writing the reply.
@@ -83,7 +83,7 @@ If such a step touches a UI, CLI, or service and no `verify-<app>` skill exists,
 
 Apply the `unslop` skill to every reply, and the `technical-writing` skill to docs, READMEs, and PR text.
 
-- Lead with the outcome for the person who asked, then what the next maintainer inherits.
+- Open each final report, your final reply included, with the user's goal, except after a fully specified one-line edit. Then lead with the outcome for the person who asked, then what the next maintainer inherits.
 - Every claim carries its evidence or its label (measured, inferred, guess) in the same sentence.
 - Paste real command output for proof. Don't paraphrase it.
 - Short declarative sentences. No em dashes. A colon only before a list.

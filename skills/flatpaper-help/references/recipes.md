@@ -31,7 +31,7 @@ Swap in the real paths, skills, and done checks. Informal wording works. `/fp` b
 
 ## Review and ship
 
-- `/flatpaper-stack:interrogate the whole branch, but skeptically. no nitpicks unless it's a real bug or regression.` Read the dismissals too.
+- `/flatpaper-stack:interrogate the whole branch, but skeptically. no nitpicks unless it's a real bug or regression.` Read the Dropped list too.
 - `/flatpaper-stack:blast-radius PR <number>`
 - `/flatpaper-stack:swarm check every package under <dir> against its check script. one worker per package. one table.`
 - `/fp open the pr. small ordered commits, evidence in the description.`

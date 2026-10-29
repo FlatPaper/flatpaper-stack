@@ -100,7 +100,7 @@ raise a draft PR.</pre>
       <tr><td>Recheck that verification skill after the app changed</td><td><code>/flatpaper-stack:maintain-verification-skill</code></td></tr>
       <tr><td>Prove a race or invariant holds past what tests reach</td><td><code>/flatpaper-stack:create-formal-verification-skill</code></td></tr>
       <tr><td>Bring a formal verification back in line after the code changed</td><td><code>/flatpaper-stack:maintain-formal-verification-skill</code></td></tr>
-      <tr><td>Show how a system moves between states, with each bug as a path</td><td><code>/flatpaper-stack:statechart chart specs/Checkout.tla for the PM</code></td></tr>
+      <tr><td>Show how a system moves between states, with the path to each bug</td><td><code>/flatpaper-stack:statechart chart specs/Checkout.tla for the PM</code></td></tr>
       <tr id="cp-worktree-cleanup"><td>Remove finished worktrees safely</td><td><code>/flatpaper-stack:flatpaper-mode clean up worktrees</code></td></tr>
     </tbody>
   </table></div>
@@ -182,7 +182,7 @@ raise a draft PR.</pre>
 
   <div class="cmd" id="c-interrogate">
     <h4>/flatpaper-stack:interrogate</h4>
-    <p><b>Use it</b> before a PR you're unsure about. Three fresh reviewers on different models try to break it, then one verdict. It applies no fixes.</p>
+    <p><b>Use it</b> before a PR you're unsure about. Three fresh adversaries on different models try to break it. Only findings whose command still fails when rerun survive, so style and what-if risks drop out. It applies no fixes.</p>
 <pre>/flatpaper-stack:interrogate src/sync/ before I open the PR</pre>
   </div>
 
@@ -200,7 +200,7 @@ raise a draft PR.</pre>
 
   <div class="cmd" id="c-no-comments">
     <h4>/flatpaper-stack:no-comments</h4>
-    <p><b>Use it</b> before review. The <code>comment-sicko</code> agent deletes comments that narrate or excuse code and flags code that only makes sense with one. A "do not remove" comment becomes a type, test, or lint if you approve. It also runs before every PR push.</p>
+    <p><b>Use it</b> before review. The <code>comment-sicko</code> agent deletes comments that narrate or excuse code and flags code that only makes sense with one. A "do not remove" comment becomes a type, test, or lint if you approve. A comment that states a rule set by a dependency, platform, or protocol stays as a hold until docs or source settle it. It also runs before every PR push.</p>
 <pre>/flatpaper-stack:no-comments src/billing/</pre>
   </div>
 
@@ -273,8 +273,8 @@ column -s$'\t' -t decisions.tsv          # read the log in a terminal</pre>
 
   <div class="cmd" id="c-statechart">
     <h4>/flatpaper-stack:statechart</h4>
-    <p><b>Use it</b> to show a PM, a designer, or a reviewer how a system moves between states. It draws a chart from a TLA+ model with each bug as a numbered path to a state that breaks a rule, turns an agreed chart into a TLA+ skeleton, or audits code against its spec. The first run installs TLC and Java with mise.</p>
-<pre>/flatpaper-stack:statechart chart the checkout flow from specs/Checkout.tla and show each bug as a path</pre>
+    <p><b>Use it</b> to show a PM, a designer, or a reviewer how a system moves between states. It checks a TLA+ model and draws it as a Mermaid statechart, and its report gives the shortest path to each state that breaks a rule. You write the labels in a small view module. It needs Node 22.18+, Bun, or Deno, and the first run installs TLC and Java with mise.</p>
+<pre>/flatpaper-stack:statechart chart the checkout flow from specs/Checkout.tla and show the path to each bug</pre>
   </div>
 </section>
 

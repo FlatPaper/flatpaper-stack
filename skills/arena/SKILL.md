@@ -24,11 +24,11 @@ If a candidate produces no output, go on with N-1 and note the dropout.
 
 ## Phase C: Cross-judge
 
-After every candidate finishes, spawn one judge with the Agent tool: `subagent_type: "general-purpose"`, read-only (its brief says "Do not modify files, run state-changing commands, or commit. Report only."), with `model` set to one of `opus`, `sonnet`, or `fable` that differs from the session model. It sees the rubric and the candidates by path label, scores each criterion, and recommends a base with rationale. It runs while you read in Phase D. Don't spawn it while candidates are still writing.
+After every candidate finishes, spawn one judge with the Agent tool: `subagent_type: "general-purpose"`, read-only (its brief says "Do not modify files, run state-changing commands, or commit. Report only."), with `model` set to one of `opus`, `sonnet`, or `fable` that differs from the session model. The judge never runs on the session model, so never omit `model` for it. If the Agent tool rejects it, try the remaining ones in the order `opus`, `sonnet`, `fable`. If none runs, skip the judge, pick the base alone in Phase D, and say so. If you do not know the session model, try them in the same order, and say that the check against the session model did not run. The judge sees the rubric and the candidates by path label, scores each criterion, and recommends a base with rationale. It runs while you read in Phase D. Don't spawn it while candidates are still writing.
 
 ## Phase D: Pick a base
 
-Read every candidate end to end before picking. Score each against the rubric criterion by criterion, not on overall feel, and compare with the judge. Agreement on the base confirms the pick. Disagreement means one of you is biased or the rubric was ambiguous. Read both rationales before deciding.
+Read every candidate end to end before picking. Score each against the rubric criterion by criterion, not on overall feel, and compare with the judge when Phase C ran one. Agreement on the base confirms the pick. Disagreement means one of you is biased or the rubric was ambiguous. Read both rationales before deciding.
 
 Pick the base a future maintainer can extend most easily without breaking invariants. When two feel tied, prefer the cleaner boundary or smaller API (laziness protocol).
 
@@ -44,4 +44,4 @@ Verify the synthesized artifact like any other output (prove it works). If verif
 
 Remove candidate worktrees and scratch directories once the synthesis is verified.
 
-**Reply:** one synthesized artifact, with a short synthesis note naming the base and why, the judge's verdict, each graft with its source candidate, what was rejected and why, any convergence or dropouts, and the verification result.
+**Reply:** one synthesized artifact, with a short synthesis note naming the base and why, the judge's verdict or that Phase C skipped the judge, each graft with its source candidate, what was rejected and why, any convergence or dropouts, and the verification result.
