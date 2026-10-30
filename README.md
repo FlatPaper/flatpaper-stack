@@ -48,7 +48,7 @@ You don't type these. A playbook step runs them. You can still call one directly
 
 Subagents use only Anthropic models: `opus`, `sonnet`, `fable`, and `haiku`. Same-family review catches less than a cross-vendor mix, so the skills treat agreement between reviewers as a weaker signal than pstack does. The flatpaper-mode skill's Subagents section maps every role to its model.
 
-Run the session on Opus 5.5 at `high` effort: `claude --model opus --effort high`, or add both flags to the alias under Install. Opus 5.5 defaults to `medium` effort. Code writers and reviewers run on the session model, so it sets the quality of the code. Switch to `--model fable` only for the hardest long unattended runs, when Opus falls short. Fable costs 2.5 times Opus per token.
+Run the session on Opus 5.5 at `medium` effort: `claude --model opus --effort medium`, or add both flags to the alias under Install. Raise it to `--effort high` or `--effort xhigh` for hard problems and long unattended runs. Code writers and reviewers run on the session model, so it sets the quality of the code. Switch to `--model fable` only for the hardest long unattended runs, when Opus falls short. Fable costs 2.5 times Opus per token.
 
 ### Subagents
 
