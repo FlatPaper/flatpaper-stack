@@ -6,7 +6,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/FlatPaper/flatpaper-stack",
-      "revision": "8e71e06c0a595e86cc96fdd0a18613a6e26d8a8a"
+      "revision": "9737fb93519c0d6f1b1fc9bfff622b865b1d5e19"
     }
   },
   "components": [
@@ -326,7 +326,7 @@
       "id": "called",
       "type": "database",
       "label": "Playbook-called skills",
-      "sublabel": "why, architect, tidy, +9",
+      "sublabel": "why, architect, tidy, +10",
       "pos": [
         990,
         30
@@ -339,11 +339,11 @@
         {
           "path": "README.md",
           "line": 29,
-          "end_line": 46
+          "end_line": 47
         },
         {
           "path": "skills/flatpaper-mode/SKILL.md",
-          "line": 85
+          "line": 98
         },
         {
           "path": "skills/swarm/SKILL.md"
@@ -354,7 +354,7 @@
       "id": "byhand",
       "type": "database",
       "label": "By-hand skills",
-      "sublabel": "correct, reflect, recall, +4",
+      "sublabel": "correct, reflect, recall, +6",
       "pos": [
         40,
         420
@@ -366,8 +366,8 @@
       "sources": [
         {
           "path": "README.md",
-          "line": 59,
-          "end_line": 71
+          "line": 62,
+          "end_line": 76
         },
         {
           "path": "skills/correct/SKILL.md",
@@ -600,10 +600,10 @@
       "dot": "violet",
       "title": "Standalone skills",
       "items": [
-        "Playbook steps call how, why, architect, interrogate, swarm, arena, tidy, no-comments, unslop, technical-writing, statechart, benchmark-checklist",
-        "By hand only: correct, reflect, recall, ketchup, ketchup-video, sharpen, flatpaper-help, blast-radius, the verification and formal verification skills",
+        "Playbook steps call how, why, architect, interrogate, swarm, arena, tidy, no-comments, unslop, technical-writing, statechart, benchmark-checklist; large or no-match work routes to figure-it-out",
+        "By hand only: correct, reflect, recall, ketchup, ketchup-video, teach, bro, sharpen, flatpaper-help, blast-radius, the verification and formal verification skills",
         "show-me-your-work keeps the decision log",
-        "Subagents run on opus, sonnet, haiku, or fable, with effort set per spawn"
+        "Subagents run on opus, sonnet, haiku, or fable per a role table, with effort set per spawn"
       ]
     },
     {
