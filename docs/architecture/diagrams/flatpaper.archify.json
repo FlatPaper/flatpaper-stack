@@ -6,7 +6,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/FlatPaper/flatpaper-stack",
-      "revision": "30bc18d148adaafc4c28353c5b53f30e526645f9"
+      "revision": "672ce7032f64ef00b785ae940dd0556d681f5955"
     }
   },
   "components": [
@@ -155,7 +155,7 @@
       "id": "run",
       "type": "frontend",
       "label": "Run playbooks",
-      "sublabel": "plan, autonomous, pickup, pause, worktrees",
+      "sublabel": "plan, autonomous, autopilot, +3",
       "pos": [
         590,
         364
@@ -169,10 +169,10 @@
           "path": "skills/flatpaper-mode/playbooks/autonomous-run.md"
         },
         {
-          "path": "skills/flatpaper-mode/playbooks/session-pickup.md"
+          "path": "skills/flatpaper-mode/playbooks/multi-phase-plan.md"
         },
         {
-          "path": "skills/flatpaper-mode/playbooks/multi-phase-plan.md"
+          "path": "skills/flatpaper-mode/playbooks/autopilot-stack.md"
         }
       ]
     },
@@ -218,7 +218,7 @@
         },
         {
           "path": "skills/flatpaper-mode/SKILL.md",
-          "line": 58
+          "line": 59
         }
       ]
     },
@@ -326,7 +326,7 @@
       "id": "called",
       "type": "database",
       "label": "Playbook-called skills",
-      "sublabel": "why, architect, tidy, +7",
+      "sublabel": "why, architect, tidy, +9",
       "pos": [
         990,
         30
@@ -339,11 +339,11 @@
         {
           "path": "README.md",
           "line": 29,
-          "end_line": 44
+          "end_line": 46
         },
         {
           "path": "skills/flatpaper-mode/SKILL.md",
-          "line": 84
+          "line": 85
         },
         {
           "path": "skills/swarm/SKILL.md"
@@ -366,8 +366,8 @@
       "sources": [
         {
           "path": "README.md",
-          "line": 57,
-          "end_line": 68
+          "line": 59,
+          "end_line": 70
         },
         {
           "path": "skills/correct/SKILL.md",
@@ -401,7 +401,7 @@
         },
         {
           "path": "skills/flatpaper-mode/SKILL.md",
-          "line": 73
+          "line": 74
         }
       ]
     }
@@ -600,7 +600,7 @@
       "dot": "violet",
       "title": "Standalone skills",
       "items": [
-        "Playbook steps call why, architect, interrogate, swarm, arena, tidy, no-comments, unslop, technical-writing, statechart",
+        "Playbook steps call how, why, architect, interrogate, swarm, arena, tidy, no-comments, unslop, technical-writing, statechart, benchmark-checklist",
         "By hand only: correct, reflect, recall, ketchup, sharpen, flatpaper-help, blast-radius, the verification and formal verification skills",
         "show-me-your-work keeps the decision log",
         "Subagents run on opus, sonnet, haiku, or fable, with effort set per spawn"
