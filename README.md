@@ -34,6 +34,7 @@ You don't type these. A playbook step runs them. You can still call one directly
 |---|---|---|
 | `/flatpaper-stack:why` | Investigation | Finds why code is the way it is, from git, PRs, and whichever trackers, docs, chat, and observability connectors the session can reach. Every claim gets a confidence tier |
 | `/flatpaper-stack:how` | Investigation | Explains how code works for an engineer new to the area, and where new code should live. A narrow question is read directly. For a large area, read-only explorers on `sonnet` trace it in parallel, and one explainer on `opus` writes the answer |
+| `/flatpaper-stack:figure-it-out` | flatpaper-mode, for large or cross-cutting work and any task no playbook fits | Designs a bespoke playbook: a falsifiable done check, a rigor level, a verification harness built before the work, a hypothesis loop with a VERIFIED, NOT VERIFIED, or INCONCLUSIVE verdict per unit, and a decision log |
 | `/flatpaper-stack:architect` | Feature | Sketches types, signatures, and module structure in competing designs before code |
 | `/flatpaper-stack:interrogate` | Feature, Refactoring | Three fresh adversaries on `opus`, `sonnet`, and `fable` try to break the change. Keeps only findings whose run fails when rerun |
 | `/flatpaper-stack:swarm` | Feature, Perf, Multi-phase plan | Fans out parallel workers and returns one table |
@@ -45,7 +46,9 @@ You don't type these. A playbook step runs them. You can still call one directly
 | `/flatpaper-stack:unslop` | Every reply | Cuts AI tells from prose |
 | `/flatpaper-stack:technical-writing` | Docs and PR text | Layered writing standard for docs, READMEs, PR descriptions, and commit messages |
 
-Subagents use only Anthropic models: `opus`, `sonnet`, `fable`, and `haiku`. Same-family review catches less than a cross-vendor mix, so the skills treat agreement between reviewers as a weaker signal than pstack does.
+Subagents use only Anthropic models: `opus`, `sonnet`, `fable`, and `haiku`. Same-family review catches less than a cross-vendor mix, so the skills treat agreement between reviewers as a weaker signal than pstack does. The flatpaper-mode skill's Subagents section maps every role to its model.
+
+Run the session on Opus 5.5 at `high` effort: `claude --model opus --effort high`, or add both flags to the alias under Install. Opus 5.5 defaults to `medium` effort. Code writers and reviewers run on the session model, so it sets the quality of the code. Switch to `--model fable` only for the hardest long unattended runs, when Opus falls short. Fable costs 2.5 times Opus per token.
 
 ### Subagents
 
@@ -67,6 +70,8 @@ These act on your session or your repo at a time you choose.
 | `/flatpaper-stack:recall` | Rebuilds recent context from this project's sessions, decision logs, git, and open PRs into a short current-state brief |
 | `/flatpaper-stack:ketchup` | Catches you up on what changed since your last message in under 150 words, with each action item laid out so you can decide |
 | `/flatpaper-stack:ketchup-video` | Catches you up like `ketchup`, but shows what happened as a short subtitled slide video on a private Artifact page, with the action items as text. Needs `ffmpeg` and a headless browser |
+| `/flatpaper-stack:teach` | Explains a change or subsystem so you understand it. Runs `how` and `why`, starts from a plain definition, builds diagrams up one part at a time, and goes deeper when you ask. No quizzes |
+| `/flatpaper-stack:bro` | Restates the last reply in plain words, with no jargon |
 | `/flatpaper-stack:flatpaper-help` | Answers how-to questions about flatpaper: setup, wording a flatpaper-mode prompt, which skill or playbook fits, and fixes for a run that went wrong. Hands back a prompt to send instead of starting the work |
 | `/flatpaper-stack:sharpen` | Rewrites a prompt deeper, not bigger: what a top professional would add, the raw material and methods they would use, and an outside check that the result is right. Returns the prompt and does not do the task |
 
@@ -139,6 +144,7 @@ Only the goal is required. A missing check, proof or constraints gets proposed b
 | clean up, restructure, without changing behavior | Refactoring |
 | try, sketch, which works better | Prototype |
 | im stepping away, run until, /loop until | Autonomous run |
+| migrate every caller, an ambitious multi-part change, figure it out | `figure-it-out` designs a bespoke playbook |
 | autopilot, build the stack, I'll land it | Autopilot stack |
 | map this repo, update the architecture page | Architecture page |
 | speed up, make it faster, cut the cost | Perf |

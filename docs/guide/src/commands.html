@@ -34,6 +34,8 @@ raise a draft PR.</pre>
     <tbody>
       <tr id="cp-investigation"><td>Know how something works, or whether it's right</td><td><code>/flatpaper-stack:flatpaper-mode how does billing pick the invoice date? read-only.</code></td></tr>
       <tr><td>Know why code was built this way</td><td><code>/flatpaper-stack:why does the uploader retry exactly 3 times?</code></td></tr>
+      <tr><td>Really understand a change or subsystem</td><td><code>/flatpaper-stack:teach me how the sync queue retries failed uploads</code></td></tr>
+      <tr><td>Hear the last reply again in plain words</td><td><code>/flatpaper-stack:bro</code></td></tr>
       <tr id="cp-runtime-forensics"><td>See what a running process is doing right now</td><td><code>/flatpaper-stack:flatpaper-mode the worker is at 100% CPU while idle. what is it doing? pid 4123. no code changes.</code></td></tr>
       <tr id="cp-trace-forensics"><td>Read a trace, profile, or core dump you already have</td><td><code>/flatpaper-stack:flatpaper-mode read this trace: ~/Downloads/boot.json. where does first paint wait?</code></td></tr>
       <tr id="cp-architecture-page"><td>Get a map of the repo, or update the one you have</td><td><code>/flatpaper-stack:flatpaper-mode map this repo</code></td></tr>
@@ -47,6 +49,7 @@ raise a draft PR.</pre>
       <tr id="cp-bug-fix"><td>Fix a bug</td><td><code>/flatpaper-stack:flatpaper-mode fix the csv export dropping its last row. repro first.</code></td></tr>
       <tr id="cp-feature"><td>Add a feature</td><td><code>/flatpaper-stack:flatpaper-mode add a --json flag to the status command. text output stays byte-identical.</code></td></tr>
       <tr id="cp-refactoring"><td>Clean up code without changing what it does</td><td><code>/flatpaper-stack:flatpaper-mode restructure the config loader without changing behavior. record current output first.</code></td></tr>
+      <tr><td>Run a large migration or a change no playbook fits</td><td><code>/flatpaper-stack:flatpaper-mode move every service from the old config loader to the new one. done means zero old imports and all suites pass.</code></td></tr>
       <tr id="cp-perf"><td>Make something faster or cheaper</td><td><code>/flatpaper-stack:flatpaper-mode speed up cold start. 1.8s now. done means under 1s, median of 5.</code></td></tr>
     </tbody>
   </table></div>
@@ -167,6 +170,24 @@ raise a draft PR.</pre>
     <h4>/flatpaper-stack:why</h4>
     <p><b>Use it when</b> you need the reason behind code before you change it. It searches git, PRs, and any trackers or docs the session can reach, and labels how sure it is of each claim.</p>
 <pre>/flatpaper-stack:why did we pick postgres advisory locks over redis?</pre>
+  </div>
+
+  <div class="cmd" id="c-teach">
+    <h4>/flatpaper-stack:teach <span class="tag">by hand</span></h4>
+    <p><b>Use it when</b> you want to understand a change or subsystem, not just get an answer. It runs <code>how</code> and <code>why</code>, starts from a plain definition, and builds diagrams up one part at a time. It gives the short version first and goes deeper when you ask. No quizzes.</p>
+<pre>/flatpaper-stack:teach me how the sync queue retries failed uploads</pre>
+  </div>
+
+  <div class="cmd" id="c-bro">
+    <h4>/flatpaper-stack:bro <span class="tag">by hand</span></h4>
+    <p><b>Use it when</b> the last reply was full of jargon. It says the same thing again, simply, like one person talking to another.</p>
+<pre>/flatpaper-stack:bro</pre>
+  </div>
+
+  <div class="cmd" id="c-figure-it-out">
+    <h4>/flatpaper-stack:figure-it-out <span class="tag">by hand</span></h4>
+    <p><b>Use it when</b> the work is large or cross-cutting, or no playbook fits. flatpaper-mode routes there on its own. It designs a playbook first: a done check that can fail, a rigor level, and a check built before the work. Then it runs each unit as an experiment, verdicts each one VERIFIED, NOT VERIFIED, or INCONCLUSIVE, and keeps a decision log.</p>
+<pre>/flatpaper-stack:figure-it-out move every service from the old config loader to the new one</pre>
   </div>
 
   <div class="cmd" id="c-architect">

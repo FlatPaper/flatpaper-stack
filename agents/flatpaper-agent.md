@@ -1,6 +1,7 @@
 ---
 name: flatpaper-agent
 description: Delegate for code-writing and helper tasks spawned during a /flatpaper-stack:flatpaper-mode run. Reads the flatpaper-mode skill, its principles, and the flatpaper guidelines before any work. Use for delegates, not to run flatpaper-mode itself. Substituting general-purpose skips that read and drifts.
+model: inherit
 ---
 
 # flatpaper subagent

@@ -115,7 +115,7 @@
     <div><span class="mark fail">PASSES WHEN BROKEN</span><p><code>send.assert_not_called()</code> after <code>notify_user(42)</code>. Code that does nothing never calls send.</p></div>
     <div><span class="mark pass">FAILS WHEN BROKEN</span><p>Notify an opted-out user and a subscribed one, then <code>send.assert_called_once_with(7, ...)</code>.</p></div>
   </div>
-  <p>Write the failing test first when there's a cheap test path. Don't force one through brittle mocks when running the real command is stronger evidence.</p>
+  <p>Write the failing test first when there's a cheap test path, and watch it fail for the reason you expect before you fix anything. Don't force one through brittle mocks when running the real command is stronger evidence. No new test beats a bad one.</p>
   <h3>Clean before review</h3>
   <p>Cleanup is not optional polish. Narrating comments and defensive dead weight read as unfinished, and the extra code is where the next bug hides. Clean code and prose separately, and have comments reviewed by an agent that didn't write them, because authors defend their own.</p>
   <p><b>In flatpaper-stack:</b> the Bug fix, Feature, Refactoring, and Perf playbooks, the Opening a PR playbook and its <code>gh pr create</code> gate, <code>tidy</code>, <code>no-comments</code>, <code>unslop</code>, and <code>technical-writing</code>.</p>
@@ -173,7 +173,7 @@ keep a decision log. don't ask me before committing.
     <li><b>Delegate to keep the main thread small.</b> Bulk reading, independent slices, and fresh review go to subagents. The main thread keeps the summaries and the decisions.</li>
     <li><b>Write a brief a stranger could run.</b> Goal, scope, context, acceptance, verify commands, timebox, what's forbidden, and the report shape. A field you can't fill is a unit you haven't scoped.</li>
     <li><b>Keep code on the session model.</b> Don't split one change into a planning agent and cheaper writers. To write a plan detailed enough for them, the planner writes the code itself. The split then costs more, and one bug in the plan reaches every writer.</li>
-    <li><b>Mix models only where a skill says to.</b> <code>swarm</code>, <code>arena</code>, <code>interrogate</code>, <code>reflect</code>, <code>why</code>, <code>how</code>, and <code>recall</code> pick their own models. Everything else runs on the session model.</li>
+    <li><b>Mix models only where a skill says to.</b> <code>swarm</code>, <code>arena</code>, <code>interrogate</code>, <code>reflect</code>, <code>why</code>, <code>how</code>, and <code>recall</code> pick their own models, and plain read-only searches run on Sonnet. Everything else runs on the session model. Run the session on Opus 5.5 at <code>high</code> effort, and switch to Fable 5.1 only when Opus falls short on a long unattended run. Fable costs 2.5 times Opus per token.</li>
     <li><b>Read the diff yourself.</b> A subagent's report is a claim. Check its work and write your own summary.</li>
   </ul>
   <div class="tbl"><table>

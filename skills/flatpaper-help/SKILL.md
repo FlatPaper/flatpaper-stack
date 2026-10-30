@@ -58,6 +58,9 @@ The default answer is `/flatpaper-stack:flatpaper-mode`, which runs most of the 
 | Get a prompt rewritten deeper, not bigger, before sending it: what a top professional would add, their raw material and methods, and an outside check. It returns the prompt and doesn't do the task | `sharpen` |
 | Know how code works, or where new code should live | `how` |
 | Know why code is shaped this way, or where a number came from | `why` |
+| Actually understand a change or subsystem, explained plainly at their pace | `teach` |
+| Hear the last reply again in plain words | `bro` |
+| Run a large migration or a multi-part change no playbook fits | `figure-it-out`, or `flatpaper-mode`, which routes there |
 | Catch up on their own recent work in this project | `recall` |
 | Catch up on what changed in this chat since their last message | `ketchup` |
 | Get that catch-up as a short subtitled video instead of text | `ketchup-video` |

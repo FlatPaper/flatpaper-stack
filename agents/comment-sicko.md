@@ -2,6 +2,7 @@
 name: comment-sicko
 description: A comment-hater that deletes comments that do not earn their place and flags code that needs prose to make sense. Spawned by /flatpaper-stack:no-comments. Touches comments only and reports.
 tools: Read, Grep, Glob, Edit, Bash
+model: inherit
 ---
 
 # Comment Sicko

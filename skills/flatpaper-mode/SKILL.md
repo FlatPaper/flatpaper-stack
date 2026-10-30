@@ -19,7 +19,7 @@ The always-on rules in the flatpaper guidelines still apply. This mode adds play
 
 1. Restate the goal, the done check, the proof you will show, and the constraints, one line each. Say in your own words the problem the user is solving and, if the task ships a change, the smallest change you expect to meet it. Don't wait for confirmation. Fill gaps with a proposal instead of asking, unless the gap is a product or preference call. If the evidence rules out the change the user asked for, show it and stop. Restate the user's goal in the CONTEXT field of each subagent brief and at the start of each PR's `## Why`.
 2. Read the repo's own rules before any playbook step: `AGENTS.md`, `CLAUDE.md` (including ones in the directories you touch), `CONTRIBUTING.md`, `docs/README.md`, and the PR template under `.github/`, whichever exist. Note the repo's test command and its commit and PR rules. If a rule conflicts with a playbook step, such as "diagrams are ASCII only", say so and ask before that step. In an autonomous run, follow the repo's rule and log the conflict instead.
-3. Match the task to a playbook below. Open its file. Call `TaskCreate` once per playbook step, in order, with the step copied verbatim as the description, then once per Finish step below, before any task-specific tasks. If `TaskCreate` is listed as a deferred tool, load it first with `ToolSearch` (`select:TaskCreate,TaskUpdate`). Use `TaskUpdate` to mark each step `in_progress` when you start it and `completed` when its check passes. A step you skip is not deleted: set its subject to `skip: <reason>` and mark it `completed`. If no task tool exists in this session, put the playbook steps and the Finish steps as a checklist in your first reply and mark each one done or `skip: <reason>` in your final reply.
+3. Match the task to a playbook below. Open its file. Call `TaskCreate` once per playbook step, in order, with the step copied verbatim as the description, then once per Finish step below, before any task-specific tasks. On the `figure-it-out` route, its tasks come first and the Finish steps after. If `TaskCreate` is listed as a deferred tool, load it first with `ToolSearch` (`select:TaskCreate,TaskUpdate`). Use `TaskUpdate` to mark each step `in_progress` when you start it and `completed` when its check passes. A step you skip is not deleted: set its subject to `skip: <reason>` and mark it `completed`. If no task tool exists in this session, put the playbook steps and the Finish steps as a checklist in your first reply and mark each one done or `skip: <reason>` in your final reply.
 4. Read `references/principles.md`. Every reply ends with the principles footer described in Writing the reply.
 
 Re-match on every prompt. When the kind of work changes (review, then fix, then PR), match the new prompt to its playbook from scratch, even if it does not say "new task". Restate the goal for the new work, mark the old playbook's open steps and open Finish steps `skip: superseded by <playbook>`, then create the new playbook's steps and the Finish steps. A follow-up that continues the same kind of work stays on the current playbook. A follow-up that only asks to test, commit, or open a PR also stays: reopen the current Finish steps instead of re-matching.
@@ -54,7 +54,7 @@ Run these once, after the playbook's last step and before the reply. Pause safel
 
 If `docs/architecture/` exists, read `meta.json`, `diagrams/*.archify.json`, and `diagrams/*.reference.html` there before tracing code in any playbook. They are the repo's map; the built `.html` is the same content wrapped in a viewer. An older page with only `index.html` is read from there. Treat the map as a starting point, and trust the code where they disagree.
 
-No playbook fits? Write a short bespoke one in the same shape (owner line, numbered steps each ending in a check, reply line), create its steps and the Finish steps with `TaskCreate` the same way, and follow it.
+A large or cross-cutting effort (a migration across many call sites, an ambitious multi-part change) routes to the `figure-it-out` skill even when a narrower playbook like Feature fits. So does any task no playbook fits. Read `${CLAUDE_PLUGIN_ROOT}/skills/figure-it-out/SKILL.md` and follow it, with no need to ask first, since its Phase A has its own checkpoint: it designs a bespoke playbook, creates its steps as tasks, and keeps a decision log. Then create the Finish steps. One task driven to a checkable predicate stays Autonomous run, and a queue of PRs stays Autopilot stack.
 
 ## Driving the app
 
@@ -71,14 +71,27 @@ If such a step touches a UI, CLI, or service and no `verify-<app>` skill exists,
 
 ## Subagents
 
-- Spawn code-writing delegates and ad-hoc helpers inside a playbook step with `subagent_type: "flatpaper-stack:flatpaper-agent"`, and put this file's absolute path in the brief. It reads this skill before any work, which `general-purpose` does not. Read-only search stays on `Explore`. Skills that name their own `subagent_type` keep it. Never spawn a `flatpaper-agent` to run the playbook itself. An Autopilot stack owner runs Opening a PR and Babysit for its own PR, not the parent playbook.
+- Spawn code-writing delegates and ad-hoc helpers inside a playbook step with `subagent_type: "flatpaper-stack:flatpaper-agent"`, and put this file's absolute path in the brief. It reads this skill before any work, which `general-purpose` does not. Read-only search stays on `Explore` with `model: "sonnet"`, because Explore otherwise runs on the session model. Skills that name their own `subagent_type` keep it. Never spawn a `flatpaper-agent` to run the playbook itself. An Autopilot stack owner runs Opening a PR and Babysit for its own PR, not the parent playbook.
 - You own every subagent's work. Read its diff or output and write your own summary. Don't pass its claims through.
 - Give review and verification to a fresh subagent that did not write the change. If no independent reviewer can run, record `BLOCKED: independent review`, keep merge-ready closed, and say which reviewers ran. Your own review, passing tests, and CI never count as the verdict.
 - `completed` means an agent sent its completion notice, not that it exited. One with live background children can resume. Before you reuse its worktree or replace it, stop it and confirm the stop. The tell is a claim about the tree that `git status` contradicts.
-- Keep code-writing delegates on the session model: omit `model`. Don't split one sequential change into a planning agent and cheaper writers. To write a brief detailed enough for them, the planner writes the code itself. The split then costs more, and one bug in the plan reaches every unit. Only skills that name their own models use other models: `swarm`, `arena`, `interrogate`, `reflect`, `why`, `how`, and `recall`.
+- Keep code-writing delegates on the session model: omit `model`. Don't split one sequential change into a planning agent and cheaper writers. To write a brief detailed enough for them, the planner writes the code itself. The split then costs more, and one bug in the plan reaches every unit. Only read-only search and the skills that name their own models use other models: `swarm`, `arena`, `interrogate`, `reflect`, `why`, `how`, and `recall`. The table below is the whole map.
 - Write every brief with the fields in `references/subagent-brief.md`, sized to the unit. A brief that can't fill its fields is not ready to send.
 - Route bulk reading to subagents and keep summaries in the main thread.
 - Match the effort to the job. Before each spawn, set the Agent tool's `effort`. Start at `high`. Raise it to `xhigh` or `max` for the hardest or subtlest work, lower it to `medium` for judgment calls, and to `low` for routine reading or mechanical edits. Keep the model a skill names, so a mixed panel stays mixed. If the tool rejects `effort`, omit it and say so.
+
+| Role | `model` | Why |
+|---|---|---|
+| Code writers: `flatpaper-agent` delegates, Autopilot stack owners, `swarm` writers | session (omit) | The strongest model in the session writes the code. An Autopilot stack owner retried after a tool error runs on `opus` or `fable`, whichever is not the session model |
+| Reviewers and verifiers: the `show-me-your-work` reviewer, `tidy` reviewers, Comment Sicko, `swarm` verifiers | session (omit) | Independence comes from a fresh context, not a different model |
+| Read-only search: ad-hoc `Explore`, `how` explorers, `why` investigators | `sonnet` | Tracing code takes judgment, not the top model |
+| Bulk extraction: `recall` miners, `swarm` bulk readers | `haiku` | High-volume reading and classification |
+| Synthesis: the `how` explainer, the `why` synthesizer, the `reflect` synthesizer | `opus` | Reasoning quality decides the answer here |
+| Variety panels: `arena` runners, `interrogate` adversaries, `swarm` model-race arms | `opus`, `sonnet`, `fable` | Different models miss different things |
+| `reflect` reviewers | judgment `opus`, tooling `sonnet`, divergent `fable` | One lens per model |
+| `arena` judge | first of `fable`, `opus`, `sonnet` that is not the session model | The judge sees all candidates, so it gets the strongest other model |
+
+`fable` costs 2.5 times `opus` per token. Spawn it only where this table names it.
 
 ## Writing the reply
 
