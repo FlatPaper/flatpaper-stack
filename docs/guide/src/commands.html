@@ -85,6 +85,7 @@ raise a draft PR.</pre>
       <tr id="cp-autopilot-stack"><td>Build a queue of PRs while you're gone, and land them yourself</td><td><code>/flatpaper-stack:flatpaper-mode autopilot the plan in docs/plans/grpc.md. build the stack, I'll land it.</code></td></tr>
       <tr id="cp-pause-safely"><td>Stop for now and resume later</td><td><code>pause for now. I'll pick this up tomorrow.</code></td></tr>
       <tr><td>See what changed since your last message</td><td><code>/flatpaper-stack:ketchup</code></td></tr>
+      <tr><td>Watch it as a short video instead</td><td><code>/flatpaper-stack:ketchup-video</code></td></tr>
       <tr><td>Read what it decided while you were away</td><td><code>/flatpaper-stack:show-me-your-work catch me up on what you did</code></td></tr>
       <tr id="cp-session-pickup"><td>Continue another session's work</td><td><code>/flatpaper-stack:flatpaper-mode pick up where the last session left off on this branch</code></td></tr>
       <tr><td>Rebuild context after a few days off</td><td><code>/flatpaper-stack:recall my work on the export cache this week</code></td></tr>
@@ -240,6 +241,12 @@ column -s$'\t' -t decisions.tsv          # read the log in a terminal</pre>
     <h4>/flatpaper-stack:ketchup <span class="tag">by hand</span></h4>
     <p><b>Use it when</b> you come back to a session. It tells you what changed since your last message, in under 150 words, and what needs you.</p>
 <pre>/flatpaper-stack:ketchup</pre>
+  </div>
+
+  <div class="cmd" id="c-ketchup-video">
+    <h4>/flatpaper-stack:ketchup-video <span class="tag">by hand</span></h4>
+    <p><b>Use it when</b> a catch-up is easier to watch than read. It shows what happened since your last message as a short subtitled slide video on a private page, and lists what needs you as text under the link. It needs <code>ffmpeg</code> and a headless browser. Without them, you get the opening line and the action items as text.</p>
+<pre>/flatpaper-stack:ketchup-video</pre>
   </div>
 
   <div class="cmd" id="c-recall">

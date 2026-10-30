@@ -60,6 +60,7 @@ The default answer is `/flatpaper-stack:flatpaper-mode`, which runs most of the 
 | Know why code is shaped this way, or where a number came from | `why` |
 | Catch up on their own recent work in this project | `recall` |
 | Catch up on what changed in this chat since their last message | `ketchup` |
+| Get that catch-up as a short subtitled video instead of text | `ketchup-video` |
 | Know what a diff could break outside itself | `blast-radius` |
 | Settle types and module shape before code that crosses a module boundary | `architect` |
 | Get several attempts at one brief, merged into the best one | `arena` |

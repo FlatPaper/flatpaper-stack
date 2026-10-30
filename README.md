@@ -66,6 +66,7 @@ These act on your session or your repo at a time you choose.
 | `/flatpaper-stack:reflect` | Three reviewers mine this session's transcript. Each learning becomes a proposed edit to a skill, `CLAUDE.md`, or memory, shown for your approval |
 | `/flatpaper-stack:recall` | Rebuilds recent context from this project's sessions, decision logs, git, and open PRs into a short current-state brief |
 | `/flatpaper-stack:ketchup` | Catches you up on what changed since your last message in under 150 words, with each action item laid out so you can decide |
+| `/flatpaper-stack:ketchup-video` | Catches you up like `ketchup`, but shows what happened as a short subtitled slide video on a private Artifact page, with the action items as text. Needs `ffmpeg` and a headless browser |
 | `/flatpaper-stack:flatpaper-help` | Answers how-to questions about flatpaper: setup, wording a flatpaper-mode prompt, which skill or playbook fits, and fixes for a run that went wrong. Hands back a prompt to send instead of starting the work |
 | `/flatpaper-stack:sharpen` | Rewrites a prompt deeper, not bigger: what a top professional would add, the raw material and methods they would use, and an outside check that the result is right. Returns the prompt and does not do the task |
 
