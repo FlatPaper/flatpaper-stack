@@ -95,7 +95,7 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 </style>
 <header class="top">
-  <div class="eyebrow">A Claude Code plugin · version 0.8.15</div>
+  <div class="eyebrow">A Claude Code plugin · version 0.8.16</div>
   <h1>Using flatpaper</h1>
   <p class="lede">flatpaper makes agent work you can trust and still understand a month later. Part 1 gets you running. Part 2 covers the ideas behind it: how to work with agents so the result holds up. Part 3 shows what to type for the situation you're in.</p>
   <div class="five"><span>goal</span><span>done check</span><span>proof</span><span>what you know</span><span>constraints</span></div>
@@ -299,7 +299,7 @@ claude plugin update flatpaper-stack@flatpaper-stack   # after edits; bump the v
     <div><span class="mark fail">PASSES WHEN BROKEN</span><p><code>send.assert_not_called()</code> after <code>notify_user(42)</code>. Code that does nothing never calls send.</p></div>
     <div><span class="mark pass">FAILS WHEN BROKEN</span><p>Notify an opted-out user and a subscribed one, then <code>send.assert_called_once_with(7, ...)</code>.</p></div>
   </div>
-  <p>Write the failing test first when there's a cheap test path. Don't force one through brittle mocks when running the real command is stronger evidence.</p>
+  <p>Write the failing test first when there's a cheap test path, and watch it fail for the reason you expect before you fix anything. Don't force one through brittle mocks when running the real command is stronger evidence. No new test beats a bad one.</p>
   <h3>Clean before review</h3>
   <p>Cleanup is not optional polish. Narrating comments and defensive dead weight read as unfinished, and the extra code is where the next bug hides. Clean code and prose separately, and have comments reviewed by an agent that didn't write them, because authors defend their own.</p>
   <p><b>In flatpaper-stack:</b> the Bug fix, Feature, Refactoring, and Perf playbooks, the Opening a PR playbook and its <code>gh pr create</code> gate, <code>tidy</code>, <code>no-comments</code>, <code>unslop</code>, and <code>technical-writing</code>.</p>
@@ -357,7 +357,7 @@ keep a decision log. don't ask me before committing.
     <li><b>Delegate to keep the main thread small.</b> Bulk reading, independent slices, and fresh review go to subagents. The main thread keeps the summaries and the decisions.</li>
     <li><b>Write a brief a stranger could run.</b> Goal, scope, context, acceptance, verify commands, timebox, what's forbidden, and the report shape. A field you can't fill is a unit you haven't scoped.</li>
     <li><b>Keep code on the session model.</b> Don't split one change into a planning agent and cheaper writers. To write a plan detailed enough for them, the planner writes the code itself. The split then costs more, and one bug in the plan reaches every writer.</li>
-    <li><b>Mix models only where a skill says to.</b> <code>swarm</code>, <code>arena</code>, <code>interrogate</code>, <code>reflect</code>, <code>why</code>, <code>how</code>, and <code>recall</code> pick their own models. Everything else runs on the session model.</li>
+    <li><b>Mix models only where a skill says to.</b> <code>swarm</code>, <code>arena</code>, <code>interrogate</code>, <code>reflect</code>, <code>why</code>, <code>how</code>, and <code>recall</code> pick their own models, and plain read-only searches run on Sonnet. Everything else runs on the session model. Run the session on Opus 5.5 at <code>high</code> effort, and switch to Fable 5.1 only when Opus falls short on a long unattended run. Fable costs 2.5 times Opus per token.</li>
     <li><b>Read the diff yourself.</b> A subagent's report is a claim. Check its work and write your own summary.</li>
   </ul>
   <div class="tbl"><table>
@@ -460,6 +460,8 @@ raise a draft PR.</pre>
     <tbody>
       <tr id="cp-investigation"><td>Know how something works, or whether it's right</td><td><code>/flatpaper-stack:flatpaper-mode how does billing pick the invoice date? read-only.</code></td></tr>
       <tr><td>Know why code was built this way</td><td><code>/flatpaper-stack:why does the uploader retry exactly 3 times?</code></td></tr>
+      <tr><td>Really understand a change or subsystem</td><td><code>/flatpaper-stack:teach me how the sync queue retries failed uploads</code></td></tr>
+      <tr><td>Hear the last reply again in plain words</td><td><code>/flatpaper-stack:bro</code></td></tr>
       <tr id="cp-runtime-forensics"><td>See what a running process is doing right now</td><td><code>/flatpaper-stack:flatpaper-mode the worker is at 100% CPU while idle. what is it doing? pid 4123. no code changes.</code></td></tr>
       <tr id="cp-trace-forensics"><td>Read a trace, profile, or core dump you already have</td><td><code>/flatpaper-stack:flatpaper-mode read this trace: ~/Downloads/boot.json. where does first paint wait?</code></td></tr>
       <tr id="cp-architecture-page"><td>Get a map of the repo, or update the one you have</td><td><code>/flatpaper-stack:flatpaper-mode map this repo</code></td></tr>
@@ -473,6 +475,7 @@ raise a draft PR.</pre>
       <tr id="cp-bug-fix"><td>Fix a bug</td><td><code>/flatpaper-stack:flatpaper-mode fix the csv export dropping its last row. repro first.</code></td></tr>
       <tr id="cp-feature"><td>Add a feature</td><td><code>/flatpaper-stack:flatpaper-mode add a --json flag to the status command. text output stays byte-identical.</code></td></tr>
       <tr id="cp-refactoring"><td>Clean up code without changing what it does</td><td><code>/flatpaper-stack:flatpaper-mode restructure the config loader without changing behavior. record current output first.</code></td></tr>
+      <tr><td>Run a large migration or a change no playbook fits</td><td><code>/flatpaper-stack:flatpaper-mode move every service from the old config loader to the new one. done means zero old imports and all suites pass.</code></td></tr>
       <tr id="cp-perf"><td>Make something faster or cheaper</td><td><code>/flatpaper-stack:flatpaper-mode speed up cold start. 1.8s now. done means under 1s, median of 5.</code></td></tr>
     </tbody>
   </table></div>
@@ -593,6 +596,24 @@ raise a draft PR.</pre>
     <h4>/flatpaper-stack:why</h4>
     <p><b>Use it when</b> you need the reason behind code before you change it. It searches git, PRs, and any trackers or docs the session can reach, and labels how sure it is of each claim.</p>
 <pre>/flatpaper-stack:why did we pick postgres advisory locks over redis?</pre>
+  </div>
+
+  <div class="cmd" id="c-teach">
+    <h4>/flatpaper-stack:teach <span class="tag">by hand</span></h4>
+    <p><b>Use it when</b> you want to understand a change or subsystem, not just get an answer. It runs <code>how</code> and <code>why</code>, starts from a plain definition, and builds diagrams up one part at a time. It gives the short version first and goes deeper when you ask. No quizzes.</p>
+<pre>/flatpaper-stack:teach me how the sync queue retries failed uploads</pre>
+  </div>
+
+  <div class="cmd" id="c-bro">
+    <h4>/flatpaper-stack:bro <span class="tag">by hand</span></h4>
+    <p><b>Use it when</b> the last reply was full of jargon. It says the same thing again, simply, like one person talking to another.</p>
+<pre>/flatpaper-stack:bro</pre>
+  </div>
+
+  <div class="cmd" id="c-figure-it-out">
+    <h4>/flatpaper-stack:figure-it-out <span class="tag">by hand</span></h4>
+    <p><b>Use it when</b> the work is large or cross-cutting, or no playbook fits. flatpaper-mode routes there on its own. It designs a playbook first: a done check that can fail, a rigor level, and a check built before the work. Then it runs each unit as an experiment, verdicts each one VERIFIED, NOT VERIFIED, or INCONCLUSIVE, and keeps a decision log.</p>
+<pre>/flatpaper-stack:figure-it-out move every service from the old config loader to the new one</pre>
   </div>
 
   <div class="cmd" id="c-architect">
@@ -773,4 +794,4 @@ new task: review the open PR.</pre>
 </section>
 </main>
 </div>
-<footer>Built from the flatpaper repo at version 0.8.15 with <code>docs/guide/build.sh</code>.</footer>
+<footer>Built from the flatpaper repo at version 0.8.16 with <code>docs/guide/build.sh</code>.</footer>
