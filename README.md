@@ -17,7 +17,7 @@ Three ideas carry it:
 | `guidelines.md` | Always-on rules, loaded at session start by a hook |
 | `UserPromptSubmit` hook | One-line reminder on every prompt: concise replies, a done check, proof, and constraints, and the principles footer in flatpaper-mode sessions |
 | `gh pr create` gate | In a flatpaper-mode session, blocks `gh pr create` until the session has run `tidy`, `no-comments`, `technical-writing`, and `unslop`, and lists the Opening a PR steps that always run. A `PreToolUse` hook in the flatpaper-mode skill's frontmatter |
-| `/flatpaper-stack:flatpaper-mode` | Rigorous mode. Matches the task to a playbook (investigation, bug fix, feature, refactoring, prototype, autonomous run, architecture page, perf, babysit, session pickup, pause safely, worktree cleanup, multi-phase plan, runtime forensics, trace forensics, opening a PR) |
+| `/flatpaper-stack:flatpaper-mode` | Rigorous mode. Matches the task to a playbook (investigation, bug fix, feature, refactoring, prototype, autonomous run, autopilot stack, architecture page, perf, babysit, session pickup, pause safely, worktree cleanup, multi-phase plan, runtime forensics, trace forensics, opening a PR) |
 | Architecture drift line | At session start, says when `docs/architecture/` is behind this repo's commits, or behind the latest release of the repo it describes. Silent otherwise. |
 | `/flatpaper-stack:show-me-your-work` | Decision log (TSV), audited against the transcript, with an Attention section from a fresh reviewer |
 | `/flatpaper-stack:create-verification-skill` | Generates a project-local `verify-<app>` skill (launch, doctor, drive, evidence, cleanup, feature map) and proves it once, including that Doctor can fail. flatpaper-mode playbooks drive the app through it and offer to create one when a task needs it |
@@ -33,11 +33,13 @@ You don't type these. A playbook step runs them. You can still call one directly
 | Skill | Called from | What it does |
 |---|---|---|
 | `/flatpaper-stack:why` | Investigation | Finds why code is the way it is, from git, PRs, and whichever trackers, docs, chat, and observability connectors the session can reach. Every claim gets a confidence tier |
+| `/flatpaper-stack:how` | Investigation | Explains how code works for an engineer new to the area, and where new code should live. A narrow question is read directly. For a large area, read-only explorers on `sonnet` trace it in parallel, and one explainer on `opus` writes the answer |
 | `/flatpaper-stack:architect` | Feature | Sketches types, signatures, and module structure in competing designs before code |
 | `/flatpaper-stack:interrogate` | Feature, Refactoring | Three fresh adversaries on `opus`, `sonnet`, and `fable` try to break the change. Keeps only findings whose run fails when rerun |
 | `/flatpaper-stack:swarm` | Feature, Perf, Multi-phase plan | Fans out parallel workers and returns one table |
 | `/flatpaper-stack:arena` | Prototype | Runs candidates on `opus`, `sonnet`, and `fable`, picks a base, and grafts the best parts of the others |
 | `/flatpaper-stack:statechart` | Bug fix, and the skills `create-formal-verification-skill` writes | Checks a TLA+ model and draws how the system moves between states as a Mermaid statechart. The report gives the shortest path to each state that breaks a rule. Needs Node 22.18+ (23.6+ on 23.x), Bun 1.1.5+, or Deno 2.0+. Installs TLC and Java with mise on first run |
+| `/flatpaper-stack:benchmark-checklist` | Perf | Vets a performance number before you report or act on it: the limiter, tuning, physical limits, errors, repeat runs, end-to-end share, and whether the work ran |
 | `/flatpaper-stack:tidy` | Opening a PR | Fresh reviewers check the diff for reuse, simplification, efficiency, and altitude. Applies the fixes that hold up and reports what it skipped. Quality only, not bugs |
 | `/flatpaper-stack:no-comments` | Opening a PR | A fresh reviewer deletes comments that don't earn their place and flags code that needs prose to make sense. Fixes the accepted flags and offers to turn claimed constraints into a type, test, or lint |
 | `/flatpaper-stack:unslop` | Every reply | Cuts AI tells from prose |
@@ -136,6 +138,7 @@ Only the goal is required. A missing check, proof or constraints gets proposed b
 | clean up, restructure, without changing behavior | Refactoring |
 | try, sketch, which works better | Prototype |
 | im stepping away, run until, /loop until | Autonomous run |
+| autopilot, build the stack, I'll land it | Autopilot stack |
 | map this repo, update the architecture page | Architecture page |
 | speed up, make it faster, cut the cost | Perf |
 | babysit, get it green, address the review comments | Babysit |

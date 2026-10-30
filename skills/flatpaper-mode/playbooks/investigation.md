@@ -2,7 +2,7 @@
 
 **You own the answer.** Read-only. The output is a cited explanation or a recommendation, not a code change.
 
-1. Trace the code with read-only Explore subagents when the area is large. Read directly when it is narrow. For "how does X work", answer for a senior engineer new to the area, in these sections, dropping any that don't apply: Overview (what it is and why it exists), Key concepts, How it works (the flow from trigger to result, with `file:line` and a diagram only when components talk to each other), Where things live, and Gotchas.
+1. For "how does X work" and "where should this live", run the `how` skill. It reads a narrow area directly, and splits a large one across read-only explorers and one explainer. Either way the answer comes in its sections with `file:line` citations.
 2. For "why was it built this way" questions, run the `why` skill. It anchors in git history first and then checks the other sources this session can reach. "Nobody wrote down why" is a valid finding.
 3. Put each claim in a confidence tier from `../references/principles.md`. Cite `file:line`, commits, PRs, and command output for each claim. A hypothesis the user embeds in the question ("I assume it's for performance?") is a claim to test.
 4. For a choice between options, answer with a recommendation and a tradeoffs table. If running something would settle the choice, say so and route to Prototype.
