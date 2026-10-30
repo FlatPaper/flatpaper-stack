@@ -50,7 +50,7 @@
     <li>When the subject changes, the work should re-match. A mode mid-feature otherwise treats your new question as the next feature step.</li>
     <li>Give parallel work its own worktree. Agents sharing one working tree fight over files, ports, and build output.</li>
   </ul>
-  <p><b>In flatpaper-stack:</b> <code>flatpaper-mode</code>, its 16 playbooks, the shared Start and Finish steps, re-matching on every prompt, and a worktree for every writing subagent.</p>
+  <p><b>In flatpaper-stack:</b> <code>flatpaper-mode</code>, its 17 playbooks, the shared Start and Finish steps, re-matching on every prompt, and a worktree for every writing subagent.</p>
 </section>
 
 <section class="ch" id="i-understand">
@@ -67,7 +67,7 @@
   <p>Try it:</p>
 <pre>/flatpaper-stack:flatpaper-mode investigate why background jobs time out every few hours. give me what we know, what data you used, and your best hypotheses. don't change any code yet.
 /flatpaper-stack:why was the retry limit set to five? does the reason still hold?</pre>
-  <p><b>In flatpaper-stack:</b> the Investigation, Runtime forensics, and Trace forensics playbooks, <code>why</code>, <code>recall</code>, Session pickup, and the confidence tiers in <code>principles.md</code>.</p>
+  <p><b>In flatpaper-stack:</b> the Investigation, Runtime forensics, and Trace forensics playbooks, <code>how</code>, <code>why</code>, <code>recall</code>, Session pickup, and the confidence tiers in <code>principles.md</code>.</p>
 </section>
 
 <section class="ch" id="i-design">
@@ -136,7 +136,7 @@
     <div><span class="mark fail">ALL GREEN, NOTHING THERE</span><p>Dashboard loaded. Daemon restarted. WebSocket <code>101</code>. <code>/api/runs</code> returned <code>200</code>, with body <code>[]</code>.</p></div>
     <div><span class="mark pass">THE REAL CHECK</span><p>A smoke run actually appears in the dashboard through the Coder URL.</p></div>
   </div>
-  <p><b>In flatpaper-stack:</b> <code>create-verification-skill</code>, <code>maintain-verification-skill</code>, <code>create-formal-verification-skill</code>, <code>maintain-formal-verification-skill</code>, <code>statechart</code>, "Driving the app" in flatpaper-mode, <code>blast-radius</code>, the Perf playbook's number vetting, Babysit, and a fresh reviewer in every playbook.</p>
+  <p><b>In flatpaper-stack:</b> <code>create-verification-skill</code>, <code>maintain-verification-skill</code>, <code>create-formal-verification-skill</code>, <code>maintain-formal-verification-skill</code>, <code>statechart</code>, "Driving the app" in flatpaper-mode, <code>blast-radius</code>, <code>benchmark-checklist</code>, Babysit, and a fresh reviewer in every playbook.</p>
 </section>
 
 <section class="ch" id="i-away">
@@ -162,7 +162,7 @@ keep a decision log. don't ask me before committing.
     <li>Ask when watched, decide and log when away. The log is what makes deciding safe.</li>
     <li>In the morning, audit decisions, not the whole night. Read the Attention section first.</li>
   </ul>
-  <p><b>In flatpaper-stack:</b> the Autonomous run, Pause safely, and Session pickup playbooks, <code>show-me-your-work</code>, and <code>ketchup</code>.</p>
+  <p><b>In flatpaper-stack:</b> the Autonomous run, Autopilot stack, Pause safely, and Session pickup playbooks, <code>show-me-your-work</code>, and <code>ketchup</code>.</p>
 </section>
 
 <section class="ch" id="i-delegate">
@@ -173,7 +173,7 @@ keep a decision log. don't ask me before committing.
     <li><b>Delegate to keep the main thread small.</b> Bulk reading, independent slices, and fresh review go to subagents. The main thread keeps the summaries and the decisions.</li>
     <li><b>Write a brief a stranger could run.</b> Goal, scope, context, acceptance, verify commands, timebox, what's forbidden, and the report shape. A field you can't fill is a unit you haven't scoped.</li>
     <li><b>Keep code on the session model.</b> Don't split one change into a planning agent and cheaper writers. To write a plan detailed enough for them, the planner writes the code itself. The split then costs more, and one bug in the plan reaches every writer.</li>
-    <li><b>Mix models only where a skill says to.</b> <code>swarm</code>, <code>arena</code>, <code>interrogate</code>, <code>reflect</code>, <code>why</code>, and <code>recall</code> pick their own models. Everything else runs on the session model.</li>
+    <li><b>Mix models only where a skill says to.</b> <code>swarm</code>, <code>arena</code>, <code>interrogate</code>, <code>reflect</code>, <code>why</code>, <code>how</code>, and <code>recall</code> pick their own models. Everything else runs on the session model.</li>
     <li><b>Read the diff yourself.</b> A subagent's report is a claim. Check its work and write your own summary.</li>
   </ul>
   <div class="tbl"><table>

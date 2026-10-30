@@ -40,6 +40,7 @@ Run these once, after the playbook's last step and before the reply. Pause safel
 - **Refactoring.** A behavior-preserving change to structure. `playbooks/refactoring.md`.
 - **Prototype.** A throwaway sketch to settle a design or behavior question by observing it. `playbooks/prototype.md`.
 - **Autonomous run.** A long task driven to a predicate without stopping ("run until done", "going to bed", "/loop until X"). `playbooks/autonomous-run.md`.
+- **Autopilot stack.** Build and verify a queue of PRs unattended, then hand them to the user to land. Nothing merges ("autopilot", "build the stack, I'll land it", "stack them, don't ship"). `playbooks/autopilot-stack.md`.
 - **Architecture page.** Create or update the repo's architecture page ("map this repo", "update the diagrams"), or a step in another playbook calls for it. `playbooks/architecture-page.md`.
 - **Perf.** Make something faster or cheaper against a measured number ("speed up", "make it faster", "cut the cost"). `playbooks/perf.md`.
 - **Babysit.** Drive an open PR to merge-ready: conflicts, review comments, CI ("babysit", "get it green", "address the review comments", "check on the PR"). `playbooks/babysit.md`.
@@ -64,17 +65,17 @@ If such a step touches a UI, CLI, or service and no `verify-<app>` skill exists,
 ## Autonomy
 
 - Reversible work proceeds without asking.
-- Always pause for irreversible actions: force-push to shared branches, deploys, data deletion, messages to other people. Replies on a PR the user asked you to babysit are the one exception.
+- Always pause for irreversible actions: force-push to shared branches, deploys, data deletion, messages to other people. Replies on a PR the user asked you to babysit are an exception. So are an Autopilot stack owner's replies on its own PR and its lease-pinned force-push of its own branch.
 - Session overrides ("don't stop", "going to bed", "run until done") mean keep going and log decisions with the show-me-your-work skill.
 - A skill or playbook that breaks mid-task gets fixed in its own PR. Don't block on it, and don't silently work around it.
 
 ## Subagents
 
-- Spawn code-writing delegates and ad-hoc helpers inside a playbook step with `subagent_type: "flatpaper-stack:flatpaper-agent"`, and put this file's absolute path in the brief. It reads this skill before any work, which `general-purpose` does not. Read-only search stays on `Explore`. Skills that name their own `subagent_type` keep it. Never spawn a `flatpaper-agent` to run the playbook itself.
+- Spawn code-writing delegates and ad-hoc helpers inside a playbook step with `subagent_type: "flatpaper-stack:flatpaper-agent"`, and put this file's absolute path in the brief. It reads this skill before any work, which `general-purpose` does not. Read-only search stays on `Explore`. Skills that name their own `subagent_type` keep it. Never spawn a `flatpaper-agent` to run the playbook itself. An Autopilot stack owner runs Opening a PR and Babysit for its own PR, not the parent playbook.
 - You own every subagent's work. Read its diff or output and write your own summary. Don't pass its claims through.
 - Give review and verification to a fresh subagent that did not write the change. If no independent reviewer can run, record `BLOCKED: independent review`, keep merge-ready closed, and say which reviewers ran. Your own review, passing tests, and CI never count as the verdict.
 - `completed` means an agent sent its completion notice, not that it exited. One with live background children can resume. Before you reuse its worktree or replace it, stop it and confirm the stop. The tell is a claim about the tree that `git status` contradicts.
-- Keep code-writing delegates on the session model: omit `model`. Don't split one sequential change into a planning agent and cheaper writers. To write a brief detailed enough for them, the planner writes the code itself. The split then costs more, and one bug in the plan reaches every unit. Only skills that name their own models use other models: `swarm`, `arena`, `interrogate`, `reflect`, `why`, and `recall`.
+- Keep code-writing delegates on the session model: omit `model`. Don't split one sequential change into a planning agent and cheaper writers. To write a brief detailed enough for them, the planner writes the code itself. The split then costs more, and one bug in the plan reaches every unit. Only skills that name their own models use other models: `swarm`, `arena`, `interrogate`, `reflect`, `why`, `how`, and `recall`.
 - Write every brief with the fields in `references/subagent-brief.md`, sized to the unit. A brief that can't fill its fields is not ready to send.
 - Route bulk reading to subagents and keep summaries in the main thread.
 - Match the effort to the job. Before each spawn, set the Agent tool's `effort`. Start at `high`. Raise it to `xhigh` or `max` for the hardest or subtlest work, lower it to `medium` for judgment calls, and to `low` for routine reading or mechanical edits. Keep the model a skill names, so a mixed panel stays mixed. If the tool rejects `effort`, omit it and say so.

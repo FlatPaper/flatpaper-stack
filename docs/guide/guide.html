@@ -95,7 +95,7 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 </style>
 <header class="top">
-  <div class="eyebrow">A Claude Code plugin · version 0.8.13</div>
+  <div class="eyebrow">A Claude Code plugin · version 0.8.14</div>
   <h1>Using flatpaper</h1>
   <p class="lede">flatpaper makes agent work you can trust and still understand a month later. Part 1 gets you running. Part 2 covers the ideas behind it: how to work with agents so the result holds up. Part 3 shows what to type for the situation you're in.</p>
   <div class="five"><span>goal</span><span>done check</span><span>proof</span><span>what you know</span><span>constraints</span></div>
@@ -234,7 +234,7 @@ claude plugin update flatpaper-stack@flatpaper-stack   # after edits; bump the v
     <li>When the subject changes, the work should re-match. A mode mid-feature otherwise treats your new question as the next feature step.</li>
     <li>Give parallel work its own worktree. Agents sharing one working tree fight over files, ports, and build output.</li>
   </ul>
-  <p><b>In flatpaper-stack:</b> <code>flatpaper-mode</code>, its 16 playbooks, the shared Start and Finish steps, re-matching on every prompt, and a worktree for every writing subagent.</p>
+  <p><b>In flatpaper-stack:</b> <code>flatpaper-mode</code>, its 17 playbooks, the shared Start and Finish steps, re-matching on every prompt, and a worktree for every writing subagent.</p>
 </section>
 
 <section class="ch" id="i-understand">
@@ -251,7 +251,7 @@ claude plugin update flatpaper-stack@flatpaper-stack   # after edits; bump the v
   <p>Try it:</p>
 <pre>/flatpaper-stack:flatpaper-mode investigate why background jobs time out every few hours. give me what we know, what data you used, and your best hypotheses. don't change any code yet.
 /flatpaper-stack:why was the retry limit set to five? does the reason still hold?</pre>
-  <p><b>In flatpaper-stack:</b> the Investigation, Runtime forensics, and Trace forensics playbooks, <code>why</code>, <code>recall</code>, Session pickup, and the confidence tiers in <code>principles.md</code>.</p>
+  <p><b>In flatpaper-stack:</b> the Investigation, Runtime forensics, and Trace forensics playbooks, <code>how</code>, <code>why</code>, <code>recall</code>, Session pickup, and the confidence tiers in <code>principles.md</code>.</p>
 </section>
 
 <section class="ch" id="i-design">
@@ -320,7 +320,7 @@ claude plugin update flatpaper-stack@flatpaper-stack   # after edits; bump the v
     <div><span class="mark fail">ALL GREEN, NOTHING THERE</span><p>Dashboard loaded. Daemon restarted. WebSocket <code>101</code>. <code>/api/runs</code> returned <code>200</code>, with body <code>[]</code>.</p></div>
     <div><span class="mark pass">THE REAL CHECK</span><p>A smoke run actually appears in the dashboard through the Coder URL.</p></div>
   </div>
-  <p><b>In flatpaper-stack:</b> <code>create-verification-skill</code>, <code>maintain-verification-skill</code>, <code>create-formal-verification-skill</code>, <code>maintain-formal-verification-skill</code>, <code>statechart</code>, "Driving the app" in flatpaper-mode, <code>blast-radius</code>, the Perf playbook's number vetting, Babysit, and a fresh reviewer in every playbook.</p>
+  <p><b>In flatpaper-stack:</b> <code>create-verification-skill</code>, <code>maintain-verification-skill</code>, <code>create-formal-verification-skill</code>, <code>maintain-formal-verification-skill</code>, <code>statechart</code>, "Driving the app" in flatpaper-mode, <code>blast-radius</code>, <code>benchmark-checklist</code>, Babysit, and a fresh reviewer in every playbook.</p>
 </section>
 
 <section class="ch" id="i-away">
@@ -346,7 +346,7 @@ keep a decision log. don't ask me before committing.
     <li>Ask when watched, decide and log when away. The log is what makes deciding safe.</li>
     <li>In the morning, audit decisions, not the whole night. Read the Attention section first.</li>
   </ul>
-  <p><b>In flatpaper-stack:</b> the Autonomous run, Pause safely, and Session pickup playbooks, <code>show-me-your-work</code>, and <code>ketchup</code>.</p>
+  <p><b>In flatpaper-stack:</b> the Autonomous run, Autopilot stack, Pause safely, and Session pickup playbooks, <code>show-me-your-work</code>, and <code>ketchup</code>.</p>
 </section>
 
 <section class="ch" id="i-delegate">
@@ -357,7 +357,7 @@ keep a decision log. don't ask me before committing.
     <li><b>Delegate to keep the main thread small.</b> Bulk reading, independent slices, and fresh review go to subagents. The main thread keeps the summaries and the decisions.</li>
     <li><b>Write a brief a stranger could run.</b> Goal, scope, context, acceptance, verify commands, timebox, what's forbidden, and the report shape. A field you can't fill is a unit you haven't scoped.</li>
     <li><b>Keep code on the session model.</b> Don't split one change into a planning agent and cheaper writers. To write a plan detailed enough for them, the planner writes the code itself. The split then costs more, and one bug in the plan reaches every writer.</li>
-    <li><b>Mix models only where a skill says to.</b> <code>swarm</code>, <code>arena</code>, <code>interrogate</code>, <code>reflect</code>, <code>why</code>, and <code>recall</code> pick their own models. Everything else runs on the session model.</li>
+    <li><b>Mix models only where a skill says to.</b> <code>swarm</code>, <code>arena</code>, <code>interrogate</code>, <code>reflect</code>, <code>why</code>, <code>how</code>, and <code>recall</code> pick their own models. Everything else runs on the session model.</li>
     <li><b>Read the diff yourself.</b> A subagent's report is a claim. Check its work and write your own summary.</li>
   </ul>
   <div class="tbl"><table>
@@ -508,6 +508,7 @@ raise a draft PR.</pre>
     <thead><tr><th>When you want to</th><th>Type</th></tr></thead>
     <tbody>
       <tr id="cp-autonomous-run"><td>Let it run while you're gone</td><td><code>/flatpaper-stack:flatpaper-mode im going to bed. migrate every caller to the new parser. done means zero old callers and fixtures pass. keep a decision log.</code></td></tr>
+      <tr id="cp-autopilot-stack"><td>Build a queue of PRs while you're gone, and land them yourself</td><td><code>/flatpaper-stack:flatpaper-mode autopilot the plan in docs/plans/grpc.md. build the stack, I'll land it.</code></td></tr>
       <tr id="cp-pause-safely"><td>Stop for now and resume later</td><td><code>pause for now. I'll pick this up tomorrow.</code></td></tr>
       <tr><td>See what changed since your last message</td><td><code>/flatpaper-stack:ketchup</code></td></tr>
       <tr><td>Read what it decided while you were away</td><td><code>/flatpaper-stack:show-me-your-work catch me up on what you did</code></td></tr>
@@ -581,6 +582,12 @@ raise a draft PR.</pre>
 <pre>/flatpaper-stack:sharpen figure out why our nightly job got slower this month</pre>
   </div>
 
+  <div class="cmd" id="c-how">
+    <h4>/flatpaper-stack:how</h4>
+    <p><b>Use it when</b> you need to know how code works before you change it, or where new code should live. It reads a narrow area itself. For a large one, read-only explorers trace it in parallel and one explainer writes the answer, with file and line citations.</p>
+<pre>/flatpaper-stack:how does the export job pick which rows to send?</pre>
+  </div>
+
   <div class="cmd" id="c-why">
     <h4>/flatpaper-stack:why</h4>
     <p><b>Use it when</b> you need the reason behind code before you change it. It searches git, PRs, and any trackers or docs the session can reach, and labels how sure it is of each claim.</p>
@@ -604,6 +611,12 @@ raise a draft PR.</pre>
     <p><b>Use it when</b> the work splits into many independent checks, or you want a race. Parallel workers, one table back.</p>
 <pre>/flatpaper-stack:swarm check every test file for tests that pass when the code does nothing
 /flatpaper-stack:swarm race 3 workers on fixing the flaky upload test, first pass wins</pre>
+  </div>
+
+  <div class="cmd" id="c-benchmark-checklist">
+    <h4>/flatpaper-stack:benchmark-checklist</h4>
+    <p><b>Use it</b> before you report or act on a speedup or regression you measured. Seven questions test the number: what limits it, whether both sides were tuned, whether it breaks a physical limit, errors, repeat runs, its share of the end-to-end path, and whether the work ran. The Perf playbook runs it on every number.</p>
+<pre>/flatpaper-stack:benchmark-checklist the cache change made export 30% faster</pre>
   </div>
 
   <div class="cmd" id="c-interrogate">
@@ -753,4 +766,4 @@ new task: review the open PR.</pre>
 </section>
 </main>
 </div>
-<footer>Built from the flatpaper repo at version 0.8.13 with <code>docs/guide/build.sh</code>.</footer>
+<footer>Built from the flatpaper repo at version 0.8.14 with <code>docs/guide/build.sh</code>.</footer>

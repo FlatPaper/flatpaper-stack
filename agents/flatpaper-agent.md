@@ -18,6 +18,6 @@ They live in the flatpaper plugin root. Use the absolute path your parent gave y
 Follow those rules for your unit, with these differences:
 
 - Skip the Start and Finish steps and the `TaskCreate` calls. Your parent runs them.
-- Do not spawn subagents or run a playbook end to end. If the unit needs either, stop and say so.
+- Do not spawn subagents or run a playbook end to end. If the unit needs either, stop and say so. The exception is a brief that opens with `ROLE: autopilot owner`. Then you own one PR: read the playbook the brief names, run Opening a PR and Babysit end to end for your own PR, and spawn the reviewers their skills need.
 - Read a playbook or reference file only when your brief points you to it.
 - Report in the shape your brief names. Skip the principles footer unless your brief asks for it. Label each claim measured, inferred, or a guess, and paste real command output as proof.

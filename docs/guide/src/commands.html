@@ -82,6 +82,7 @@ raise a draft PR.</pre>
     <thead><tr><th>When you want to</th><th>Type</th></tr></thead>
     <tbody>
       <tr id="cp-autonomous-run"><td>Let it run while you're gone</td><td><code>/flatpaper-stack:flatpaper-mode im going to bed. migrate every caller to the new parser. done means zero old callers and fixtures pass. keep a decision log.</code></td></tr>
+      <tr id="cp-autopilot-stack"><td>Build a queue of PRs while you're gone, and land them yourself</td><td><code>/flatpaper-stack:flatpaper-mode autopilot the plan in docs/plans/grpc.md. build the stack, I'll land it.</code></td></tr>
       <tr id="cp-pause-safely"><td>Stop for now and resume later</td><td><code>pause for now. I'll pick this up tomorrow.</code></td></tr>
       <tr><td>See what changed since your last message</td><td><code>/flatpaper-stack:ketchup</code></td></tr>
       <tr><td>Read what it decided while you were away</td><td><code>/flatpaper-stack:show-me-your-work catch me up on what you did</code></td></tr>
@@ -155,6 +156,12 @@ raise a draft PR.</pre>
 <pre>/flatpaper-stack:sharpen figure out why our nightly job got slower this month</pre>
   </div>
 
+  <div class="cmd" id="c-how">
+    <h4>/flatpaper-stack:how</h4>
+    <p><b>Use it when</b> you need to know how code works before you change it, or where new code should live. It reads a narrow area itself. For a large one, read-only explorers trace it in parallel and one explainer writes the answer, with file and line citations.</p>
+<pre>/flatpaper-stack:how does the export job pick which rows to send?</pre>
+  </div>
+
   <div class="cmd" id="c-why">
     <h4>/flatpaper-stack:why</h4>
     <p><b>Use it when</b> you need the reason behind code before you change it. It searches git, PRs, and any trackers or docs the session can reach, and labels how sure it is of each claim.</p>
@@ -178,6 +185,12 @@ raise a draft PR.</pre>
     <p><b>Use it when</b> the work splits into many independent checks, or you want a race. Parallel workers, one table back.</p>
 <pre>/flatpaper-stack:swarm check every test file for tests that pass when the code does nothing
 /flatpaper-stack:swarm race 3 workers on fixing the flaky upload test, first pass wins</pre>
+  </div>
+
+  <div class="cmd" id="c-benchmark-checklist">
+    <h4>/flatpaper-stack:benchmark-checklist</h4>
+    <p><b>Use it</b> before you report or act on a speedup or regression you measured. Seven questions test the number: what limits it, whether both sides were tuned, whether it breaks a physical limit, errors, repeat runs, its share of the end-to-end path, and whether the work ran. The Perf playbook runs it on every number.</p>
+<pre>/flatpaper-stack:benchmark-checklist the cache change made export 30% faster</pre>
   </div>
 
   <div class="cmd" id="c-interrogate">

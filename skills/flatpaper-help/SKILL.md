@@ -56,6 +56,7 @@ The default answer is `/flatpaper-stack:flatpaper-mode`, which runs most of the 
 |---|---|
 | Do any non-trivial task with rigor | `flatpaper-mode` |
 | Get a prompt rewritten deeper, not bigger, before sending it: what a top professional would add, their raw material and methods, and an outside check. It returns the prompt and doesn't do the task | `sharpen` |
+| Know how code works, or where new code should live | `how` |
 | Know why code is shaped this way, or where a number came from | `why` |
 | Catch up on their own recent work in this project | `recall` |
 | Catch up on what changed in this chat since their last message | `ketchup` |
@@ -63,6 +64,7 @@ The default answer is `/flatpaper-stack:flatpaper-mode`, which runs most of the 
 | Settle types and module shape before code that crosses a module boundary | `architect` |
 | Get several attempts at one brief, merged into the best one | `arena` |
 | Run parallel checks over slices, or race workers | `swarm` |
+| Check a speedup or regression they measured before reporting it | `benchmark-checklist` |
 | Have different models try to break a diff, keeping only findings a run proves | `interrogate` |
 | Clean up a diff for reuse, simplicity, and efficiency without changing behavior | `tidy` |
 | Strip comments before review, using a reviewer that didn't write them | `no-comments` |
@@ -82,7 +84,8 @@ Each skill lives at `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md`. If a skill d
 
 Close calls:
 
-- How code works now is the Investigation playbook. `/flatpaper-stack:why` finds the reasons.
+- `/flatpaper-stack:how` explains how code works now. `/flatpaper-stack:why` finds the reasons. The Investigation playbook runs both.
+- `/flatpaper-stack:benchmark-checklist` vets one number. The Perf playbook runs it on every number while it makes something faster.
 - `/flatpaper-stack:arena` gives every worker the same brief and merges the best parts. `/flatpaper-stack:swarm` splits work into slices or a race and returns one table.
 - `/flatpaper-stack:architect` implements right after it settles the design. Add "with checkpoint" to review the design before it writes code.
 - `/flatpaper-stack:interrogate` reviews the diff. `/flatpaper-stack:blast-radius` looks for breakage outside the diff and proves the one fact that makes the change safe.
@@ -93,7 +96,8 @@ Close calls:
 
 Not in flatpaper:
 
-- flatpaper has no skill for explaining how code works, for restating an ask, or for vetting a benchmark. Use the Investigation playbook, ask flatpaper-mode to restate the issue in plain words first, or use the Perf playbook. For a large or cross-cutting run, use the Autonomous run or Multi-phase plan playbook.
+- flatpaper has no skill for restating an ask. Ask flatpaper-mode to restate the issue in plain words first. For one long goal, use the Autonomous run playbook. For a queue of PRs, use the Multi-phase plan playbook, then the Autopilot stack playbook to build it.
+- flatpaper never merges unattended. Autopilot stack stops at verified PRs, and the user lands them.
 - `/loop`, `/code-review`, and `/simplify` are Claude Code built-ins. The Autonomous run playbook uses `/loop`. `/flatpaper-stack:tidy` is flatpaper's version of `/simplify`, and the one the Opening a PR playbook runs.
 - Plan mode is a Claude Code feature and works alongside flatpaper.
 
@@ -106,6 +110,7 @@ Playbooks are step lists inside `/flatpaper-stack:flatpaper-mode`, not skills, s
 - "take over this branch" or "continue from the log" runs Session pickup.
 - "pause" or "pick this up tomorrow" runs Pause safely.
 - "im stepping away" or "run until done" runs Autonomous run.
+- "autopilot" or "build the stack, I'll land it" runs Autopilot stack. Each PR gets its own owner agent and a verifying swarm. It never merges.
 - "plan this migration" or "break this into PRs" runs Multi-phase plan. It writes the plan and doesn't implement it.
 - "map this repo" runs Architecture page.
 

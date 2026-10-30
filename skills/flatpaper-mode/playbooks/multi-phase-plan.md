@@ -7,7 +7,7 @@ For work that spans several PRs or phases ("plan this migration", "break this in
 1. When the change is one or two files with an obvious approach, skip the plan. Say so and stop.
 2. Settle open questions by prototype before you write. Run the Prototype playbook (`playbooks/prototype.md`) for each. Keep the scratch path, the commit SHA, and the screenshots for Appendix A. Ask the user only about a product or preference call that no run can settle, and give options (never block on the human). The check is each open question either answered by a prototype or listed as unproven.
 3. Explore with read-only `Explore` subagents via the Agent tool, briefed per `../references/subagent-brief.md` (guard the context window). Each returns file pointers, conventions, test commands, and entry points. No inlined dumps. The check is a test command and an entry point for every PR you expect to write.
-4. Copy the skeleton below into the plan file and fill every placeholder. Unless the user names a path, write it to `docs/plans/<slug>.md` in the repo. Keep every heading and every sub-block in the order shown. One section per PR. One PR is one change with its own evidence (sequence verifiable units). Name the execution path in **How to read this**: the Autonomous run playbook (`playbooks/autonomous-run.md`) when the user hands the program off to run unattended, otherwise the user starts each PR as its own flatpaper-mode task. The check is no `<placeholder>` left in the file.
+4. Copy the skeleton below into the plan file and fill every placeholder. Unless the user names a path, write it to `docs/plans/<slug>.md` in the repo. Keep every heading and every sub-block in the order shown. One section per PR. One PR is one change with its own evidence (sequence verifiable units). Name the execution path in **How to read this**: the Autopilot stack playbook (`playbooks/autopilot-stack.md`) when the user hands the program off to run unattended, otherwise the user starts each PR as its own flatpaper-mode task. The check is no `<placeholder>` left in the file.
 5. Write the prose with the `technical-writing` skill, then run the `unslop` skill over it. The body is a how-to. The appendices hold explanation and reference. Each heading states the task or the finding. No em dashes. A colon only before a list.
 6. Run `scripts/check-plan.sh <plan.md>` from this skill's base directory (shown when the skill loads) and fix every line it prints until it exits 0 (encode lessons in structure).
 7. Hand back. Post the plan path and the script's output, then stop. Execution starts only on the user's explicit go, under the execution path the plan names.
@@ -25,7 +25,7 @@ For work that spans several PRs or phases ("plan this migration", "break this in
 
 One box is one unit of work. Every box names the evidence that checks it. A nested box is a sub-step of the box above it. Check a box only when its evidence exists, such as a file, a log line, a screenshot, a test run, or a SHA. The body is a how-to. The appendices explain and record.
 
-The program runs <the Autonomous run playbook, `playbooks/autonomous-run.md` in flatpaper-mode, or one flatpaper-mode task per PR started by the user>. <Who merges, and which PR ids stop at merge-ready for the user.>
+The program runs <the Autopilot stack playbook, `playbooks/autopilot-stack.md` in flatpaper-mode, or one flatpaper-mode task per PR started by the user>. <Who merges, and which PR ids stop at merge-ready for the user.>
 
 Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
@@ -35,7 +35,7 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 
 - [ ] State this plan to the user, then stop. Start execution only on the user's explicit go.
 - [ ] Read the execution playbook, the `swarm` skill, and each `verify-<app>` skill the lanes use, at program start.
-- [ ] For an autonomous run, set the exit predicate to "every box in this plan is checked" and keep going with `/loop`. Log one row per decision with the `show-me-your-work` skill.
+- [ ] Under Autopilot stack, the queue and gates come from this plan, and a PR is done only when its boxes here are checked. Log one row per decision with the `show-me-your-work` skill.
 - [ ] On the user's hold, stop every writer at once and leave each branch pushed.
 
 ### Order and boundaries
@@ -53,7 +53,7 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 - [ ] Run the repo's lint and typecheck before the PR-facing push. Push with hooks on.
 - [ ] Get a clean review from a fresh subagent that did not write the change, at the head SHA.
 - [ ] Triage every review comment per flatpaper-mode's review triage reference (`references/review-triage.md` in that skill).
-- [ ] Rebase onto current trunk before merge-ready. Drive CI and comments with the Babysit playbook.
+- [ ] Rebase onto the PR's base (trunk, or the parent PR's branch in a stack) before merge-ready. Drive CI and comments with the Babysit playbook.
 
 ### Boot recipe, for every live lane
 
@@ -107,8 +107,8 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 
 - [ ] Clean review verdict at the exact head SHA.
 - [ ] Review comments triaged.
-- [ ] Rebased onto current trunk after the verdict, patch unchanged.
-- [ ] <Who merges. Either the owner squash-merges its own PR, or the user lands the stack bottom-up.>
+- [ ] Rebased onto the PR's base after the verdict, patch unchanged.
+- [ ] <Who merges. Under Autopilot stack the user lands the stack bottom-up, because it never merges. Otherwise the user or the PR's own task squash-merges it.>
 
 ## Close the program
 
