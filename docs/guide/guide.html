@@ -95,7 +95,7 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 </style>
 <header class="top">
-  <div class="eyebrow">A Claude Code plugin · version 0.8.14</div>
+  <div class="eyebrow">A Claude Code plugin · version 0.8.15</div>
   <h1>Using flatpaper</h1>
   <p class="lede">flatpaper makes agent work you can trust and still understand a month later. Part 1 gets you running. Part 2 covers the ideas behind it: how to work with agents so the result holds up. Part 3 shows what to type for the situation you're in.</p>
   <div class="five"><span>goal</span><span>done check</span><span>proof</span><span>what you know</span><span>constraints</span></div>
@@ -511,6 +511,7 @@ raise a draft PR.</pre>
       <tr id="cp-autopilot-stack"><td>Build a queue of PRs while you're gone, and land them yourself</td><td><code>/flatpaper-stack:flatpaper-mode autopilot the plan in docs/plans/grpc.md. build the stack, I'll land it.</code></td></tr>
       <tr id="cp-pause-safely"><td>Stop for now and resume later</td><td><code>pause for now. I'll pick this up tomorrow.</code></td></tr>
       <tr><td>See what changed since your last message</td><td><code>/flatpaper-stack:ketchup</code></td></tr>
+      <tr><td>Watch it as a short video instead</td><td><code>/flatpaper-stack:ketchup-video</code></td></tr>
       <tr><td>Read what it decided while you were away</td><td><code>/flatpaper-stack:show-me-your-work catch me up on what you did</code></td></tr>
       <tr id="cp-session-pickup"><td>Continue another session's work</td><td><code>/flatpaper-stack:flatpaper-mode pick up where the last session left off on this branch</code></td></tr>
       <tr><td>Rebuild context after a few days off</td><td><code>/flatpaper-stack:recall my work on the export cache this week</code></td></tr>
@@ -668,6 +669,12 @@ column -s$'\t' -t decisions.tsv          # read the log in a terminal</pre>
 <pre>/flatpaper-stack:ketchup</pre>
   </div>
 
+  <div class="cmd" id="c-ketchup-video">
+    <h4>/flatpaper-stack:ketchup-video <span class="tag">by hand</span></h4>
+    <p><b>Use it when</b> a catch-up is easier to watch than read. It shows what happened since your last message as a short subtitled slide video on a private page, and lists what needs you as text under the link. It needs <code>ffmpeg</code> and a headless browser. Without them, you get the opening line and the action items as text.</p>
+<pre>/flatpaper-stack:ketchup-video</pre>
+  </div>
+
   <div class="cmd" id="c-recall">
     <h4>/flatpaper-stack:recall <span class="tag">by hand</span></h4>
     <p><b>Use it when</b> you start fresh after time away. It briefs you from this project's recent sessions, logs, and PRs. Defaults to the last 7 days.</p>
@@ -766,4 +773,4 @@ new task: review the open PR.</pre>
 </section>
 </main>
 </div>
-<footer>Built from the flatpaper repo at version 0.8.14 with <code>docs/guide/build.sh</code>.</footer>
+<footer>Built from the flatpaper repo at version 0.8.15 with <code>docs/guide/build.sh</code>.</footer>
