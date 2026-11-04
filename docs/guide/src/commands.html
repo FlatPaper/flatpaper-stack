@@ -80,12 +80,24 @@ raise a draft PR.</pre>
   </table></div>
   <p>Babysit has three modes. <b>babysit this</b> loops until the PR is merge-ready or needs a person. <b>is it green?</b> does one status pass. <b>threads only</b> answers review threads and never retriggers CI.</p>
 
+  <h3>Ship a story that spans several PRs</h3>
+  <p>When a story needs three or more PRs, flatpaper-mode switches to Multi-phase plan on its own and says so. It never starts the build without your go. Read the plan, then pick who lands the PRs. Say "just build it" to skip the plan.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Step</th><th>Type</th></tr></thead>
+    <tbody>
+      <tr><td>1. Plan it. Nothing gets built</td><td><code>/flatpaper-stack:flatpaper-mode plan MT-4122 as a set of PRs. don't build anything.</code></td></tr>
+      <tr><td>2a. Build it, and land the PRs yourself</td><td><code>/flatpaper-stack:flatpaper-mode autopilot the plan in docs/plans/mt-4122.md. build the stack, I'll land it.</code></td></tr>
+      <tr><td>2b. Build it, and let owners merge as each PR passes</td><td><code>/flatpaper-stack:flatpaper-mode orchestrate the plan in docs/plans/mt-4122.md. own it until it lands.</code></td></tr>
+    </tbody>
+  </table></div>
+
   <h3>Step away and come back</h3>
   <div class="tbl"><table>
     <thead><tr><th>When you want to</th><th>Type</th></tr></thead>
     <tbody>
       <tr id="cp-autonomous-run"><td>Let it run while you're gone</td><td><code>/flatpaper-stack:flatpaper-mode im going to bed. migrate every caller to the new parser. done means zero old callers and fixtures pass. keep a decision log.</code></td></tr>
       <tr id="cp-autopilot-stack"><td>Build a queue of PRs while you're gone, and land them yourself</td><td><code>/flatpaper-stack:flatpaper-mode autopilot the plan in docs/plans/grpc.md. build the stack, I'll land it.</code></td></tr>
+      <tr id="cp-orchestrate"><td>Hand off a multi-day project that merges as it goes</td><td><code>/flatpaper-stack:flatpaper-mode run this whole project. own the gRPC migration until it lands.</code></td></tr>
       <tr id="cp-pause-safely"><td>Stop for now and resume later</td><td><code>pause for now. I'll pick this up tomorrow.</code></td></tr>
       <tr><td>See what changed since your last message</td><td><code>/flatpaper-stack:ketchup</code></td></tr>
       <tr><td>Watch it as a short video instead</td><td><code>/flatpaper-stack:ketchup-video</code></td></tr>

@@ -95,7 +95,7 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 </style>
 <header class="top">
-  <div class="eyebrow">A Claude Code plugin · version 0.8.16</div>
+  <div class="eyebrow">A Claude Code plugin · version 0.8.17</div>
   <h1>Using flatpaper</h1>
   <p class="lede">flatpaper makes agent work you can trust and still understand a month later. Part 1 gets you running. Part 2 covers the ideas behind it: how to work with agents so the result holds up. Part 3 shows what to type for the situation you're in.</p>
   <div class="five"><span>goal</span><span>done check</span><span>proof</span><span>what you know</span><span>constraints</span></div>
@@ -234,7 +234,7 @@ claude plugin update flatpaper-stack@flatpaper-stack   # after edits; bump the v
     <li>When the subject changes, the work should re-match. A mode mid-feature otherwise treats your new question as the next feature step.</li>
     <li>Give parallel work its own worktree. Agents sharing one working tree fight over files, ports, and build output.</li>
   </ul>
-  <p><b>In flatpaper-stack:</b> <code>flatpaper-mode</code>, its 17 playbooks, the shared Start and Finish steps, re-matching on every prompt, and a worktree for every writing subagent.</p>
+  <p><b>In flatpaper-stack:</b> <code>flatpaper-mode</code>, its 18 playbooks, the shared Start and Finish steps, re-matching on every prompt, and a worktree for every writing subagent.</p>
 </section>
 
 <section class="ch" id="i-understand">
@@ -346,7 +346,7 @@ keep a decision log. don't ask me before committing.
     <li>Ask when watched, decide and log when away. The log is what makes deciding safe.</li>
     <li>In the morning, audit decisions, not the whole night. Read the Attention section first.</li>
   </ul>
-  <p><b>In flatpaper-stack:</b> the Autonomous run, Autopilot stack, Pause safely, and Session pickup playbooks, <code>show-me-your-work</code>, and <code>ketchup</code>.</p>
+  <p><b>In flatpaper-stack:</b> the Autonomous run, Autopilot stack, Orchestrate, Pause safely, and Session pickup playbooks, <code>show-me-your-work</code>, and <code>ketchup</code>.</p>
 </section>
 
 <section class="ch" id="i-delegate">
@@ -357,7 +357,7 @@ keep a decision log. don't ask me before committing.
     <li><b>Delegate to keep the main thread small.</b> Bulk reading, independent slices, and fresh review go to subagents. The main thread keeps the summaries and the decisions.</li>
     <li><b>Write a brief a stranger could run.</b> Goal, scope, context, acceptance, verify commands, timebox, what's forbidden, and the report shape. A field you can't fill is a unit you haven't scoped.</li>
     <li><b>Keep code on the session model.</b> Don't split one change into a planning agent and cheaper writers. To write a plan detailed enough for them, the planner writes the code itself. The split then costs more, and one bug in the plan reaches every writer.</li>
-    <li><b>Mix models only where a skill says to.</b> <code>swarm</code>, <code>arena</code>, <code>interrogate</code>, <code>reflect</code>, <code>why</code>, <code>how</code>, and <code>recall</code> pick their own models, and plain read-only searches run on Sonnet. Everything else runs on the session model. Run the session on Opus 5.5 at <code>high</code> effort, and switch to Fable 5.1 only when Opus falls short on a long unattended run. Fable costs 2.5 times Opus per token.</li>
+    <li><b>Mix models only where a skill says to.</b> <code>swarm</code>, <code>arena</code>, <code>interrogate</code>, <code>reflect</code>, <code>why</code>, <code>how</code>, and <code>recall</code> pick their own models. Comment Sicko runs on Opus, Orchestrate verifiers run on whichever of Opus or Fable their owner is not, and plain read-only searches run on Sonnet. Everything else runs on the session model. Run the session on Opus 5.5 at <code>high</code> effort, and switch to Fable 5.1 only when Opus falls short on a long unattended run. Fable costs 2.5 times Opus per token.</li>
     <li><b>Read the diff yourself.</b> A subagent's report is a claim. Check its work and write your own summary.</li>
   </ul>
   <div class="tbl"><table>
@@ -506,12 +506,24 @@ raise a draft PR.</pre>
   </table></div>
   <p>Babysit has three modes. <b>babysit this</b> loops until the PR is merge-ready or needs a person. <b>is it green?</b> does one status pass. <b>threads only</b> answers review threads and never retriggers CI.</p>
 
+  <h3>Ship a story that spans several PRs</h3>
+  <p>When a story needs three or more PRs, flatpaper-mode switches to Multi-phase plan on its own and says so. It never starts the build without your go. Read the plan, then pick who lands the PRs. Say "just build it" to skip the plan.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Step</th><th>Type</th></tr></thead>
+    <tbody>
+      <tr><td>1. Plan it. Nothing gets built</td><td><code>/flatpaper-stack:flatpaper-mode plan MT-4122 as a set of PRs. don't build anything.</code></td></tr>
+      <tr><td>2a. Build it, and land the PRs yourself</td><td><code>/flatpaper-stack:flatpaper-mode autopilot the plan in docs/plans/mt-4122.md. build the stack, I'll land it.</code></td></tr>
+      <tr><td>2b. Build it, and let owners merge as each PR passes</td><td><code>/flatpaper-stack:flatpaper-mode orchestrate the plan in docs/plans/mt-4122.md. own it until it lands.</code></td></tr>
+    </tbody>
+  </table></div>
+
   <h3>Step away and come back</h3>
   <div class="tbl"><table>
     <thead><tr><th>When you want to</th><th>Type</th></tr></thead>
     <tbody>
       <tr id="cp-autonomous-run"><td>Let it run while you're gone</td><td><code>/flatpaper-stack:flatpaper-mode im going to bed. migrate every caller to the new parser. done means zero old callers and fixtures pass. keep a decision log.</code></td></tr>
       <tr id="cp-autopilot-stack"><td>Build a queue of PRs while you're gone, and land them yourself</td><td><code>/flatpaper-stack:flatpaper-mode autopilot the plan in docs/plans/grpc.md. build the stack, I'll land it.</code></td></tr>
+      <tr id="cp-orchestrate"><td>Hand off a multi-day project that merges as it goes</td><td><code>/flatpaper-stack:flatpaper-mode run this whole project. own the gRPC migration until it lands.</code></td></tr>
       <tr id="cp-pause-safely"><td>Stop for now and resume later</td><td><code>pause for now. I'll pick this up tomorrow.</code></td></tr>
       <tr><td>See what changed since your last message</td><td><code>/flatpaper-stack:ketchup</code></td></tr>
       <tr><td>Watch it as a short video instead</td><td><code>/flatpaper-stack:ketchup-video</code></td></tr>
@@ -794,4 +806,4 @@ new task: review the open PR.</pre>
 </section>
 </main>
 </div>
-<footer>Built from the flatpaper repo at version 0.8.16 with <code>docs/guide/build.sh</code>.</footer>
+<footer>Built from the flatpaper repo at version 0.8.17 with <code>docs/guide/build.sh</code>.</footer>

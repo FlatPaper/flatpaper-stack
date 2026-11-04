@@ -17,7 +17,7 @@ Three ideas carry it:
 | `guidelines.md` | Always-on rules, loaded at session start by a hook |
 | `UserPromptSubmit` hook | One-line reminder on every prompt: concise replies, a done check, proof, and constraints, and the principles footer in flatpaper-mode sessions |
 | `gh pr create` gate | In a flatpaper-mode session, blocks `gh pr create` until the session has run `tidy`, `no-comments`, `technical-writing`, and `unslop`, and lists the Opening a PR steps that always run. A `PreToolUse` hook in the flatpaper-mode skill's frontmatter |
-| `/flatpaper-stack:flatpaper-mode` | Rigorous mode. Matches the task to a playbook (investigation, bug fix, feature, refactoring, prototype, autonomous run, autopilot stack, architecture page, perf, babysit, session pickup, pause safely, worktree cleanup, multi-phase plan, runtime forensics, trace forensics, opening a PR) |
+| `/flatpaper-stack:flatpaper-mode` | Rigorous mode. Matches the task to a playbook (investigation, bug fix, feature, refactoring, prototype, autonomous run, autopilot stack, orchestrate, architecture page, perf, babysit, session pickup, pause safely, worktree cleanup, multi-phase plan, runtime forensics, trace forensics, opening a PR) |
 | Architecture drift line | At session start, says when `docs/architecture/` is behind this repo's commits, or behind the latest release of the repo it describes. Silent otherwise. |
 | `/flatpaper-stack:show-me-your-work` | Decision log (TSV), audited against the transcript, with an Attention section from a fresh reviewer |
 | `/flatpaper-stack:create-verification-skill` | Generates a project-local `verify-<app>` skill (launch, doctor, drive, evidence, cleanup, feature map) and proves it once, including that Doctor can fail. flatpaper-mode playbooks drive the app through it and offer to create one when a task needs it |
@@ -48,7 +48,7 @@ You don't type these. A playbook step runs them. You can still call one directly
 
 Subagents use only Anthropic models: `opus`, `sonnet`, `fable`, and `haiku`. Same-family review catches less than a cross-vendor mix, so the skills treat agreement between reviewers as a weaker signal than pstack does. The flatpaper-mode skill's Subagents section maps every role to its model.
 
-Run the session on Opus 5.5 at `high` effort: `claude --model opus --effort high`, or add both flags to the alias under Install. Opus 5.5 defaults to `medium` effort. Code writers and reviewers run on the session model, so it sets the quality of the code. Switch to `--model fable` only for the hardest long unattended runs, when Opus falls short. Fable costs 2.5 times Opus per token.
+Run the session on Opus 5.5 at `high` effort: `claude --model opus --effort high`, or add both flags to the alias under Install. Opus 5.5 defaults to `medium` effort. Code writers and most reviewers run on the session model, so it sets the quality of the code. Comment Sicko runs on Opus. Switch to `--model fable` only for the hardest long unattended runs, when Opus falls short. Fable costs 2.5 times Opus per token.
 
 ### Subagents
 
@@ -57,7 +57,7 @@ flatpaper-mode is a by-hand skill, so a subagent cannot load it from its skill l
 | Agent | Spawned by | What it does |
 |---|---|---|
 | `flatpaper-stack:flatpaper-agent` | flatpaper-mode, for code-writing delegates and helpers | Reads the mode, its principles, and the guidelines before any work. Does not run the playbook itself |
-| `flatpaper-stack:comment-sicko` | `/flatpaper-stack:no-comments` | Deletes comments that don't earn their place and flags code that needs prose. Touches comments only |
+| `flatpaper-stack:comment-sicko` | `/flatpaper-stack:no-comments` | Deletes comments that don't earn their place and flags code that needs prose. Touches comments only. Runs on Opus |
 
 ### Skills you call by hand
 
@@ -146,6 +146,7 @@ Only the goal is required. A missing check, proof or constraints gets proposed b
 | im stepping away, run until, /loop until | Autonomous run |
 | migrate every caller, an ambitious multi-part change, figure it out | `figure-it-out` designs a bespoke playbook |
 | autopilot, build the stack, I'll land it | Autopilot stack |
+| orchestrate, run this whole project, own this migration until it lands | Orchestrate |
 | map this repo, update the architecture page | Architecture page |
 | speed up, make it faster, cut the cost | Perf |
 | babysit, get it green, address the review comments | Babysit |
