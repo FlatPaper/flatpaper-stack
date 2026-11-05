@@ -224,7 +224,13 @@ real_tmp=$(getconf DARWIN_USER_TEMP_DIR 2> /dev/null) || real_tmp=${TMPDIR:-/tmp
 chrome_leftovers() { ls -A "$real_tmp" 2> /dev/null | grep -E '^\.?(com\.google\.Chrome|org\.chromium\.Chromium)\.' | sort; }
 chrome_leftovers > "$tmp/chrome-before"
 rc=
-cdp_run() { TMPDIR="$ui/profiles" capped 30 node "$cdp" "$@"; }
+foreign_chrome=
+note_foreign_chrome() { pgrep -fl -- '--headless' 2> /dev/null | grep -v -- "$ui/profiles" | grep -qi chrom && foreign_chrome=1; }
+cdp_run() {
+	note_foreign_chrome
+	TMPDIR="$ui/profiles" capped 30 node "$cdp" "$@"
+	note_foreign_chrome
+}
 if ! node -e 'process.exit(typeof WebSocket === "function" ? 0 : 1)' 2> /dev/null; then
 	inconclusive "control-ui" "needs Node 22+ for the global WebSocket"
 else
@@ -242,6 +248,10 @@ elif [ -n "${rc:-}" ]; then
 	grep -q '^exception: Error: boom-uncaught' "$ui/console.txt" 2> /dev/null && ok || bad "cdp --console: want the uncaught exception"
 	cdp_run --help
 	expect "cdp --help" 0 '^Exit codes: '
+	CHROME=/nonexistent cdp_run about:blank
+	expect "cdp CHROME that does not exist" 2 '^cdp: CHROME=/nonexistent does not exist$'
+	CHROME="$ui/f.html" cdp_run about:blank
+	expect "cdp CHROME that cannot run" 2 '^cdp: Chrome did not start: .*EACCES'
 	cdp_run "$ui/click.html" --eval 'document.getElementById("save").click()' --wait-for '#saved' --dom '#saved'
 	expect "cdp --eval clicks, then --wait-for sees the result" 0 '^saved$'
 	cdp_run "$ui/click.html" --eval 'await null; new Promise((r) => setTimeout(() => r("promised"), 50))'
@@ -272,7 +282,13 @@ elif [ -n "${rc:-}" ]; then
 	pgrep -f "$ui/profiles" > /dev/null && bad "cdp: Chrome still running after exit" || ok
 	[ -z "$(ls -A "$ui/profiles")" ] && ok || bad "cdp: temp profile left behind: $(ls "$ui/profiles")"
 	new=$(chrome_leftovers | comm -13 "$tmp/chrome-before" -)
-	[ -z "$new" ] && ok || bad "cdp: Chrome left files in $real_tmp: $new"
+	if [ -z "$new" ]; then
+		ok
+	elif [ -n "$foreign_chrome" ]; then
+		inconclusive "cdp temp files" "a headless Chrome the suite did not start ran meanwhile, and $real_tmp gained: $new"
+	else
+		bad "cdp: Chrome left files in $real_tmp: $new"
+	fi
 fi
 
 drive="$root/skills/control-cli/scripts/drive.sh"
@@ -299,6 +315,17 @@ else
 		"$drive" kill "$s"
 		"$drive" capture "$s" > /dev/null 2>&1 && bad "drive.sh kill: session still exists" || ok
 
+		"$drive" start "$s-echo" -- sh -c 'while IFS= read -r l; do printf "got[%s]\n" "$l"; done'
+		for text in 'A;' 'B;C' 'E\;'; do
+			"$drive" type "$s-echo" "$text"
+			"$drive" send "$s-echo" Enter
+		done
+		capped 15 "$drive" wait "$s-echo" '^got\[E\\;\]$'
+		for want in 'got[A;]' 'got[B;C]' 'got[E\;]'; do
+			grep -qxF "$want" "$tmp/out" && ok || dump "drive.sh type: want the line $want:"
+		done
+		"$drive" kill "$s-echo"
+
 		"$drive" start "$s-dies" -- sh -c 'echo bye; exit 3'
 		capped 15 "$drive" wait "$s-dies" READY
 		expect "drive.sh command that exits first" 1 '^bye$'
@@ -311,6 +338,13 @@ else
 		for bad_timeout in 1.5 abc; do
 			capped 5 "$drive" wait "$s-hang" READY --timeout "$bad_timeout"
 			expect "drive.sh --timeout $bad_timeout" 2 '^  drive\.sh wait '
+		done
+		for probe in 1 2; do
+			t0=$(python3 -c 'import time; print(time.time())')
+			capped 10 "$drive" wait "$s-hang" READY --timeout 2
+			elapsed=$(python3 -c "import time; print('%.2f' % (time.time() - $t0))")
+			[ "$rc" = 124 ] && awk -v e="$elapsed" 'BEGIN { exit !(e >= 2.0) }' && ok ||
+				dump "drive.sh --timeout 2, probe $probe: want exit 124 after at least 2.0s, got $rc after ${elapsed}s:"
 		done
 		capped 10 "$drive" wait "$s-hang" READY --timeout 3
 		"$drive" kill "$s-hang"
@@ -326,6 +360,13 @@ else
 	expect "pty-drive.py --timeout x" 2 'timeout must be a positive number'
 	capped 10 "$pty" --timeout 5 --wait bye -- sh -c 'echo bye; exit 3'
 	expect "pty-drive.py reports the exit status" 0 '^pty-drive: command exited with status 3$'
+	capped 5 "$pty" --send '\x' -- true
+	expect "pty-drive.py --send with a bad escape" 2 'bad escape in --send'
+	capped 10 "$pty" --timeout 5 --wait bye --wait-exit -- sh -c 'echo bye; sleep 0.3; echo after; exit 3'
+	expect "pty-drive.py --wait-exit on status 3" 3 '^pty-drive: command exited with status 3$'
+	tr -d '\r' < "$tmp/out" | grep -qx after && ok || dump "pty-drive.py --wait-exit: want the output printed before the exit:"
+	capped 10 "$pty" --timeout 5 --wait-exit -- sh -c 'echo fine'
+	expect "pty-drive.py --wait-exit on status 0" 0 '^pty-drive: command exited with status 0$'
 fi
 
 [ "$skipped" -eq 0 ] || echo "test-scripts: $skipped inconclusive, not counted as passes"
