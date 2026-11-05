@@ -17,7 +17,7 @@ Three ideas carry it:
 | `guidelines.md` | Always-on rules, loaded at session start by a hook |
 | `UserPromptSubmit` hook | One-line reminder on every prompt: concise replies, a done check, proof, and constraints, and the principles footer in flatpaper-mode sessions |
 | `gh pr create` gate | In a flatpaper-mode session, blocks `gh pr create` until the session has run `tidy`, `no-comments`, `technical-writing`, and `unslop`, and lists the Opening a PR steps that always run. A `PreToolUse` hook in the flatpaper-mode skill's frontmatter |
-| `/flatpaper-stack:flatpaper-mode` | Rigorous mode. Matches the task to a playbook (investigation, bug fix, feature, refactoring, prototype, autonomous run, autopilot stack, orchestrate, architecture page, perf, hillclimb, eval, babysit, session pickup, pause safely, worktree cleanup, multi-phase plan, runtime forensics, trace forensics, opening a PR) |
+| `/flatpaper-stack:flatpaper-mode` | Rigorous mode. Matches the task to a playbook (investigation, bug fix, feature, refactoring, prototype, autonomous run, autopilot stack, autopilot-full, orchestrate, architecture page, perf, hillclimb, eval, babysit, shipping, session pickup, pause safely, worktree cleanup, multi-phase plan, runtime forensics, trace forensics, opening a PR) |
 | Architecture drift line | At session start, says when `docs/architecture/` is behind this repo's commits, or behind the latest release of the repo it describes. Silent otherwise. |
 | `/flatpaper-stack:show-me-your-work` | Decision log (TSV), audited against the transcript, with an Attention section from a fresh reviewer |
 | `/flatpaper-stack:create-verification-skill` | Generates a project-local `verify-<app>` skill (launch, doctor, drive, evidence, cleanup, feature map) and proves it once, including that Doctor can fail. flatpaper-mode playbooks drive the app through it and offer to create one when a task needs it |
@@ -148,12 +148,14 @@ Only the goal is required. A missing check, proof or constraints gets proposed b
 | im stepping away, run until, /loop until | Autonomous run |
 | migrate every caller, an ambitious multi-part change, figure it out | `figure-it-out` designs a bespoke playbook |
 | autopilot, build the stack, I'll land it | Autopilot stack |
+| autopilot and merge, run the queue to merged | Autopilot-full |
 | orchestrate, run this whole project, own this migration until it lands | Orchestrate |
 | map this repo, update the architecture page | Architecture page |
 | speed up, make it faster, cut the cost | Perf |
 | hillclimb, push this metric up, iterate until X% | Hillclimb |
 | eval this skill, A/B these prompts, is variant B better | Eval |
 | babysit, get it green, address the review comments | Babysit |
+| land it, ship the stack, merge the verified PRs | Shipping |
 | pick up, take over this branch, continue from the log | Session pickup |
 | pause, stop for now, pick this up tomorrow | Pause safely |
 | clean up worktrees | Worktree cleanup |
