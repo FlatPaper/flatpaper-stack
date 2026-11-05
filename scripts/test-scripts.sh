@@ -25,8 +25,9 @@ printf '%s\n' 'Spawn a generalPurpose agent.' 'Adapted from pstack.' \
 	'Keep pstack wording, as ported from cursor/plugins@ upstream.' >> "$tmp/lint/skills/tidy/SKILL.md"
 "$root/scripts/check-skills.sh" "$tmp/lint" > "$tmp/out" 2>&1
 code=$?
-lint_has() { # name, FAIL line pattern
-	if grep -q "^FAIL $2" "$tmp/out"; then ok; else bad "check-skills $1: want a FAIL matching '$2'"; sed 's/^/  /' "$tmp/out"; fi
+lint_has() {
+	local name=$1 pattern=$2
+	if grep -q "^FAIL $pattern" "$tmp/out"; then ok; else bad "check-skills $name: want a FAIL matching '$pattern'"; sed 's/^/  /' "$tmp/out"; fi
 }
 if [ "$code" = 1 ] && [ "$(grep -c '^FAIL' "$tmp/out")" = 4 ]; then ok; else
 	bad "check-skills: want exit 1 and four FAILs on the planted prose lines, with the three provenance comments exempt, got exit $code"; sed 's/^/  /' "$tmp/out"
@@ -109,13 +110,13 @@ G -C "$tmp/wt-tagged" switch -q --detach
 G -C "$tmp/wt-tagged" commit -q --allow-empty -m tagged
 G -C "$tmp/wt-tagged" tag kept
 G -C "$tmp/wt-tagged" switch -q tagged
-# Merged into a branch other than the default, so it reads merged only with -b.
 G -C "$tmp/wt-rel" commit -q --allow-empty -m release-fix
 G branch release rel
 
 audit() { HOME="$tmp/home" CLAUDE_SESSION_ID='' "$scripts/worktree-audit.sh" "$r" "$@" > "$tmp/audit" 2> "$tmp/err"; }
-audit_col() { # worktree suffix, column number
-	awk -F'\t' -v w="/wt-$1" -v c="$2" 'substr($8, length($8) - length(w) + 1) == w { print $c }' "$tmp/audit"
+audit_col() {
+	local wt=$1 col=$2
+	awk -F'\t' -v w="/wt-$wt" -v c="$col" 'substr($8, length($8) - length(w) + 1) == w { print $c }' "$tmp/audit"
 }
 audit
 audit_case() { # worktree suffix, want bucket
@@ -138,7 +139,7 @@ for flag in "-b release" "--base release" "--base=release"; do
 		bad "worktree-audit wt-rel with $flag: want MERGED yes and the note naming release, got ${got:-no row}"; sed 's/^/  /' "$tmp/audit" "$tmp/err"
 	fi
 done
-bad_base() { # want stderr line, args...
+bad_base() {
 	local want=$1; shift
 	audit "$@"
 	code=$?

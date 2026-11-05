@@ -77,8 +77,6 @@ sed -n 's/^worktree //p' "$tmp/list" | while IFS= read -r p; do
 	[ -d "$p" ] && phys "$p"
 done | sort -u > "$tmp/wt_paths"
 
-# Base for the merge check: -b, else origin's default branch, else local main
-# or master. No fetch, so this is as fresh as the last fetch.
 [ -n "$base" ] || base=$(g symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)
 if [ -z "$base" ]; then
 	for b in origin/main origin/master main master; do

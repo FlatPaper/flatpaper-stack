@@ -88,9 +88,8 @@ for f in agents/*.md; do
 done
 
 banned='grok|gemini|llama|mistral|deepseek|composer-[0-9]|AskQuestion|poteto-agent|cursor-team-kit|/deslop|generalPurpose|\.cursor/|is_background'
-# A whole-line provenance comment is a license notice, so it may name upstream paths.
-provenance='^[^:]+:[0-9]+:[[:space:]]*(<!--|#|//) ported from cursor/plugins@[0-9a-f]{40}( [^ ]+)+ \(MIT\)( -->)?$'
-if hits=$(grep -rsniE "$banned" skills agents guidelines.md hooks README.md | grep -vE "$provenance"); then
+license_notice='^[^:]+:[0-9]+:[[:space:]]*(<!--|#|//) ported from cursor/plugins@[0-9a-f]{40}( [^ ]+)+ \(MIT\)( -->)?$'
+if hits=$(grep -rsniE "$banned" skills agents guidelines.md hooks README.md | grep -vE "$license_notice"); then
 	while IFS= read -r h; do problem "banned term: ${h:0:160}"; done <<<"$hits"
 fi
 
@@ -103,7 +102,7 @@ if hits=$(grep -rsnoE '\bgpt-[0-9][a-z0-9.-]*' skills agents guidelines.md hooks
 	while IFS= read -r h; do problem "GPT model other than gpt-6.1-sol: ${h:0:160}"; done <<<"$hits"
 fi
 
-if hits=$(grep -rsniE 'pstack|poteto' skills agents | grep -vE "$provenance"); then
+if hits=$(grep -rsniE 'pstack|poteto' skills agents | grep -vE "$license_notice"); then
 	while IFS= read -r h; do problem "upstream reference: ${h:0:160}"; done <<<"$hits"
 fi
 
