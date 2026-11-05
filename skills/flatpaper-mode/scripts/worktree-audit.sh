@@ -4,8 +4,10 @@
 # --no-optional-locks, so it never takes index.lock or refreshes the index.
 # Removal stays a step the user confirms in playbooks/worktree-cleanup.md.
 #
-# Usage: worktree-audit.sh [--self <session-id>] [repo-path]
+# Usage: worktree-audit.sh [-b <ref>] [--self <session-id>] [repo-path]
 #   repo-path  defaults to the current repo
+#   -b, --base the ref MERGED checks against (defaults to origin/HEAD, then
+#              origin/main, origin/master, main, or master)
 #   --self     session id to leave out of verify-recent (defaults to
 #              $CLAUDE_SESSION_ID when set)
 #
@@ -38,12 +40,17 @@ phys() { (CDPATH='' cd -- "$1" 2>/dev/null && pwd -P) || printf '%s\n' "$1"; }
 
 self="${CLAUDE_SESSION_ID:-}"
 repo=""
+base=""
 while [ $# -gt 0 ]; do
 	case "$1" in
+		-b|--base) [ $# -ge 2 ] && [ -n "$2" ] || { echo "$1 needs a ref" >&2; exit 1; }
+			base=$2; shift 2 ;;
+		--base=*) base=${1#--base=}; [ -n "$base" ] || { echo "--base needs a ref" >&2; exit 1; }
+			shift ;;
 		--self) [ $# -ge 2 ] || { echo "--self needs a session id" >&2; exit 1; }
 			self=$2; shift 2 ;;
 		--self=*) self=${1#--self=}; shift ;;
-		-h|--help) sed -n '2,10p' "$0"; exit 0 ;;
+		-h|--help) sed -n '2,12p' "$0"; exit 0 ;;
 		*) repo=$1; shift ;;
 	esac
 done
@@ -69,9 +76,13 @@ sed -n 's/^worktree //p' "$tmp/list" | while IFS= read -r p; do
 	[ -d "$p" ] && phys "$p"
 done | sort -u > "$tmp/wt_paths"
 
-# Base for the merge check: origin's default branch, else local main or master.
-# No fetch, so this is as fresh as the last fetch.
-base=$(g symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)
+# Base for the merge check: -b, else origin's default branch, else local main
+# or master. No fetch, so this is as fresh as the last fetch.
+if [ -n "$base" ]; then
+	g rev-parse --verify --quiet "$base^{commit}" >/dev/null || { echo "-b $base is not a commit in $repo" >&2; exit 1; }
+else
+	base=$(g symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)
+fi
 if [ -z "$base" ]; then
 	for b in origin/main origin/master main master; do
 		g rev-parse --verify --quiet "$b" >/dev/null && { base=$b; break; }
@@ -326,3 +337,5 @@ if [ -d "$cw" ]; then
 			"under .claude/worktrees but not a registered worktree"
 	done
 fi
+
+# ported from cursor/plugins@2776ddd2355d6d6c8747d3964600f28daf62f049 pstack/skills/poteto-mode/playbooks/worktree-cleanup.md (MIT)

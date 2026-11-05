@@ -110,6 +110,33 @@ audit_case reflog hold-reflog
 audit_case rebased safe
 audit_case tagged safe
 
+# A worktree merged into a branch other than the default reads merged only with -b.
+G worktree add -q -b relwork "$tmp/wt-rel" main
+G -C "$tmp/wt-rel" commit -q --allow-empty -m release-fix
+G branch release relwork
+merged_col() { awk -F'\t' 'substr($8, length($8) - 6) == "/wt-rel" { print $3 }' "$1"; }
+HOME="$tmp/home" CLAUDE_SESSION_ID='' "$scripts/worktree-audit.sh" "$r" > "$tmp/audit" 2>/dev/null
+got=$(merged_col "$tmp/audit")
+if [ "$got" = no ]; then ok; else bad "worktree-audit wt-rel without -b: want MERGED no, got ${got:-no row}"; sed 's/^/  /' "$tmp/audit"; fi
+for flag in "-b release" "--base release" "--base=release"; do
+	HOME="$tmp/home" CLAUDE_SESSION_ID='' "$scripts/worktree-audit.sh" $flag "$r" > "$tmp/audit" 2> "$tmp/err"
+	got=$(merged_col "$tmp/audit")
+	if [ "$got" = yes ] && grep -qx 'note: merged means reachable from release as of the last fetch' "$tmp/err"; then ok; else
+		bad "worktree-audit wt-rel with $flag: want MERGED yes and the note naming release, got ${got:-no row}"; sed 's/^/  /' "$tmp/audit" "$tmp/err"
+	fi
+done
+bad_base() { # want stderr line, args...
+	local want=$1; shift
+	HOME="$tmp/home" CLAUDE_SESSION_ID='' "$scripts/worktree-audit.sh" "$r" "$@" > "$tmp/audit" 2> "$tmp/err"
+	code=$?
+	if [ "$code" = 1 ] && [ ! -s "$tmp/audit" ] && grep -qxF -- "$want" "$tmp/err"; then ok; else
+		bad "worktree-audit $*: want exit 1, no table, and '$want', got exit $code"; sed 's/^/  /' "$tmp/audit" "$tmp/err"
+	fi
+}
+bad_base "-b no-such-ref is not a commit in $r" -b no-such-ref
+bad_base "-b needs a ref" -b
+bad_base "--base needs a ref" --base=
+
 # pr-gate.sh. gh pr create is blocked until the transcript shows a Skill call
 # for each gated skill, with or without a plugin prefix. Without a readable
 # transcript it lets the call through.
