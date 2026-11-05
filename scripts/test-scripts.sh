@@ -23,8 +23,6 @@ if [ $? = 1 ] && [ "$(grep -c '^FAIL' "$tmp/out")" = 2 ] && grep -q '^FAIL banne
 	bad "check-skills: want exit 1 and two FAILs, the banned term and the upstream reference on the planted lines, with provenance lines exempt"; sed 's/^/  /' "$tmp/out"
 fi
 
-# check-plan.sh. The base plan is the playbook skeleton with every placeholder
-# filled, so it must pass. Each case appends to it and expects a verdict.
 awk '/^````markdown$/{f=1;next} /^````$/{f=0} f' "$root/skills/flatpaper-mode/playbooks/multi-phase-plan.md" |
 	grep -v 'One box per further lane' | sed -E 's/<[^>]*>/filler/g' > "$tmp/base.md"
 
@@ -34,6 +32,10 @@ plan_case() { # name, want (pass|fail), file
 }
 
 plan_case "skeleton" pass "$tmp/base.md"
+
+awk '/^### Verdict and merge/{skip=1;next} /^### /{skip=0} !skip' "$tmp/base.md" > "$tmp/noverdict.md"
+plan_case "no Verdict and merge block" fail "$tmp/noverdict.md"
+if grep -q 'Program checklist lacks .*Verdict and merge' "$tmp/out"; then ok; else bad "check-plan no Verdict and merge block: want the Program checklist line naming it"; fi
 
 { printf '\357\273\277'; cat "$tmp/base.md"; } > "$tmp/bom.md"
 plan_case "UTF-8 BOM before the title" pass "$tmp/bom.md"

@@ -107,10 +107,11 @@ END {
     for (i in m) if (index(howtext, m[i]) == 0) fail(how, "How to read this lacks \"" m[i] "\"")
   }
   if (!prog) fail(1, "no \"## Program checklist\" section")
-  else if (h3 !~ /\|Arm the program.*\|Order and boundaries.*\|PR mechanics.*\|Boot recipe/) fail(prog, "Program checklist lacks Arm the program, Order and boundaries, PR mechanics, Boot recipe in order")
+  else if (h3 !~ /\|Arm the program.*\|Order and boundaries.*\|PR mechanics.*\|Verdict and merge.*\|Boot recipe/) fail(prog, "Program checklist lacks Arm the program, Order and boundaries, PR mechanics, Verdict and merge, Boot recipe in order")
   if (!closeat) fail(1, "no \"## Close the program\" section")
   else if (!proto) fail(closeat, "no \"## Appendix ... Prototype evidence\" section")
   if (!prs) fail(1, "no PR sections between Program checklist and Close the program")
   print prs + 0 " PR sections, " bad + 0 " problems"
   exit (bad > 0)
 }' "$1"
+# ported from cursor/plugins@2776ddd2355d6d6c8747d3964600f28daf62f049 pstack/skills/poteto-mode/scripts/check-plan.mjs (MIT)

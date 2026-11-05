@@ -7,14 +7,14 @@ For work that spans several PRs or phases ("plan this migration", "break this in
 1. When the change is one or two files with an obvious approach, skip the plan. Say so and stop. If Start step 3 switched you here, return to the playbook the prompt matched instead of stopping.
 2. Settle open questions by prototype before you write. Run the Prototype playbook (`playbooks/prototype.md`) for each. Keep the scratch path, the commit SHA, and the screenshots for Appendix A. Ask the user only about a product or preference call that no run can settle, and give options (never block on the human). The check is each open question either answered by a prototype or listed as unproven.
 3. Explore with read-only `Explore` subagents via the Agent tool, briefed per `../references/subagent-brief.md` (guard the context window). Each returns file pointers, conventions, test commands, and entry points. No inlined dumps. The check is a test command and an entry point for every PR you expect to write.
-4. Copy the skeleton below into the plan file and fill every placeholder. Unless the user names a path, write it to `docs/plans/<slug>.md` in the repo. Keep every heading and every sub-block in the order shown. One section per PR. One PR is one change with its own evidence (sequence verifiable units). Name the execution path in **How to read this**: the Autopilot stack playbook (`playbooks/autopilot-stack.md`) when the user hands the program off to run unattended and lands it, the Orchestrate playbook (`playbooks/orchestrate.md`) when owners merge their own PRs over a multi-day program, otherwise the user starts each PR as its own flatpaper-mode task. The check is no `<placeholder>` left in the file.
+4. Copy the skeleton below into the plan file and fill every placeholder. Unless the user names a path, write it to `docs/plans/<slug>.md` in the repo. Keep every heading and every sub-block in the order shown. One section per PR. One PR is one change with its own evidence (sequence verifiable units). Name the execution path in **How to read this**: the Autopilot stack playbook (`playbooks/autopilot-stack.md`) when the user hands the program off to run unattended and lands it, the Autopilot-full playbook (`playbooks/autopilot-full.md`) when the unattended run may merge the queue's PRs, the Orchestrate playbook (`playbooks/orchestrate.md`) when owners merge their own PRs over a multi-day program, otherwise the user starts each PR as its own flatpaper-mode task. The check is no `<placeholder>` left in the file.
 5. Write the prose with the `technical-writing` skill, then run the `unslop` skill over it. The body is a how-to. The appendices hold explanation and reference. Each heading states the task or the finding. No em dashes. A colon only before a list.
 6. Run `scripts/check-plan.sh <plan.md>` from this skill's base directory (shown when the skill loads) and fix every line it prints until it exits 0 (encode lessons in structure).
-7. Hand back. Post the plan path and the script's output, then stop. Execution starts only on the user's explicit go, under the execution path the plan names. If Start step 3 switched you here under a session override ("going to bed", "run until done"), log the switch with the show-me-your-work skill and build the plan under Autopilot stack, which never merges. Orchestrate still waits for the user's go.
+7. Hand back. Post the plan path, the execution path it names, who merges, and the script's output, then stop. Execution starts only on the user's explicit go, under the execution path the plan names. If Start step 3 switched you here under a session override ("going to bed", "run until done"), log the switch with the show-me-your-work skill and build the plan under Autopilot stack, which never merges. Autopilot-full and Orchestrate still wait for the user's go.
 
 **Verification.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked (prove it works). That sentence is the verification rule. Every verification block opens with it. The live block is mandatory. Lanes at the PR head drive the real surface through the project's `verify-<app>` skill. Use ten lanes by default and fan them out with the `swarm` skill. Each lane is one box with a concrete scenario, the screenshot or output file it saves, and its pass predicate. Lane 1 is the **Regression lane against trunk.** It runs the same load-bearing scenario on trunk and head. If trunk does not have the feature, the lane records that fact and gates the behavior the diff adds plus the end state the user waits for, instead of inventing a trunk result. The perf gate is dual-sided. Trunk and head must both produce the named metric, measured per the Perf playbook (`playbooks/perf.md`). If trunk lacks the feature, isolate the work the diff adds and set an absolute budget for it plus the end-to-end state the user waits for. Do not claim a ratio between unlike scenarios. A PR that changes an interaction is review-gated. The user reviews it with screenshots and a video before merge. A PR that changes no interaction writes `**Review gate.** None. <PR id> is not review-gated.` and no boxes under it.
 
-**Verification skill.** Pick it by surface. Use the project's `verify-<app>` skill for each surface the PR touches. A PR that touches two surfaces gets lanes on both. When a surface has no verification skill, add a PR that creates one with `/flatpaper-stack:create-verification-skill` (an agent reads `${CLAUDE_PLUGIN_ROOT}/skills/create-verification-skill/SKILL.md` and follows it, replacing the variable with the plugin's real path in a subagent brief), or list it as a risk in Appendix C and name in the live block how each lane drives the surface by hand.
+**Verification skill.** Pick it by surface. Use the project's `verify-<app>` skill for each surface the PR touches. A PR that touches two surfaces gets lanes on both. When a surface has no verification skill, add a PR that creates one with `/flatpaper-stack:create-verification-skill` (an agent reads `${CLAUDE_PLUGIN_ROOT}/skills/create-verification-skill/SKILL.md` and follows it, replacing the variable with the plugin's real path in a subagent brief), or list it as a risk in Appendix C and name in the live block how each lane drives the surface through the `control-ui` or `control-cli` skill, or by hand, per flatpaper-mode's Driving the app section.
 
 ````markdown
 # <Program> plan
@@ -25,7 +25,7 @@ For work that spans several PRs or phases ("plan this migration", "break this in
 
 One box is one unit of work. Every box names the evidence that checks it. A nested box is a sub-step of the box above it. Check a box only when its evidence exists, such as a file, a log line, a screenshot, a test run, or a SHA. The body is a how-to. The appendices explain and record.
 
-The program runs <the Autopilot stack playbook, `playbooks/autopilot-stack.md` in flatpaper-mode, the Orchestrate playbook, `playbooks/orchestrate.md` in flatpaper-mode, or one flatpaper-mode task per PR started by the user>. <Who merges, and which PR ids stop at merge-ready for the user.>
+The program runs <the Autopilot stack playbook, `playbooks/autopilot-stack.md` in flatpaper-mode, the Autopilot-full playbook, `playbooks/autopilot-full.md` in flatpaper-mode, the Orchestrate playbook, `playbooks/orchestrate.md` in flatpaper-mode, or one flatpaper-mode task per PR started by the user>. <Who merges, and which PR ids stop at merge-ready for the user.>
 
 Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
@@ -35,8 +35,8 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 
 - [ ] State this plan to the user, then stop. Start execution only on the user's explicit go.
 - [ ] Read the execution playbook, the `swarm` skill, and each `verify-<app>` skill the lanes use, at program start.
-- [ ] On the user's go, under Autopilot stack or Orchestrate, write this exact text into `notes.md` in the program's store under `~/.claude/orchestrate/<slug>/` and restate it in your todolist. "<The plan path, the PR ids in order, the verification rule, who merges, and the done condition.>"
-- [ ] Under Autopilot stack or Orchestrate, the queue and gates come from this plan, and a PR is done only when its boxes here are checked. Log one row per decision with the `show-me-your-work` skill.
+- [ ] On the user's go, under Autopilot stack, Autopilot-full, or Orchestrate, write this exact text into `notes.md` in the program's store under `~/.claude/orchestrate/<slug>/` and restate it in your todolist. "<The plan path, the PR ids in order, the verification rule, who merges, and the done condition.>"
+- [ ] Under Autopilot stack, Autopilot-full, or Orchestrate, the queue and gates come from this plan, and a PR is done only when its boxes here are checked. Log one row per decision with the `show-me-your-work` skill.
 - [ ] On the user's hold, stop every writer at once and leave each branch pushed.
 
 ### Order and boundaries
@@ -45,16 +45,22 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
   - [ ] <PR id> and <PR id> are independent and first. Both branch from `main`.
   - [ ] <PR id> after <PR id>.
 - [ ] Hold the file boundaries. <PR id> touches only `<glob>`.
-- [ ] Hold the review gate. <PR ids> change an interaction. They wait for the user's review with screenshots and a video before merge.
+- [ ] Hold the review gate. <PR ids> change an interaction. They wait for the user's review with screenshots and a video before merge. They stop at merge-ready for the user under every execution path, Autopilot-full and Orchestrate included.
 
 ### PR mechanics, for every PR
 
 - [ ] Work in its own git worktree.
 - [ ] Commit, branch, and open the PR per the repo's rules, as in the flatpaper-mode Finish steps.
 - [ ] Run the repo's lint and typecheck before the PR-facing push. Push with hooks on.
-- [ ] Get a clean review from a fresh subagent that did not write the change, at the head SHA.
 - [ ] Triage every review comment per flatpaper-mode's review triage reference (`references/review-triage.md` in that skill).
-- [ ] Rebase onto the PR's base (trunk, or the parent PR's branch in a stack) before merge-ready. Drive CI and comments with the Babysit playbook.
+- [ ] Under Autopilot stack, Autopilot-full, or Orchestrate, the owner rebases its own branch onto the PR's base (trunk, or the parent PR's branch in a stack) before the code-ready report. It pushes with a lease pinned to its last push. Keep that merge base in fix rounds. The owner rebases again only for merge prep, a conflict that `git merge-tree --write-tree origin/<base> HEAD` reports, a CI failure that comes from a change on the base, or a change to the same files that lands on the base. On the per-task path, never rebase or force-push a pushed branch. Report which branch needs a rebase onto which base, and stop, as in Opening a PR. The one other restack is the Shipping playbook's, on an explicit land request. Drive CI and comments with the Babysit playbook.
+
+### Verdict and merge, for every PR
+
+- [ ] Get the verdict from agents that did not write the change. Under Autopilot stack or Autopilot-full, a full swarm runs once at the code-ready head, per the `swarm` skill. Under Orchestrate, the owner's verifier on the other model runs the same lanes. Otherwise a fresh subagent reviews the head. Re-verify a new head per the execution playbook.
+- [ ] The verdict runs one gates lane, the live lanes from the PR's **Verify, live** block, the perf lane from its **Verify, perf** block, and two or more audit lanes. Each audit lane has its own focus, reads the diff and the receipts, and distrusts the PR body. Check the receipts in the owner's report before the verdict.
+- [ ] Judge every finding by the execution playbook's blocking rule. The verdict is clean when none blocks. A failure on trunk behavior in the lane marked `Regression lane against trunk.` is recorded against trunk and does not block the PR.
+- [ ] Merge only at the exact head SHA a verdict names. <The merge or handoff rule from the execution playbook.>
 
 ### Boot recipe, for every live lane
 
@@ -108,8 +114,8 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 
 - [ ] Clean review verdict at the exact head SHA.
 - [ ] Review comments triaged.
-- [ ] Rebased onto the PR's base after the verdict, patch unchanged.
-- [ ] <Who merges. Under Autopilot stack the user lands the stack bottom-up, because it never merges. Under Orchestrate the owner merges on its verifier's pass at the head. Otherwise the user or the PR's own task squash-merges it.>
+- [ ] On the PR's base at the verdict's head SHA. Only an owner, or Shipping on an explicit land request, rebases to get there. On the per-task path, a needed rebase is reported, not done.
+- [ ] <Who merges. Under Autopilot stack the user lands the stack bottom-up, because it never merges. Under Autopilot-full the owner merges after merge prep, on the verdict at its head. A review-gated PR stops at merge-ready for the user under every path. Under Orchestrate the owner merges on its verifier's pass at the head. Otherwise the user merges it, or lands the stack through the Shipping playbook on an explicit land request.>
 
 ## Close the program
 
@@ -134,3 +140,5 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 ````
 
 **Reply:** the plan path, the PR ids with their dependencies and the review-gated set, what the prototypes proved and what stays unproven, and the check script's output.
+
+<!-- ported from cursor/plugins@2776ddd2355d6d6c8747d3964600f28daf62f049 pstack/skills/poteto-mode/playbooks/multi-phase-plan.md (MIT) -->

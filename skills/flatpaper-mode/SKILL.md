@@ -41,12 +41,14 @@ Run these once, after the playbook's last step and before the reply. Pause safel
 - **Prototype.** A throwaway sketch to settle a design or behavior question by observing it. `playbooks/prototype.md`.
 - **Autonomous run.** A long task driven to a predicate without stopping ("run until done", "going to bed", "/loop until X"). `playbooks/autonomous-run.md`.
 - **Autopilot stack.** Build and verify a queue of PRs unattended, then hand them to the user to land. Nothing merges ("autopilot", "build the stack, I'll land it", "stack them, don't ship"). `playbooks/autopilot-stack.md`.
+- **Autopilot-full.** Build, verify, and merge a queue of PRs unattended, after the user's go. Each owner merges its own PR on a verdict that names its exact head SHA ("autopilot and merge", "run the queue to merged"). `playbooks/autopilot-full.md`.
 - **Orchestrate.** A standing project handed to one coordinator chat: multi-day, many stacked PRs, dozens of subagents, few human turns. Owners merge their own PRs after a verifier on another model passes them ("orchestrate", "run this whole project", "own this migration until it lands"). Work one agent could finish inside the session's budget is not a program. `playbooks/orchestrate.md`.
 - **Architecture page.** Create or update the repo's architecture page ("map this repo", "update the diagrams"), or a step in another playbook calls for it. `playbooks/architecture-page.md`.
 - **Perf.** Make something faster or cheaper against a measured number, with one fix or a few ("speed up", "make it faster", "cut the cost"). `playbooks/perf.md`.
 - **Hillclimb.** Climb one metric toward a target over many measured attempts, keeping or reverting each one. The metric can be an eval score, a bundle size, a pass rate, or a latency ("hillclimb", "push this metric up", "iterate until X%"). `playbooks/hillclimb.md`.
 - **Eval.** Test whether a variant of a skill, prompt, or playbook changes what agents do, with blinded candidates and a judge from another vendor ("eval this skill", "A/B these prompts", "is variant B better"). `playbooks/eval.md`.
 - **Babysit.** Drive an open PR to merge-ready: conflicts, review comments, CI ("babysit", "get it green", "address the review comments", "check on the PR"). `playbooks/babysit.md`.
+- **Shipping.** Land a stack on the user's explicit request, bottom-up, merging only the contiguous run of verified PRs from the bottom ("land it", "land the stack", "merge the verified PRs"). "Ship" alone means commit or open a PR, not merge. `playbooks/shipping.md`.
 - **Session pickup.** Continue work another session started ("pick up", "take over this branch", "continue from the log"). `playbooks/session-pickup.md`.
 - **Pause safely.** Stop mid-task so the work can resume later ("pause", "stop for now", "pick this up tomorrow"). `playbooks/pause-safely.md`.
 - **Worktree cleanup.** Find and remove stale git worktrees ("clean up worktrees"). `playbooks/worktree-cleanup.md`.
@@ -68,7 +70,8 @@ If such a step touches a UI, CLI, or service and no `verify-<app>` skill exists,
 ## Autonomy
 
 - Reversible work proceeds without asking.
-- Always pause for irreversible actions: force-push to shared branches, deploys, data deletion, messages to other people. Replies on a PR the user asked you to babysit are an exception. So are an Autopilot stack or Orchestrate owner's replies on its own PR and its lease-pinned force-push of its own branch. After the user's go on an Orchestrate program, its owners merge their own PRs on a verifier's pass at the current head.
+- Always pause for irreversible actions: force-push to shared branches, deploys, data deletion, messages to other people. Replies on a PR the user asked you to babysit are an exception. So are an Autopilot stack, Autopilot-full, or Orchestrate owner's replies on its own PR and its lease-pinned force-push of its own branch. So are Shipping's verdict comments and its lease-pinned force-pushes of the listed PRs' branches, which the user's land request covers.
+- Merges are user-granted, and each needs a verdict that names the exact head SHA it merges. After the user's go on an Orchestrate program, its owners merge their own PRs on a verifier's pass. After the user's go on an Autopilot-full queue, its owners merge their own PRs in the queue on the coordinator's verdict. On the user's explicit request to land or merge a stack, Shipping merges its verified run once the user confirms the run, or once the request names each PR in the run and asks to merge them into trunk.
 - Session overrides ("don't stop", "going to bed", "run until done") mean keep going and log decisions with the show-me-your-work skill.
 - A skill or playbook that breaks mid-task gets fixed in its own PR. Don't block on it, and don't silently work around it.
 

@@ -95,7 +95,7 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 </style>
 <header class="top">
-  <div class="eyebrow">A Claude Code plugin · version 0.8.23</div>
+  <div class="eyebrow">A Claude Code plugin · version 0.8.24</div>
   <h1>Using flatpaper</h1>
   <p class="lede">flatpaper makes agent work you can trust and still understand a month later. Part 1 gets you running. Part 2 covers the ideas behind it: how to work with agents so the result holds up. Part 3 shows what to type for the situation you're in.</p>
   <div class="five"><span>goal</span><span>done check</span><span>proof</span><span>what you know</span><span>constraints</span></div>
@@ -234,7 +234,7 @@ claude plugin update flatpaper-stack@flatpaper-stack   # after edits; bump the v
     <li>When the subject changes, the work should re-match. A mode mid-feature otherwise treats your new question as the next feature step.</li>
     <li>Give parallel work its own worktree. Agents sharing one working tree fight over files, ports, and build output.</li>
   </ul>
-  <p><b>In flatpaper-stack:</b> <code>flatpaper-mode</code>, its 20 playbooks, the shared Start and Finish steps, re-matching on every prompt, and a worktree for every writing subagent.</p>
+  <p><b>In flatpaper-stack:</b> <code>flatpaper-mode</code>, its 22 playbooks, the shared Start and Finish steps, re-matching on every prompt, and a worktree for every writing subagent.</p>
 </section>
 
 <section class="ch" id="i-understand">
@@ -320,7 +320,7 @@ claude plugin update flatpaper-stack@flatpaper-stack   # after edits; bump the v
     <div><span class="mark fail">ALL GREEN, NOTHING THERE</span><p>Dashboard loaded. Daemon restarted. WebSocket <code>101</code>. <code>/api/runs</code> returned <code>200</code>, with body <code>[]</code>.</p></div>
     <div><span class="mark pass">THE REAL CHECK</span><p>A smoke run actually appears in the dashboard through the Coder URL.</p></div>
   </div>
-  <p><b>In flatpaper-stack:</b> <code>create-verification-skill</code>, <code>maintain-verification-skill</code>, <code>create-formal-verification-skill</code>, <code>maintain-formal-verification-skill</code>, <code>statechart</code>, "Driving the app" in flatpaper-mode, <code>blast-radius</code>, <code>benchmark-checklist</code>, Babysit, and a fresh reviewer in every playbook.</p>
+  <p><b>In flatpaper-stack:</b> <code>create-verification-skill</code>, <code>maintain-verification-skill</code>, <code>create-formal-verification-skill</code>, <code>maintain-formal-verification-skill</code>, <code>statechart</code>, "Driving the app" in flatpaper-mode, <code>blast-radius</code>, <code>benchmark-checklist</code>, Babysit, Shipping, and a fresh reviewer in every playbook.</p>
 </section>
 
 <section class="ch" id="i-away">
@@ -346,7 +346,7 @@ keep a decision log. don't ask me before committing.
     <li>Ask when watched, decide and log when away. The log is what makes deciding safe.</li>
     <li>In the morning, audit decisions, not the whole night. Read the Attention section first.</li>
   </ul>
-  <p><b>In flatpaper-stack:</b> the Autonomous run, Autopilot stack, Orchestrate, Pause safely, and Session pickup playbooks, <code>show-me-your-work</code>, and <code>ketchup</code>.</p>
+  <p><b>In flatpaper-stack:</b> the Autonomous run, Autopilot stack, Autopilot-full, Orchestrate, Pause safely, and Session pickup playbooks, <code>show-me-your-work</code>, and <code>ketchup</code>.</p>
 </section>
 
 <section class="ch" id="i-delegate">
@@ -503,9 +503,10 @@ raise a draft PR.</pre>
       <tr><td>Strip comments that narrate or excuse code</td><td><code>/flatpaper-stack:no-comments src/billing/</code></td></tr>
       <tr id="cp-opening-a-pr"><td>Open a PR after the work is done</td><td><code>raise a draft PR.</code> as a follow-up. Written repo rules replace flatpaper's format defaults. Its review steps always run.</td></tr>
       <tr id="cp-babysit"><td>Get a PR green and answer its review comments</td><td><code>/flatpaper-stack:flatpaper-mode babysit PR 123</code></td></tr>
+      <tr id="cp-shipping"><td>Land a verified stack, bottom PR first</td><td><code>/flatpaper-stack:flatpaper-mode land PR 120, PR 121, and PR 122 into main.</code></td></tr>
     </tbody>
   </table></div>
-  <p>Babysit has three modes. <b>babysit this</b> loops until the PR is merge-ready or needs a person. <b>is it green?</b> does one status pass. <b>threads only</b> answers review threads and never retriggers CI.</p>
+  <p>Babysit has four modes. <b>babysit this</b> loops until the PR is merge-ready or needs a person. <b>background</b> runs the same loop while the session keeps building. <b>is it green?</b> does one status pass. <b>threads only</b> answers review threads and never retriggers CI. On a stack, Babysit works the lowest unmerged PR first. Babysit never merges. Say <b>land it</b> to run Shipping, which merges only the verified PRs from the bottom of the stack up. It restates the run and waits for your yes before the first merge, unless your request named each PR in the run and asked to merge them into trunk. "Ship" alone means commit or open a PR.</p>
 
   <h3>Ship a story that spans several PRs</h3>
   <p>When a story needs three or more PRs, flatpaper-mode switches to Multi-phase plan on its own and says so. It never starts the build without your go. Read the plan, then pick who lands the PRs. Say "just build it" to skip the plan.</p>
@@ -514,7 +515,8 @@ raise a draft PR.</pre>
     <tbody>
       <tr><td>1. Plan it. Nothing gets built</td><td><code>/flatpaper-stack:flatpaper-mode plan MT-4122 as a set of PRs. don't build anything.</code></td></tr>
       <tr><td>2a. Build it, and land the PRs yourself</td><td><code>/flatpaper-stack:flatpaper-mode autopilot the plan in docs/plans/mt-4122.md. build the stack, I'll land it.</code></td></tr>
-      <tr><td>2b. Build it, and let owners merge as each PR passes</td><td><code>/flatpaper-stack:flatpaper-mode orchestrate the plan in docs/plans/mt-4122.md. own it until it lands.</code></td></tr>
+      <tr><td>2b. Build it, and let owners merge each PR on its verdict</td><td><code>/flatpaper-stack:flatpaper-mode autopilot and merge the plan in docs/plans/mt-4122.md.</code></td></tr>
+      <tr><td>2c. Build it, and let owners merge as each PR passes over several days</td><td><code>/flatpaper-stack:flatpaper-mode orchestrate the plan in docs/plans/mt-4122.md. own it until it lands.</code></td></tr>
     </tbody>
   </table></div>
 
@@ -524,6 +526,7 @@ raise a draft PR.</pre>
     <tbody>
       <tr id="cp-autonomous-run"><td>Let it run while you're gone</td><td><code>/flatpaper-stack:flatpaper-mode im going to bed. migrate every caller to the new parser. done means zero old callers and fixtures pass. keep a decision log.</code></td></tr>
       <tr id="cp-autopilot-stack"><td>Build a queue of PRs while you're gone, and land them yourself</td><td><code>/flatpaper-stack:flatpaper-mode autopilot the plan in docs/plans/grpc.md. build the stack, I'll land it.</code></td></tr>
+      <tr id="cp-autopilot-full"><td>Build a queue of PRs while you're gone, and let each one merge on its verdict</td><td><code>/flatpaper-stack:flatpaper-mode autopilot and merge the plan in docs/plans/grpc.md. run the queue to merged.</code></td></tr>
       <tr id="cp-orchestrate"><td>Hand off a multi-day project that merges as it goes</td><td><code>/flatpaper-stack:flatpaper-mode run this whole project. own the gRPC migration until it lands.</code></td></tr>
       <tr id="cp-pause-safely"><td>Stop for now and resume later</td><td><code>pause for now. I'll pick this up tomorrow.</code></td></tr>
       <tr><td>See what changed since your last message</td><td><code>/flatpaper-stack:ketchup</code></td></tr>
@@ -824,4 +827,4 @@ new task: review the open PR.</pre>
 </section>
 </main>
 </div>
-<footer>Built from the flatpaper repo at version 0.8.23 with <code>docs/guide/build.sh</code>.</footer>
+<footer>Built from the flatpaper repo at version 0.8.24 with <code>docs/guide/build.sh</code>.</footer>
