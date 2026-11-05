@@ -7,7 +7,7 @@ description: Drive and inspect a local web, IDE, or Electron UI in headless Chro
 
 Drive a local UI and keep evidence of what it did. If the project has a `verify-<app>` skill, follow it instead. This skill is the fallback driver, and a recipe for that skill's Drive section.
 
-Reuse the repo's own harness first: Playwright or Cypress specs, Storybook, browser scripts, or an Electron launch script. It already knows the app's startup and markers. If none fits, use `${CLAUDE_PLUGIN_ROOT}/skills/control-ui/scripts/cdp.mjs`, which drives one page of headless Chrome over raw CDP. Do not add Playwright or any other package to the project for a probe unless the user asks.
+Reuse the repo's own harness first: Playwright or Cypress specs, Storybook, browser scripts, or an Electron launch script. It already knows the app's startup and markers. If none fits, use `${CLAUDE_PLUGIN_ROOT}/skills/control-ui/scripts/cdp.mjs`, which drives one page of headless Chrome over raw CDP. When `CLAUDE_PLUGIN_ROOT` is unset, as in a clone of this plugin, use the path from the clone's root, `skills/control-ui/scripts/cdp.mjs`. Do not add Playwright or any other package to the project for a probe unless the user asks.
 
 ## What it is for
 
@@ -28,7 +28,11 @@ Reuse the repo's own harness first: Playwright or Cypress specs, Storybook, brow
 
 ## cdp.mjs
 
-It needs Node 22 or later and a local Chrome or Chromium. Set `CHROME` to a browser binary to choose one. Without `--port`, it launches headless Chrome with a temp profile under `$TMPDIR`. It kills that Chrome and removes the profile on every exit, including a failed step and a signal. Write the output files to the session scratchpad.
+It needs Node 22 or later and a local Chrome or Chromium. It looks for `/Applications/Google Chrome.app`, then `/Applications/Chromium.app`, then `google-chrome`, `google-chrome-stable`, `chromium`, `chromium-browser`, and `chrome` on `PATH`. Set `CHROME` to a browser binary to choose one. With no browser found, it prints `no Chrome or Chromium found; set CHROME to its binary` and exits 2.
+
+Without `--port`, it launches headless Chrome in a temp directory under `$TMPDIR`, in its own process group. It kills the group and removes the directory on every exit, including a failed step and a signal. On macOS it also removes the `com.google.Chrome.*` directory that Chrome makes in the real temp directory.
+
+In these examples, `$OUT` is a directory you make for this run's files in the session scratchpad, for example `OUT=<scratchpad>/ui-<slug>; mkdir -p "$OUT"`. Run `node "$cdp" --help` for the full usage.
 
 ```bash
 cdp="${CLAUDE_PLUGIN_ROOT}/skills/control-ui/scripts/cdp.mjs"
@@ -37,19 +41,32 @@ node "$cdp" http://127.0.0.1:<port> --wait-for '[data-testid=app]' \
 node "$cdp" page.html --dom 'main h1'
 node "$cdp" page.html --dom 'form' --html
 node "$cdp" page.html --eval 'document.title'
-node "$cdp" --port <debug-port> --match '<app-root-selector>' --screenshot "$OUT/app.png"
 node "$cdp" diff "$OUT/before.png" "$OUT/after.png" --out "$OUT/diff.png"
 ```
 
-- The steps run in this order: open, `--wait-for`, `--eval`, `--dom`, `--screenshot`. `--console` is written last, even when a step fails.
-- `--wait-for <css>` polls until the element exists. After `--timeout <ms>` (default 10000) it exits 124 and names the selector.
-- The same timeout bounds every page load and CDP call, so a hung page also exits 124 and names the call.
+- The steps run in this order: open, `--eval`, `--wait-for`, `--dom`, `--screenshot`. `--console` is written last, even when a step fails.
+- `--eval <js>` prints the value as text or JSON. It awaits a returned Promise, and it allows top-level `await`. A thrown error or a rejected Promise exits 1.
+- `--wait-for <css>` polls until the element exists. After `--timeout` it exits 124 and names the selector.
+- `--timeout <ms>` (default 10000) bounds each step and each CDP call, not the whole run. The page load, the browser connection, and the `--port` lookup each get it too. Every timeout exits 124 and names what it waited for.
 - `--dom <css>` prints the `innerText` of each match, or the `outerHTML` with `--html`. No match exits 1.
-- `--console <file>` gets one line per console call (`log: ...`, `error: ...`), browser log entry, and uncaught exception (`exception: ...`).
-- `--eval <js>` prints the value. A thrown error exits 1.
-- `--viewport <W>x<H>` sets the page size (default 1280x800, scale 1). `--full` captures the whole page.
-- `--port <n>` attaches to a running browser and leaves it running. It picks the first page that matches `--match <css>`, or opens the URL in a new tab and closes the tab after. With no matching page, it lists each page's title and URL and exits 1.
-- `diff` decodes both PNGs on a canvas in headless Chrome and prints `<n> of <total> pixels differ`. It exits 0 only when no pixel differs. A size mismatch prints both sizes and exits 1. `--out` writes the changed pixels in red over a faded copy of the first image.
+- `--console <file>` gets one line per console call, labeled with the method's type (`log:`, `info:`, `warning:`, `error:`, `debug:`). Browser log entries, such as a failed request, get their level (`verbose:`, `info:`, `warning:`, `error:`). Uncaught exceptions get `exception:`.
+- `--viewport <W>x<H>` sets the page size at scale 1. A launched browser defaults to 1280x800. `--full` captures the whole page.
+- `diff` decodes both PNGs on a canvas in headless Chrome and prints `<n> of <total> pixels differ`. It has no tolerance: one changed channel value counts. It exits 0 only when no pixel differs. A size mismatch prints both sizes, writes no `--out`, and exits 1. Otherwise `--out` is always written, with changed pixels in red over a faded copy of the first image.
+- Exit codes: 0 ok, 1 a failed step or a diff with differences, 2 a usage error, a launch error, or no browser on `--port`, 124 a timeout, and 129, 130, or 143 on SIGHUP, SIGINT, or SIGTERM.
+
+## Attach to a running browser
+
+`--port <n>` attaches to a browser started with `--remote-debugging-port=<n>` and leaves it running. It picks the first page where `--match <css>` finds an element, or opens the URL you pass in a new tab and closes that tab after. With no matching page, it lists each page's title and URL and exits 1. It sets no viewport unless you pass `--viewport`, and an override applies to that page, the user's window included, for the rest of the run.
+
+Headless Chrome opens only one URL from its command line ("Multiple targets are not supported in headless mode"). Open more tabs with `PUT /json/new`:
+
+```bash
+"$CHROME" --headless=new --remote-debugging-port=9222 --user-data-dir="$OUT/profile" about:blank &
+curl -s -X PUT "http://127.0.0.1:9222/json/new?http://127.0.0.1:<port>/settings"
+node "$cdp" --port 9222 --match '<app-root-selector>' --screenshot "$OUT/app.png"
+```
+
+Stop that browser and remove `$OUT/profile` when you are done.
 
 ## Interaction loop
 
@@ -60,7 +77,21 @@ node "$cdp" diff "$OUT/before.png" "$OUT/after.png" --out "$OUT/diff.png"
 5. Check that the expected state change happened.
 6. Keep the before and after files when the user asked for proof.
 
-Run each action with `--eval` (for example `document.querySelector('[data-testid=save]').click()`) and a `--wait-for` on the state it should produce. Every run of `cdp.mjs` starts a fresh browser, so a multi-step flow goes in one `--eval`, or attaches to a long-running browser with `--port`.
+Do the action with `--eval` and wait for the state it should produce with `--wait-for`. `--eval` runs first, so this works in one call:
+
+```bash
+node "$cdp" "$URL" --eval 'document.querySelector("[data-testid=save]").click()' \
+  --wait-for '[data-testid=saved]' --screenshot "$OUT/after.png"
+```
+
+To wait for the page before the action, await inside `--eval`:
+
+```bash
+--eval 'while (!document.querySelector("#app")) await new Promise((r) => setTimeout(r, 100));
+  document.querySelector("#go").click()'
+```
+
+Every run of `cdp.mjs` without `--port` starts a fresh browser, so a multi-step flow goes in one `--eval`, or attaches to a long-running browser with `--port`.
 
 ## CDP capabilities
 
@@ -77,7 +108,7 @@ Use raw CDP only when the page's own APIs and `cdp.mjs` are not enough. Attach t
 When several windows or tabs share one debug port:
 
 - Select by a positive marker for the surface under test, such as an app root selector.
-- Add a negative marker when you must avoid a similar surface.
+- Add a negative marker when you must avoid a similar surface, for example `--match 'body:has(<app-root>):not(:has(<other-surface>))'`.
 - If no page matches, list the page titles and URLs instead of guessing. `cdp.mjs --match` does this.
 
 ## Guardrails
@@ -85,7 +116,7 @@ When several windows or tabs share one debug port:
 - Do not reuse an element reference after a navigation or a structural change. Query again.
 - Click by coordinates only right after a fresh screenshot.
 - Keep test data local and disposable.
-- Do not keep screenshots or heap snapshots from a privacy-sensitive workspace unless the user agrees.
+- Do not keep screenshots or heap snapshots from a privacy-sensitive workspace unless the user explicitly agrees.
 - Do not hard-code selectors, ports, or script paths from another repository. Find the current repo's app markers.
 - Stop the dev servers, debug sessions, and browsers you started, and remove their temp profiles. A Chrome process left running is a bug.
 

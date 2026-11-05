@@ -1,26 +1,29 @@
 #!/usr/bin/env node
-// Drive one page of headless Chrome over raw CDP. Zero dependencies, Node 22+.
-//
-//   cdp.mjs <url|file> [--wait-for <css>] [--timeout <ms>] [--eval <js>]
-//           [--dom <css> [--html]] [--screenshot <png> [--full]]
-//           [--console <file>] [--viewport <WxH>]
-//   cdp.mjs --port <n> [--match <css>] [<url>] [same flags]
-//   cdp.mjs diff <a.png> <b.png> [--out <diff.png>] [--timeout <ms>]
-//
-// Steps run in this order: open, wait-for, eval, dom, screenshot. Without
-// --port it launches Chrome ($CHROME overrides the search) with a temp
-// profile and always kills it. With --port it attaches to a running browser,
-// picks the page that matches --match (or opens <url> in a new tab), and
-// leaves the browser running.
-//
-// Exit codes: 0 ok, 1 failed step or diff found differences, 2 usage or
-// launch error, 124 a step timed out (--timeout, default 10000 ms).
-
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+
+const USAGE = `Drive one page of headless Chrome over raw CDP. Zero dependencies, Node 22+.
+
+  cdp.mjs <url|file> [--eval <js>] [--wait-for <css>] [--dom <css> [--html]]
+          [--screenshot <png> [--full]] [--console <file>] [--viewport <W>x<H>]
+          [--timeout <ms>]
+  cdp.mjs --port <n> [--match <css>] [<url>] [same flags]
+  cdp.mjs diff <a.png> <b.png> [--out <diff.png>] [--timeout <ms>]
+
+Steps run in this order: open, eval, wait-for, dom, screenshot. Without
+--port it launches Chrome ($CHROME overrides the search) in a temp directory
+and always kills it. With --port it attaches to a running browser, picks the
+page that matches --match (or opens <url> in a new tab), and leaves the
+browser running. --timeout (default 10000 ms) bounds each step and each CDP
+call, not the whole run.
+
+Exit codes: 0 ok, 1 a step failed or diff found differences, 2 usage error,
+launch error, or no browser on --port, 124 a step timed out, 129, 130, or 143
+killed by SIGHUP, SIGINT, or SIGTERM.
+`;
 
 class Exit extends Error {
   constructor(code, message) {
@@ -33,8 +36,14 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const timedOut = (ms, what) => new Exit(124, `timed out after ${ms}ms waiting for ${what}`);
 const exceptionText = (d) => d.exception?.description || d.text;
 
+function withDeadline(promise, ms, what) {
+  let timer;
+  const deadline = new Promise((_, rej) => { timer = setTimeout(() => rej(timedOut(ms, what)), ms); });
+  return Promise.race([promise, deadline]).finally(() => clearTimeout(timer));
+}
+
 function parseArgs(argv) {
-  const opts = { timeout: 10000, viewport: [1280, 800], positional: [] };
+  const opts = { timeout: 10000, positional: [] };
   const valued = {
     "--wait-for": "waitFor", "--timeout": "timeout", "--eval": "eval", "--dom": "dom",
     "--screenshot": "screenshot", "--console": "console", "--viewport": "viewport",
@@ -42,7 +51,8 @@ function parseArgs(argv) {
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === "--html") opts.html = true;
+    if (a === "--help" || a === "-h") opts.help = true;
+    else if (a === "--html") opts.html = true;
     else if (a === "--full") opts.full = true;
     else if (valued[a]) {
       if (i + 1 >= argv.length) throw new Exit(2, `${a} needs a value`);
@@ -52,10 +62,12 @@ function parseArgs(argv) {
   }
   opts.timeout = Number(opts.timeout);
   if (!(opts.timeout > 0)) throw new Exit(2, "--timeout must be a positive number of ms");
-  if (typeof opts.viewport === "string") {
+  if (opts.viewport !== undefined) {
     const m = /^(\d+)x(\d+)$/.exec(opts.viewport);
     if (!m) throw new Exit(2, "--viewport must look like 1280x800");
     opts.viewport = [Number(m[1]), Number(m[2])];
+  } else if (!opts.port) {
+    opts.viewport = [1280, 800];
   }
   return opts;
 }
@@ -82,11 +94,28 @@ const killGroup = (chrome, signal) => {
     process.kill(-chrome.proc.pid, signal);
   } catch {}
 };
+
+// On macOS Chrome keeps its singleton socket in a com.google.Chrome.* dir
+// under the real temp dir, whatever TMPDIR says, and links to it from the
+// profile.
+function singletonDir(chrome) {
+  try {
+    const dir = dirname(readlinkSync(join(chrome.dir, "profile", "SingletonSocket")));
+    if (basename(dir).startsWith("com.google.Chrome.") || basename(dir).startsWith("org.chromium.Chromium.")) return dir;
+  } catch {}
+  return undefined;
+}
+
+function removeDirs(chrome) {
+  chrome.singleton ??= singletonDir(chrome);
+  for (const dir of [chrome.singleton, chrome.dir]) if (dir) rmSync(dir, { recursive: true, force: true });
+}
+
 for (const [signal, code] of [["SIGINT", 130], ["SIGTERM", 143], ["SIGHUP", 129]]) {
   process.on(signal, () => {
     for (const c of running) {
       killGroup(c, "SIGKILL");
-      rmSync(c.dir, { recursive: true, force: true });
+      removeDirs(c);
     }
     process.exit(code);
   });
@@ -98,8 +127,9 @@ async function launchChrome() {
   mkdirSync(profile);
   const proc = spawn(findChrome(), [
     "--headless=new", `--user-data-dir=${profile}`, "--remote-debugging-port=0",
-    "--no-first-run", "--no-default-browser-check", "--disable-gpu", "--hide-scrollbars",
-    "--mute-audio", "about:blank",
+    "--no-first-run", "--no-default-browser-check", "--disable-component-update",
+    "--disable-component-extensions-with-background-pages", "--disable-default-apps", "--disable-extensions",
+    "--disable-background-networking", "--disable-gpu", "--hide-scrollbars", "--mute-audio", "about:blank",
   ], { stdio: ["ignore", "ignore", "pipe"], detached: true, env: { ...process.env, TMPDIR: dir } });
   let stderr = "";
   proc.stderr.on("data", (d) => { stderr += d; });
@@ -112,6 +142,7 @@ async function launchChrome() {
     const lines = existsSync(portFile) ? readFileSync(portFile, "utf8").split("\n") : [];
     if (lines.length >= 2) {
       chrome.ws = `ws://127.0.0.1:${lines[0]}${lines[1]}`;
+      chrome.singleton = singletonDir(chrome);
       return chrome;
     }
     if (proc.exitCode !== null || Date.now() > deadline) {
@@ -135,7 +166,7 @@ async function killChrome(chrome) {
   killGroup(chrome, "SIGKILL");
   for (let i = 0; i < 20; i++) {
     try {
-      rmSync(chrome.dir, { recursive: true, force: true });
+      removeDirs(chrome);
       return;
     } catch {
       await sleep(100);
@@ -147,10 +178,16 @@ async function killChrome(chrome) {
 class Cdp {
   static async connect(url, timeout) {
     const ws = new WebSocket(url);
-    await new Promise((res, rej) => {
+    const open = new Promise((res, rej) => {
       ws.onopen = res;
       ws.onerror = () => rej(new Exit(2, `cannot connect to ${url}`));
     });
+    try {
+      await withDeadline(open, timeout, `a connection to ${url}`);
+    } catch (err) {
+      ws.close();
+      throw err;
+    }
     return new Cdp(ws, timeout);
   }
 
@@ -212,9 +249,20 @@ class Cdp {
 }
 
 async function evaluate(cdp, session, expression) {
-  const r = await cdp.send("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true }, session);
-  if (r.exceptionDetails) throw new Exit(1, `eval threw: ${exceptionText(r.exceptionDetails)}`);
-  return r.result.value;
+  const check = (r) => {
+    if (r.exceptionDetails) throw new Exit(1, `eval threw: ${exceptionText(r.exceptionDetails)}`);
+    return r.result;
+  };
+  // replMode allows top-level await, but it resolves to a returned Promise
+  // without awaiting it, so await that Promise as a second step.
+  const result = check(await cdp.send("Runtime.evaluate",
+    { expression, awaitPromise: true, replMode: true }, session));
+  if (!result.objectId) return result.value;
+  const settled = result.subtype === "promise"
+    ? await cdp.send("Runtime.awaitPromise", { promiseObjectId: result.objectId, returnByValue: true }, session)
+    : await cdp.send("Runtime.callFunctionOn",
+      { functionDeclaration: "function () { return this; }", objectId: result.objectId, returnByValue: true }, session);
+  return check(settled).value;
 }
 
 const exists = (cdp, session, css) => evaluate(cdp, session, `!!document.querySelector(${JSON.stringify(css)})`);
@@ -237,6 +285,19 @@ async function pickPage(cdp, match) {
   throw new Exit(1, `no page matches ${match || "(any)"}; pages:\n${list}`);
 }
 
+async function browserUrl(port, timeout) {
+  const url = `http://127.0.0.1:${port}/json/version`;
+  let res;
+  try {
+    res = await fetch(url, { signal: AbortSignal.timeout(timeout) });
+  } catch (err) {
+    if (err.name === "TimeoutError") throw timedOut(timeout, url);
+    throw new Exit(2, `no browser listening on port ${port}`);
+  }
+  if (!res.ok) throw new Exit(2, `no browser listening on port ${port}`);
+  return (await withDeadline(res.json(), timeout, url)).webSocketDebuggerUrl;
+}
+
 async function withPage(opts, fn) {
   let chrome;
   let cdp;
@@ -244,9 +305,7 @@ async function withPage(opts, fn) {
   try {
     let wsUrl;
     if (opts.port) {
-      const res = await fetch(`http://127.0.0.1:${opts.port}/json/version`).catch(() => null);
-      if (!res?.ok) throw new Exit(2, `no browser listening on port ${opts.port}`);
-      wsUrl = (await res.json()).webSocketDebuggerUrl;
+      wsUrl = await browserUrl(opts.port, opts.timeout);
     } else {
       chrome = await launchChrome();
       wsUrl = chrome.ws;
@@ -269,7 +328,7 @@ async function withPage(opts, fn) {
 
 async function drive(opts) {
   const target = opts.positional[0];
-  if (!opts.port && !target) throw new Exit(2, "usage: cdp.mjs <url|file> [flags], or cdp.mjs --port <n> [--match <css>]");
+  if (!opts.port && !target) throw new Exit(2, USAGE);
   const log = [];
   try {
     await withPage(opts, async (cdp, session) => {
@@ -284,13 +343,16 @@ async function drive(opts) {
           log.push(`${msg.params.entry.level}: ${msg.params.entry.text}`);
         }
       });
-      const [width, height] = opts.viewport;
-      await Promise.all([
+      const setup = [
         cdp.send("Page.enable", {}, session),
         cdp.send("Runtime.enable", {}, session),
         cdp.send("Log.enable", {}, session),
-        cdp.send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: false }, session),
-      ]);
+      ];
+      if (opts.viewport) {
+        const [width, height] = opts.viewport;
+        setup.push(cdp.send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: false }, session));
+      }
+      await Promise.all(setup);
 
       if (target) {
         const loaded = cdp.once("Page.loadEventFired", session);
@@ -299,17 +361,17 @@ async function drive(opts) {
         await loaded;
       }
 
+      if (opts.eval) {
+        const value = await evaluate(cdp, session, opts.eval);
+        if (value !== undefined) console.log(typeof value === "string" ? value : JSON.stringify(value));
+      }
+
       if (opts.waitFor) {
         const deadline = Date.now() + opts.timeout;
         while (!(await exists(cdp, session, opts.waitFor))) {
           if (Date.now() > deadline) throw timedOut(opts.timeout, opts.waitFor);
           await sleep(100);
         }
-      }
-
-      if (opts.eval) {
-        const value = await evaluate(cdp, session, opts.eval);
-        if (value !== undefined) console.log(typeof value === "string" ? value : JSON.stringify(value));
       }
 
       if (opts.dom) {
@@ -380,7 +442,7 @@ const COMPARE = `async (a, b, wantOut) => {
 
 async function diff(opts) {
   const [a, b] = opts.positional.slice(1);
-  if (!a || !b) throw new Exit(2, "usage: cdp.mjs diff <a.png> <b.png> [--out <diff.png>]");
+  if (!a || !b) throw new Exit(2, USAGE);
   const [da, db] = [a, b].map((p) => {
     if (!existsSync(p)) throw new Exit(2, `no such file: ${p}`);
     return readFileSync(p).toString("base64");
@@ -400,6 +462,10 @@ async function diff(opts) {
 async function main() {
   if (typeof WebSocket === "undefined") throw new Exit(2, `needs Node 22+ for the global WebSocket, have ${process.version}`);
   const opts = parseArgs(process.argv.slice(2));
+  if (opts.help) {
+    process.stdout.write(USAGE);
+    return 0;
+  }
   return opts.positional[0] === "diff" ? diff(opts) : drive(opts);
 }
 
