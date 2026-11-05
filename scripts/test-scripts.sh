@@ -216,6 +216,13 @@ setTimeout(() => { const p = document.createElement("p"); p.id = "late"; p.textC
 </script>
 <script>throw new Error("boom-uncaught")</script>
 EOF
+cat > "$ui/click.html" <<'EOF'
+<!doctype html><body>
+<button id="save" onclick="setTimeout(() => { const p = document.createElement('p'); p.id = 'saved'; p.textContent = 'saved'; document.body.append(p); }, 200)">Save</button>
+EOF
+real_tmp=$(getconf DARWIN_USER_TEMP_DIR 2> /dev/null) || real_tmp=${TMPDIR:-/tmp}
+chrome_leftovers() { ls -A "$real_tmp" 2> /dev/null | grep -E '^\.?(com\.google\.Chrome|org\.chromium\.Chromium)\.' | sort; }
+chrome_leftovers > "$tmp/chrome-before"
 rc=
 cdp_run() { TMPDIR="$ui/profiles" capped 30 node "$cdp" "$@"; }
 if ! node -e 'process.exit(typeof WebSocket === "function" ? 0 : 1)' 2> /dev/null; then
@@ -233,6 +240,20 @@ elif [ -n "${rc:-}" ]; then
 	[ "$(png_head "$ui/a.png" 24)" = 89504e470d0a1a0a0000000d494844520000050000000320 ] && ok || bad "cdp --screenshot: want a 1280x800 PNG"
 	grep -qx 'log: fixture-ready 42' "$ui/console.txt" 2> /dev/null && ok || bad "cdp --console: want the logged line"
 	grep -q '^exception: Error: boom-uncaught' "$ui/console.txt" 2> /dev/null && ok || bad "cdp --console: want the uncaught exception"
+	cdp_run --help
+	expect "cdp --help" 0 '^Exit codes: '
+	cdp_run "$ui/click.html" --eval 'document.getElementById("save").click()' --wait-for '#saved' --dom '#saved'
+	expect "cdp --eval clicks, then --wait-for sees the result" 0 '^saved$'
+	cdp_run "$ui/click.html" --eval 'await null; new Promise((r) => setTimeout(() => r("promised"), 50))'
+	expect "cdp --eval with top-level await, returning a Promise" 0 '^promised$'
+	if command -v python3 > /dev/null; then
+		python3 -c 'import socket, time; s = socket.socket(); s.bind(("127.0.0.1", 0)); s.listen(5); print(s.getsockname()[1], flush=True); time.sleep(30)' > "$ui/port" &
+		listener=$!
+		for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do [ -s "$ui/port" ] && break; sleep 0.1; done
+		cdp_run --port "$(cat "$ui/port")" --timeout 1000
+		expect "cdp --port to a server that never answers" 124 'waiting for http://127\.0\.0\.1:'
+		{ kill "$listener" && wait "$listener"; } 2> /dev/null
+	fi
 	cdp_run "$ui/f.html" --wait-for '#missing' --timeout 500
 	expect "cdp --wait-for a missing element" 124 'waiting for #missing'
 	cdp_run "$ui/f.html" --eval 'while (true) {}' --timeout 1500
@@ -250,6 +271,8 @@ elif [ -n "${rc:-}" ]; then
 	[ "$rc" = 143 ] && ok || dump "cdp killed mid-wait: want exit 143, got $rc:"
 	pgrep -f "$ui/profiles" > /dev/null && bad "cdp: Chrome still running after exit" || ok
 	[ -z "$(ls -A "$ui/profiles")" ] && ok || bad "cdp: temp profile left behind: $(ls "$ui/profiles")"
+	new=$(chrome_leftovers | comm -13 "$tmp/chrome-before" -)
+	[ -z "$new" ] && ok || bad "cdp: Chrome left files in $real_tmp: $new"
 fi
 
 drive="$root/skills/control-cli/scripts/drive.sh"
@@ -279,9 +302,16 @@ else
 		"$drive" start "$s-dies" -- sh -c 'echo bye; exit 3'
 		capped 15 "$drive" wait "$s-dies" READY
 		expect "drive.sh command that exits first" 1 '^bye$'
+		[ "$("$drive" status "$s-dies")" = 3 ] && ok || bad "drive.sh status: want 3, got $("$drive" status "$s-dies")"
+		"$drive" capture "$s-dies" | grep -qx bye && ok || bad "drive.sh capture after exit: want the scrollback line 'bye'"
 		"$drive" kill "$s-dies"
 
 		"$drive" start "$s-hang" -- $hang
+		[ "$("$drive" status "$s-hang")" = running ] && ok || bad "drive.sh status: want running"
+		for bad_timeout in 1.5 abc; do
+			capped 5 "$drive" wait "$s-hang" READY --timeout "$bad_timeout"
+			expect "drive.sh --timeout $bad_timeout" 2 '^  drive\.sh wait '
+		done
 		capped 10 "$drive" wait "$s-hang" READY --timeout 3
 		"$drive" kill "$s-hang"
 		hang_case "drive.sh hang"
@@ -290,6 +320,12 @@ else
 	expect "pty-drive.py send and wait for output" 0 '42'
 	capped 10 "$pty" --timeout 3 --wait READY -- $hang
 	hang_case "pty-drive.py hang"
+	capped 5 "$pty" --size abc -- true
+	expect "pty-drive.py --size abc" 2 'size must look like'
+	capped 5 "$pty" --timeout x --wait READY -- true
+	expect "pty-drive.py --timeout x" 2 'timeout must be a positive number'
+	capped 10 "$pty" --timeout 5 --wait bye -- sh -c 'echo bye; exit 3'
+	expect "pty-drive.py reports the exit status" 0 '^pty-drive: command exited with status 3$'
 fi
 
 [ "$skipped" -eq 0 ] || echo "test-scripts: $skipped inconclusive, not counted as passes"
