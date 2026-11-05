@@ -103,7 +103,8 @@
       "sources": [
         {
           "path": "skills/flatpaper-mode/playbooks/investigation.md",
-          "line": 6
+          "line": 5,
+          "end_line": 8
         }
       ]
     },
