@@ -27,7 +27,7 @@ Skip Phase A only when the work is greenfield with no surrounding system to inte
 
 Run the `arena` skill with the design-sketch task and the Phase A grounding. Paste `references/runner-prompt.md` and `references/rationale-template.md` into each runner's brief. Use arena's default runners.
 
-Design it twice. Require at least two structurally distinct candidates before synthesis, even when the first looks sufficient (exhaust the design space). Whole-shape alternatives, not point fixes inside one shape.
+Design it twice. Require at least two structurally distinct candidates before synthesis, even when the first looks sufficient (exhaust the design space). If arena returns fewer, run one more `sonnet` runner whose brief names the shape to avoid. Whole-shape alternatives, not point fixes inside one shape.
 
 Screen every candidate against `${CLAUDE_PLUGIN_ROOT}/skills/flatpaper-mode/references/design-red-flags.md` before synthesis. Assume the next contributor is an agent that sees only the files it opened, copies the nearest example, and takes the shortest path that compiles. Prefer the design where a change that looks right from one file is right for the whole repo.
 
