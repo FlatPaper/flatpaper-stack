@@ -7,7 +7,7 @@ description: Drive, inspect, and profile an interactive CLI or TUI with a repeat
 
 Exercise an interactive CLI with a harness you can rerun, not by hand. If the project has a `verify-<app>` skill, follow it instead. This skill is the fallback driver, and a recipe for that skill's Drive section.
 
-Reuse the repo's own harness first: package scripts, end-to-end tests, demo recorders, expect scripts, or PTY helpers. It already knows the app's startup, environment, and prompts. If none fits, use `${CLAUDE_PLUGIN_ROOT}/skills/control-cli/scripts/drive.sh` (tmux), or `scripts/pty-drive.py` on a host without tmux.
+Reuse the repo's own harness first: package scripts, end-to-end tests, demo recorders, expect scripts, or PTY helpers. It already knows the app's startup, environment, and prompts. If none fits, use `${CLAUDE_PLUGIN_ROOT}/skills/control-cli/scripts/drive.sh` (tmux), or `${CLAUDE_PLUGIN_ROOT}/skills/control-cli/scripts/pty-drive.py` on a host without tmux. When `CLAUDE_PLUGIN_ROOT` is unset, as in a clone of this plugin, use the paths from the clone's root, such as `skills/control-cli/scripts/drive.sh`.
 
 ## What it is for
 
@@ -28,31 +28,48 @@ Reuse the repo's own harness first: package scripts, end-to-end tests, demo reco
 7. Save the transcript and any profile files in the session scratchpad.
 8. Kill the session.
 
+## Harness options
+
+- A repo-native harness comes first, because checked-in scripts know the app's startup, environment, and prompts.
+- tmux, through `drive.sh`: managed sessions, `capture-pane`, `send-keys`, and attach and detach.
+- A PTY, through `pty-drive.py`, when tmux is missing. A short Node or Expect script also works.
+- A runtime inspector: the Node or Bun inspector, for CPU profiles, heap snapshots, and live evaluation in the running process.
+- A terminal recorder: the repo's own demo tools, or an asciinema-compatible recorder, only when the user asks for a demo.
+
 ## drive.sh
 
-It runs each session on a private tmux server (`tmux -L control-cli`), so it never touches your own tmux sessions.
+It runs each session on a private tmux server (`tmux -L control-cli`), so it never touches your own tmux sessions. In these examples, `$OUT` is a directory you make for this run's files in the session scratchpad, for example `OUT=<scratchpad>/cli-<slug>; mkdir -p "$OUT"`.
 
 ```bash
 drive="${CLAUDE_PLUGIN_ROOT}/skills/control-cli/scripts/drive.sh"
-"$drive" start app -- <command-under-test> <args>
-"$drive" wait app '<ready pattern>' --timeout 10
-"$drive" type app 'help'
-"$drive" send app Enter
-"$drive" wait app '<expected output>'
-"$drive" capture app > "$OUT/after.txt"
-"$drive" kill app
+s="app-$$"
+"$drive" start "$s" -- env NO_COLOR=1 <command-under-test> <args>
+"$drive" wait "$s" '<ready pattern>' --timeout 10
+"$drive" type "$s" 'help'
+"$drive" send "$s" Enter
+"$drive" wait "$s" '<output that only help prints>'
+"$drive" capture "$s" > "$OUT/after.txt"
+"$drive" kill "$s"
 ```
 
-- `start <session> [--size <cols>x<rows>] -- <command>` runs the command in a new 120x40 session. The pane stays after the command exits, so its last screen can still be read.
-- `wait <session> <regex>` polls the visible screen with `grep -E`. On a match it prints the screen and exits 0. If the command exits first, it prints the output and exits 1. After `--timeout` seconds (default 10) it prints the last screen and exits 124.
+- `start <session> [--size <cols>x<rows>] -- <command>` runs the command in a new 120x40 session. The pane stays after the command exits, so its output can still be read.
+- `wait <session> <regex>` polls the screen with `grep -E`. On a match it prints the screen and exits 0. If the command exits first, it prints the output and exits 1. After `--timeout` whole seconds (default 10) it prints the last screen and exits 124.
 - `type` sends literal text. `send` sends tmux key names, such as `Enter`, `Escape`, `C-c`, and `Up`.
-- `capture` prints the screen. `kill` ends the session and its command.
+- `capture` prints the screen. `status` prints `running`, or the command's exit status once it has exited. `kill` ends the session and its command.
+- Exit codes: 0 ok, 1 the command exited before the match or the session does not exist, 2 a usage error (such as `--timeout 1.5`), and 124 a timeout.
 
-`wait` matches anything on screen, including a prompt from an earlier step. Wait for output the last action produced, not for a prompt that is already visible.
+Rules for reliable waits:
+
+- Give each session a unique name, such as one with `$$` in it. Every agent on the machine shares the private server, so a reused name collides.
+- Set the environment in the command with `env VAR=value <command>`. A session gets the environment of the server, and the server keeps the environment of whichever call started it.
+- `wait` matches anything on screen, including a prompt from an earlier step and the echo of text you typed. Wait for output that only the last action produces.
+- After the command exits, `wait` and `capture` read the scrollback too, not only the last screen.
+- To confirm a clean exit, wait for the exit and check the status: `"$drive" wait "$s" 'Pane is dead'` and then `"$drive" status "$s"` prints `0`.
+- A command that prints nothing has no ready pattern. Check `status` to see that it is still running, then wait for the output its first input produces. A `wait` that exits 124 is the hang verdict.
 
 ## pty-drive.py
 
-It runs the whole session in one call: the steps are flags, in order. It needs only Python 3.
+It runs the whole session in one call: the steps are flags, in order. It needs only Python 3.9 or later.
 
 ```bash
 "${CLAUDE_PLUGIN_ROOT}/skills/control-cli/scripts/pty-drive.py" --timeout 10 \
@@ -60,21 +77,22 @@ It runs the whole session in one call: the steps are flags, in order. It needs o
   --transcript "$OUT/session.txt" -- <command-under-test> <args>
 ```
 
-- `--wait <regex>` matches only the output after the previous match. Terminal escape sequences are stripped and line endings become `\n` first, so `^42$` matches a line as it does in `drive.sh`.
+- `--size <cols>x<rows>` sets the terminal size (default 120x40). `--transcript <file>` also writes the raw output, escape sequences included.
+- `--wait <regex>` matches only the output after the previous match. Terminal escape sequences are stripped and line endings become `\n` first, so `^42$` matches a line as it does in `drive.sh`. The echo of sent text is output too.
 - `--send <text>` takes backslash escapes, so `\r` is Enter and `\x03` is Ctrl-C.
-- `--timeout <seconds>` applies to the waits after it.
-- It prints the transcript and exits 0 at the end, 1 if the command exits before a match, and 124 on a timeout. It kills the command's process group on every exit.
+- `--timeout <seconds>` applies to the waits after it, and decimals work.
+- It prints the transcript and exits 0 when every step passed. It exits 1 if the command exits before a match, 2 on a usage error, 124 on a timeout, and 130 or 143 on SIGINT or SIGTERM. When the command exits on its own during the run, the last line on stderr is `pty-drive: command exited with status <n>`. Check that line to confirm a clean exit. It kills the command's process group on every exit.
 
-## Node CLIs
+## Node and Bun CLIs
 
 Start the CLI with the inspector on a free port, then read the inspector URL from the screen:
 
 ```bash
-"$drive" start app -- env NODE_OPTIONS=--inspect=127.0.0.1:0 <node-cli-command>
-"$drive" wait app 'Debugger listening on ws://'
+"$drive" start "$s" -- env NODE_OPTIONS=--inspect=127.0.0.1:0 <node-cli-command>
+"$drive" wait "$s" 'Debugger listening on ws://'
 ```
 
-Attach DevTools-compatible tooling to that URL for profiles and heap snapshots. The `control-ui` skill lists the CDP domains.
+For Bun, pass `--inspect` to `bun` and wait for the URL it prints. Attach DevTools-compatible tooling to that URL for profiles, heap snapshots, and live evaluation. The `control-ui` skill lists the CDP domains.
 
 ## Profiling recipes
 
