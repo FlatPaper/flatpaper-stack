@@ -142,5 +142,41 @@ printf '{"transcript_path":"%s","tool_name":"Bash","tool_input":{"command":"mome
 printf '{"transcript_path":"%s","tool_name":"Bash","tool_input":{"command":"git push && gh  pr create --fill"}}' "$tmp/t-none.jsonl" |
 	"$scripts/pr-gate.sh" 2> /dev/null; [ $? -eq 2 ] && ok || bad "pr-gate chained gh pr create: want exit 2"
 
+# codex-seat.sh. A fake companion acts on the model name, and a fake codex
+# sits on PATH. Each case wants an exit code and an output line.
+mkdir -p "$tmp/seat/bin" "$tmp/seat/repo"
+git -C "$tmp/seat/repo" init -q
+printf '#!/bin/sh\nexit 0\n' > "$tmp/seat/bin/codex"
+chmod +x "$tmp/seat/bin/codex"
+cat > "$tmp/seat/companion.cjs" <<'EOF'
+const a = process.argv, model = a[a.indexOf("--model") + 1], cwd = a[a.indexOf("--cwd") + 1];
+const fail = (msg) => { console.error("[codex] Codex error: " + msg); console.log(msg); process.exit(1); };
+if (model === "ok") console.log("finding one");
+else if (model === "reject") fail("The 'reject' model is not supported when using Codex with a ChatGPT account.");
+else if (model === "throttle") fail("You've hit your usage limit. Try again later.");
+else if (model === "slow") setTimeout(() => console.log("late"), 10000);
+else if (model === "write") { require("fs").writeFileSync(cwd + "/stray.txt", "x"); console.log("wrote"); }
+else if (model === "blank") console.log("");
+else fail("socket closed");
+EOF
+echo "prompt" > "$tmp/seat/prompt.txt"
+seat_case() { # model, want exit, want output pattern, [PATH]
+	out=$(PATH="${4:-$tmp/seat/bin:$PATH}" CODEX_COMPANION="$tmp/seat/companion.cjs" "$scripts/codex-seat.sh" \
+		--model "$1" --effort high --fallback "the opus seat" --timeout 2 --cwd "$tmp/seat/repo" "$tmp/seat/prompt.txt" 2>&1)
+	got=$?
+	if [ "$got" = "$2" ] && printf '%s' "$out" | grep -qE "$3"; then ok; else bad "codex-seat $1: want exit $2 and /$3/, got $got: $out"; fi
+}
+seat_case ok 0 '^finding one$'
+seat_case reject 3 '^codex seat fallback: model-rejected: .*Running the opus seat instead\.$'
+seat_case throttle 3 '^codex seat fallback: throttled: '
+seat_case slow 3 '^codex seat fallback: timeout: no answer within 2s\.'
+seat_case write 3 '^codex seat fallback: tree-changed: '
+rm -f "$tmp/seat/repo/stray.txt"
+seat_case blank 3 '^codex seat fallback: empty: '
+seat_case other 3 '^codex seat fallback: error: socket closed\.'
+nocodex=$(dirname "$(command -v node)"):/usr/bin:/bin
+command -v codex | grep -q "^$(dirname "$(command -v node)")/" && nocodex=/usr/bin:/bin
+PATH=$nocodex command -v codex >/dev/null || seat_case ok 3 '^codex seat fallback: missing: codex is not on PATH\.' "$nocodex"
+
 [ "$fail" -eq 0 ] && echo "test-scripts: ok ($pass cases)"
 exit "$fail"

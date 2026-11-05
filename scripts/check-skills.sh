@@ -87,10 +87,16 @@ for f in agents/*.md; do
 	fi
 done
 
-# Only Anthropic models, and no Cursor-only tools or plugins.
-banned='grok|\bgpt\b|gpt-[0-9]|gemini|llama|mistral|deepseek|composer-[0-9]|codex|AskQuestion|poteto-agent|cursor-team-kit|/deslop|generalPurpose|\.cursor/|is_background'
+# Only Anthropic models and Codex, and no Cursor-only tools or plugins.
+banned='grok|gemini|llama|mistral|deepseek|composer-[0-9]|AskQuestion|poteto-agent|cursor-team-kit|/deslop|generalPurpose|\.cursor/|is_background'
 if hits=$(grep -rsniE "$banned" skills agents guidelines.md hooks README.md); then
 	while IFS= read -r h; do problem "banned term: ${h:0:160}"; done <<<"$hits"
+fi
+
+# Codex runs only through codex-seat.sh, which keeps it read-only. A direct call
+# to the companion, the rescue agent, or a slash command could write.
+if hits=$(grep -rsnE 'codex-companion|codex-rescue|/codex:|codex-seat\.sh[^`]*--write' skills agents guidelines.md hooks | grep -v '^skills/flatpaper-mode/scripts/codex-seat\.sh:'); then
+	while IFS= read -r h; do problem "Codex outside codex-seat.sh: ${h:0:160}"; done <<<"$hits"
 fi
 
 # Skills and agents stand on their own: no credit lines or references to the upstream plugin.

@@ -76,25 +76,28 @@ If such a step touches a UI, CLI, or service and no `verify-<app>` skill exists,
 - You own every subagent's work. Read its diff or output and write your own summary. Don't pass its claims through.
 - Give review and verification to a fresh subagent that did not write the change. If no independent reviewer can run, record `BLOCKED: independent review`, keep merge-ready closed, and say which reviewers ran. Your own review, passing tests, and CI never count as the verdict.
 - `completed` means an agent sent its completion notice, not that it exited. One with live background children can resume. Before you reuse its worktree or replace it, stop it and confirm the stop. The tell is a claim about the tree that `git status` contradicts.
-- Keep code-writing delegates on the session model: omit `model`. Don't split one sequential change into a planning agent and cheaper writers. To write a brief detailed enough for them, the planner writes the code itself. The split then costs more, and one bug in the plan reaches every unit. Only read-only search and the skills that name their own models use other models: `swarm`, `arena`, `interrogate`, `reflect`, `why`, `how`, and `recall`, plus Comment Sicko and Orchestrate verifiers. The table below is the whole map.
+- Keep code-writing delegates on the session model: omit `model`. Don't split one sequential change into a planning agent and cheaper writers. To write a brief detailed enough for them, the planner writes the code itself. The split then costs more, and one bug in the plan reaches every unit. Only read-only search and the skills that name their own models use other models: `swarm`, `arena`, `interrogate`, `reflect`, `why`, `how`, and `recall`, plus Comment Sicko and the Orchestrate auditor and verifiers. The table below is the whole map.
 - Write every brief with the fields in `references/subagent-brief.md`, sized to the unit. A brief that can't fill its fields is not ready to send.
 - Route bulk reading to subagents and keep summaries in the main thread.
-- Match the effort to the job. Before each spawn, set the Agent tool's `effort`. Start at `high`. Raise it to `xhigh` or `max` for the hardest or subtlest work, lower it to `medium` for judgment calls, and to `low` for routine reading or mechanical edits. Keep the model a skill names, so a mixed panel stays mixed. If the tool rejects `effort`, omit it and say so.
+- Match the effort to the job. Before each spawn, set the Agent tool's `effort`. Start at the role's effort in the table below. Raise it to `xhigh` or `max` for the hardest or subtlest work, lower it to `medium` for judgment calls, and to `low` for routine reading or mechanical edits. Keep the model a skill names, so a mixed panel stays mixed. If the tool rejects `effort`, omit it and say so.
+- Codex seats run first. The session runs on a Claude model, so a role that has a Codex seat runs it before any Anthropic seat in the same role. A model from another vendor misses different things than Claude models do. Run the seat with Bash and `run_in_background: true`: `${CLAUDE_PLUGIN_ROOT}/skills/flatpaper-mode/scripts/codex-seat.sh --model <id> --effort <level> --fallback "<what runs instead>" --cwd <dir> <prompt-file>`. The script calls the codex plugin's `task` command without `--write`, so Codex runs in its read-only sandbox. It fails the seat if `git status` in `<dir>` changes. Read-only Codex cannot write even a temp file, so it cannot run tests. Its brief asks for the exact commands that show each finding, and you run them. On exit 3, print the script's one `codex seat fallback:` line verbatim and run what `--fallback` names. A Codex seat never writes code and never falls back to `fable`. Codex labels stay out of anything another seat or a judge reads.
 
-| Role | `model` | Why |
-|---|---|---|
-| Code writers: `flatpaper-agent` delegates, Autopilot stack and Orchestrate owners, `swarm` writers | session (omit) | The strongest model in the session writes the code. An owner retried after a tool error runs on `opus` or `fable`, whichever is not the session model |
-| Reviewers and verifiers: the `show-me-your-work` reviewer, `tidy` reviewers, `swarm` verifiers | session (omit) | Independence comes from a fresh context, not a different model |
-| Comment Sicko | `opus`, pinned in its agent file | Judging which comments earn their place takes a strong model at a fixed cost |
-| Orchestrate verifiers | whichever of `opus` or `fable` the owner is not running on | A verifier on another model than its owner catches what the owner's model misses, and its pass lets the owner merge |
-| Read-only search: ad-hoc `Explore`, `how` explorers, `why` investigators | `sonnet` | Tracing code takes judgment, not the top model |
-| Bulk extraction: `recall` miners, `swarm` bulk readers | `haiku` | High-volume reading and classification |
-| Synthesis: the `how` explainer, the `why` synthesizer, the `reflect` synthesizer | `opus` | Reasoning quality decides the answer here |
-| Variety panels: `arena` runners, `interrogate` adversaries, `swarm` model-race arms | `opus`, `sonnet`, `fable` | Different models miss different things |
-| `reflect` reviewers | judgment `opus`, tooling `sonnet`, divergent `fable` | One lens per model |
-| `arena` judge | first of `fable`, `opus`, `sonnet` that is not the session model | The judge sees all candidates, so it gets the strongest other model |
+| Role | `model` | Effort | Why |
+|---|---|---|---|
+| Code writers: `flatpaper-agent` delegates, Autopilot stack and Orchestrate owners, `swarm` writers and writer race arms | session (omit) | `high` | The strongest model in the session writes the code. An owner retried after a tool error runs on `opus` or `fable`, whichever is not the session model |
+| Reviewers and verifiers: the `show-me-your-work` reviewer, `tidy` reviewers, `swarm` verifiers | session (omit) | `high` | Independence comes from a fresh context, not a different model |
+| Comment Sicko | `opus`, pinned in its agent file | `high` | Judging which comments earn their place takes a strong model at a fixed cost |
+| Orchestrate auditor | Codex `gpt-6.1-sol`, before the verifier | `high` | Another vendor reads the diff first. The verifier reruns each finding, and only the verifier's pass lets the owner merge. Falls back to no auditor |
+| Orchestrate verifiers | whichever of `opus` or `fable` the owner is not running on | `high` | A verifier on another model than its owner catches what the owner's model misses, and its pass lets the owner merge |
+| Read-only search: ad-hoc `Explore`, `how` explorers, `why` investigators | `sonnet` | `medium` | Tracing code takes judgment, not the top model |
+| Bulk extraction: `recall` miners, `swarm` bulk readers | `haiku` | `low` | High-volume reading and classification |
+| Synthesis: the `how` explainer, the `why` synthesizer, the `reflect` synthesizer | `opus` | `high` | Reasoning quality decides the answer here |
+| Cross-vendor panels: `interrogate` adversaries, `swarm` read-only race arms, `arena` runners on non-code artifacts | Codex `gpt-6.1-sol` first, then `opus`, `sonnet`, `fable` | `high` | Different vendors miss different things. A Codex seat that falls back leaves the Anthropic seats |
+| Same-vendor panels: `arena` runners on code, `swarm` writer race arms | `opus`, `sonnet`, `fable` | `high` | Claude writes the code, so these stay Anthropic |
+| `reflect` reviewers | judgment `opus`, tooling `sonnet`, divergent `fable` | `high` | One lens per model |
+| `arena` judge | Codex `gpt-6.1-sol`. On fallback, the first of `fable`, `opus`, `sonnet` that is not the session model | `high` | The judge sees all candidates, so it gets a model from another vendor, then the strongest other Claude model |
 
-`fable` costs 2.5 times `opus` per token. Spawn it only where this table names it.
+`fable` costs 2.5 times `opus` per token. Spawn it only where this table names it. Codex seats bill the user's ChatGPT plan, not Anthropic tokens. `gpt-6.1-sol` is the model the Codex server marks as default. The codex plugin accepts efforts up to `xhigh`.
 
 ## Writing the reply
 
