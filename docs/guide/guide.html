@@ -95,7 +95,7 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 </style>
 <header class="top">
-  <div class="eyebrow">A Claude Code plugin · version 0.8.20</div>
+  <div class="eyebrow">A Claude Code plugin · version 0.8.21</div>
   <h1>Using flatpaper</h1>
   <p class="lede">flatpaper makes agent work you can trust and still understand a month later. Part 1 gets you running. Part 2 covers the ideas behind it: how to work with agents so the result holds up. Part 3 shows what to type for the situation you're in.</p>
   <div class="five"><span>goal</span><span>done check</span><span>proof</span><span>what you know</span><span>constraints</span></div>
@@ -679,7 +679,7 @@ raise a draft PR.</pre>
 
   <div class="cmd" id="c-tidy">
     <h4>/flatpaper-stack:tidy</h4>
-    <p><b>Use it</b> when a diff works but could be smaller or cheaper. Fresh reviewers look for reused helpers, simpler forms, wasted work, and fixes at the wrong depth. It applies the fixes that hold up and lists the ones it skipped. It does not hunt bugs; use <code>interrogate</code> for that. It also runs before every PR push.</p>
+    <p><b>Use it</b> when a diff works but could be smaller or cheaper. Fresh reviewers look for reused helpers, simpler forms, wasted work, fixes at the wrong depth, and slop: defensive checks on trusted paths, type escape hatches, and code off the file's local style. It applies the fixes that hold up and lists the ones it skipped. It does not hunt bugs; use <code>interrogate</code> for that. It also runs before every PR push.</p>
 <pre>/flatpaper-stack:tidy</pre>
   </div>
 
@@ -822,4 +822,4 @@ new task: review the open PR.</pre>
 </section>
 </main>
 </div>
-<footer>Built from the flatpaper repo at version 0.8.20 with <code>docs/guide/build.sh</code>.</footer>
+<footer>Built from the flatpaper repo at version 0.8.21 with <code>docs/guide/build.sh</code>.</footer>

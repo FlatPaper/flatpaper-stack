@@ -253,7 +253,7 @@ raise a draft PR.</pre>
 
   <div class="cmd" id="c-tidy">
     <h4>/flatpaper-stack:tidy</h4>
-    <p><b>Use it</b> when a diff works but could be smaller or cheaper. Fresh reviewers look for reused helpers, simpler forms, wasted work, and fixes at the wrong depth. It applies the fixes that hold up and lists the ones it skipped. It does not hunt bugs; use <code>interrogate</code> for that. It also runs before every PR push.</p>
+    <p><b>Use it</b> when a diff works but could be smaller or cheaper. Fresh reviewers look for reused helpers, simpler forms, wasted work, fixes at the wrong depth, and slop: defensive checks on trusted paths, type escape hatches, and code off the file's local style. It applies the fixes that hold up and lists the ones it skipped. It does not hunt bugs; use <code>interrogate</code> for that. It also runs before every PR push.</p>
 <pre>/flatpaper-stack:tidy</pre>
   </div>
 
