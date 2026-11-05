@@ -80,7 +80,7 @@ It runs the whole session in one call: the steps are flags, in order. It needs o
 - `--size <cols>x<rows>` sets the terminal size (default 120x40). `--transcript <file>` also writes the raw output, escape sequences included.
 - `--wait <regex>` matches only the output after the previous match. Terminal escape sequences are stripped and line endings become `\n` first, so `^42$` matches a line as it does in `drive.sh`. The echo of sent text is output too.
 - `--send <text>` takes backslash escapes, so `\r` is Enter and `\x03` is Ctrl-C. A malformed escape such as `\x` is a usage error.
-- `--wait-exit` waits for the command to exit and prints `pty-drive: command exited with status <n>` on stderr. Use it to confirm a clean exit.
+- `--wait-exit` waits for the command to exit and prints `pty-drive: command exited with status <n>` on stderr, or `with signal <n>` when a signal killed it. Use it to confirm a clean exit. A `--send` after the command exited stops the run with exit 1.
 - `--timeout <seconds>` applies to the waits after it, `--wait-exit` included, and decimals work.
 - It prints the transcript and exits 0 when every step passed, or 3 when `--wait-exit` saw a non-zero status. It exits 1 if the command exits before a `--wait` match, 2 on a usage error, 124 on a timeout, and 130 or 143 on SIGINT or SIGTERM. Without `--wait-exit`, a command still running at the end is killed, and its status is not checked. It kills the command's process group on every exit.
 

@@ -12,7 +12,8 @@ Steps run in order:
   --send TEXT        write TEXT; backslash escapes work, so "\\r" is Enter
                      and "\\x03" is Ctrl-C
   --wait-exit        wait for the command to exit and print
-                     "pty-drive: command exited with status N" on stderr
+                     "pty-drive: command exited with status N" on stderr,
+                     or "... with signal N" if a signal killed it
 
 Matching strips terminal escape sequences and turns \\r\\n into \\n first.
 At the end it prints the transcript and exits 0, or 3 if --wait-exit saw a
@@ -34,6 +35,11 @@ import termios
 import time
 
 ESCAPES = re.compile(rb"\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b[()][0-9A-Za-z]|\x1b[=>]")
+
+
+def print_exit(status):
+    how = "signal %d" % -status if status < 0 else "status %d" % status
+    print("pty-drive: command exited with %s" % how, file=sys.stderr)
 
 
 def usage(problem):
@@ -149,8 +155,17 @@ class Session:
             self.pump(0.05)
             if len(self.raw) == before:
                 break
-        print("pty-drive: command exited with status %d" % self.status, file=sys.stderr)
+        print_exit(self.status)
         return self.status
+
+    def send(self, data):
+        try:
+            if self.status is not None:
+                raise OSError("already exited")
+            os.write(self.fd, data)
+        except OSError:
+            self.exited = True
+            self.finish(1, "command exited before --send %r" % data.decode("latin-1"))
 
     def finish(self, code, message=None):
         sys.stdout.write(self.raw.decode(errors="replace"))
@@ -174,7 +189,7 @@ class Session:
                 break
             time.sleep(0.02)
         if status is not None:
-            print("pty-drive: command exited with status %d" % status, file=sys.stderr)
+            print_exit(status)
         try:
             os.killpg(self.pid, signal.SIGTERM)
             deadline = time.monotonic() + 2
@@ -196,7 +211,7 @@ def main():
         if kind == "timeout":
             timeout = value
         elif kind == "send":
-            os.write(s.fd, value)
+            s.send(value)
         elif kind == "wait-exit":
             s.wait_exit(timeout)
         else:
