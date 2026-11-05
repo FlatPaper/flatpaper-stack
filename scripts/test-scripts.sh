@@ -24,7 +24,7 @@ if [ $? = 1 ] && [ "$(grep -c '^FAIL' "$tmp/out")" = 2 ] && grep -q '^FAIL banne
 fi
 
 # check-plan.sh. The base plan is the playbook skeleton with every placeholder
-# filled, so it must pass. Each case appends to it and expects a verdict.
+# filled, so it must pass. Each case derives a file from it and expects a verdict.
 awk '/^````markdown$/{f=1;next} /^````$/{f=0} f' "$root/skills/flatpaper-mode/playbooks/multi-phase-plan.md" |
 	grep -v 'One box per further lane' | sed -E 's/<[^>]*>/filler/g' > "$tmp/base.md"
 
