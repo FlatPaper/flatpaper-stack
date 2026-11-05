@@ -242,7 +242,7 @@ fi
 if [ "${rc:-}" = 2 ] && grep -q 'no Chrome or Chromium found' "$tmp/out"; then
 	inconclusive "control-ui" "no Chrome or Chromium found"
 elif [ -n "${rc:-}" ]; then
-	[ "$rc" = 0 ] && [ "$(cat "$tmp/out")" = "$(printf '15\nlate text')" ] && ok ||
+	[ "$rc" = 0 ] && [ "$(grep -v '^cdp: ' "$tmp/out")" = "$(printf '15\nlate text')" ] && ok ||
 		dump "cdp --wait-for, --eval, --dom: want exit 0 and '15', 'late text', got $rc:"
 	# PNG signature, then IHDR width 1280 and height 800, the default viewport.
 	[ "$(png_head "$ui/a.png" 24)" = 89504e470d0a1a0a0000000d494844520000050000000320 ] && ok || bad "cdp --screenshot: want a 1280x800 PNG"
@@ -267,6 +267,14 @@ elif [ -n "${rc:-}" ]; then
 		chmod +x "$ui/bin/fp-chrome"
 		PATH="$ui/bin:$PATH" CHROME=fp-chrome cdp_run about:blank --eval '6 * 7'
 		expect "cdp CHROME as a bare name on PATH" 0 '^42$'
+		slow_sleep="sleep 9$$"
+		printf '#!/bin/sh\n[ -e "%s" ] && exec "%s" "$@"\ntouch "%s"\nexec %s\n' \
+			"$ui/started-once" "$real_chrome" "$ui/started-once" "$slow_sleep" > "$ui/bin/fp-slow-chrome"
+		chmod +x "$ui/bin/fp-slow-chrome"
+		CHROME="$ui/bin/fp-slow-chrome" TMPDIR="$ui/profiles" capped 80 node "$cdp" about:blank --eval '6 * 7'
+		expect "cdp retries a start that gives no port" 0 '^42$'
+		grep -q 'no debugging port within 30 s; retrying once$' "$tmp/out" && ok || dump "cdp retry: want the retry notice:"
+		pgrep -fx "$slow_sleep" > /dev/null && bad "cdp retry: the hung first start is still running" || ok
 	fi
 	cdp_run "$ui/click.html" --eval 'document.getElementById("save").click()' --wait-for '#saved' --dom '#saved'
 	expect "cdp --eval clicks, then --wait-for sees the result" 0 '^saved$'

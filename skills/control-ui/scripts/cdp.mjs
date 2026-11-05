@@ -109,8 +109,24 @@ for (const [signal, code] of [["SIGINT", 130], ["SIGTERM", 143], ["SIGHUP", 129]
   });
 }
 
+// A first start on a freshly booted machine reads Chrome from a cold disk
+// cache: 8.6 s on a GitHub Ubuntu runner against 0.3 s warm, and past 15 s
+// on a slow one. The killed first attempt warms the cache, so one retry
+// starts fast.
+const START_MS = 30000;
+
 async function launchChrome() {
   const binary = findChrome();
+  try {
+    return await startChrome(binary);
+  } catch (err) {
+    if (!err.slowStart) throw err;
+    console.error(`cdp: ${err.message}; retrying once`);
+    return await startChrome(binary);
+  }
+}
+
+async function startChrome(binary) {
   const dir = mkdtempSync(join(tmpdir(), "cdp-"));
   const profile = join(dir, "profile");
   mkdirSync(profile);
@@ -137,20 +153,26 @@ async function launchChrome() {
   const chrome = { proc, dir, exited };
   running.add(chrome);
   const portFile = join(profile, "DevToolsActivePort");
-  const deadline = Date.now() + 15000;
+  const deadline = Date.now() + START_MS;
+  const lastStderr = () => stderr.trim().split("\n").slice(-3).join(" | ");
   for (;;) {
     const lines = existsSync(portFile) ? readFileSync(portFile, "utf8").split("\n") : [];
     if (lines.length >= 2) {
       chrome.ws = `ws://127.0.0.1:${lines[0]}${lines[1]}`;
       return chrome;
     }
-    if (spawnError || proc.exitCode !== null || Date.now() > deadline) {
-      const exitedEarly = proc.exitCode !== null;
+    if (spawnError || proc.exitCode !== null) {
+      const status = proc.exitCode;
       await killChrome(chrome);
-      const why = spawnError ? `${binary}: ${spawnError.message}`
-        : stderr.trim().split("\n").slice(-3).join(" | ")
-          || (exitedEarly ? `${binary} exited with status ${proc.exitCode}` : `no debugging port within 15 s`);
+      const why = spawnError ? `${binary}: ${spawnError.message}` : lastStderr() || `${binary} exited with status ${status}`;
       throw new Exit(2, `Chrome did not start: ${why}`);
+    }
+    if (Date.now() > deadline) {
+      await killChrome(chrome);
+      const err = new Exit(2, `Chrome gave no debugging port within ${START_MS / 1000} s`
+        + (lastStderr() ? ` (last stderr: ${lastStderr()})` : ""));
+      err.slowStart = true;
+      throw err;
     }
     await sleep(50);
   }
