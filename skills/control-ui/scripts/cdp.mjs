@@ -17,7 +17,7 @@
 // launch error, 124 a step timed out (--timeout, default 10000 ms).
 
 import { spawn } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -77,27 +77,34 @@ function findChrome() {
 }
 
 const running = new Set();
+const killGroup = (chrome, signal) => {
+  try {
+    process.kill(-chrome.proc.pid, signal);
+  } catch {}
+};
 for (const [signal, code] of [["SIGINT", 130], ["SIGTERM", 143], ["SIGHUP", 129]]) {
   process.on(signal, () => {
     for (const c of running) {
-      c.proc.kill("SIGKILL");
-      rmSync(c.profile, { recursive: true, force: true });
+      killGroup(c, "SIGKILL");
+      rmSync(c.dir, { recursive: true, force: true });
     }
     process.exit(code);
   });
 }
 
 async function launchChrome() {
-  const profile = mkdtempSync(join(tmpdir(), "cdp-profile-"));
+  const dir = mkdtempSync(join(tmpdir(), "cdp-"));
+  const profile = join(dir, "profile");
+  mkdirSync(profile);
   const proc = spawn(findChrome(), [
     "--headless=new", `--user-data-dir=${profile}`, "--remote-debugging-port=0",
     "--no-first-run", "--no-default-browser-check", "--disable-gpu", "--hide-scrollbars",
     "--mute-audio", "about:blank",
-  ], { stdio: ["ignore", "ignore", "pipe"] });
+  ], { stdio: ["ignore", "ignore", "pipe"], detached: true, env: { ...process.env, TMPDIR: dir } });
   let stderr = "";
   proc.stderr.on("data", (d) => { stderr += d; });
   const exited = new Promise((r) => proc.once("exit", r));
-  const chrome = { proc, profile, exited };
+  const chrome = { proc, dir, exited };
   running.add(chrome);
   const portFile = join(profile, "DevToolsActivePort");
   const deadline = Date.now() + 15000;
@@ -118,21 +125,23 @@ async function launchChrome() {
 async function killChrome(chrome) {
   running.delete(chrome);
   if (chrome.proc.exitCode === null && chrome.proc.signalCode === null) {
-    chrome.proc.kill("SIGTERM");
+    killGroup(chrome, "SIGTERM");
     const gone = await Promise.race([chrome.exited.then(() => true), sleep(3000).then(() => false)]);
     if (!gone) {
-      chrome.proc.kill("SIGKILL");
+      killGroup(chrome, "SIGKILL");
       await chrome.exited;
     }
   }
+  killGroup(chrome, "SIGKILL");
   for (let i = 0; i < 20; i++) {
     try {
-      rmSync(chrome.profile, { recursive: true, force: true });
+      rmSync(chrome.dir, { recursive: true, force: true });
       return;
     } catch {
       await sleep(100);
     }
   }
+  console.error(`cdp: could not remove ${chrome.dir}`);
 }
 
 class Cdp {

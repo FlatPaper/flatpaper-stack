@@ -246,6 +246,8 @@ elif [ -n "${rc:-}" ]; then
 	[ "$(png_head "$ui/d.png" 8)" = 89504e470d0a1a0a ] && ok || bad "cdp diff --out: want a PNG"
 	cdp_run diff "$ui/a.png" "$ui/small.png"
 	expect "cdp diff of different sizes" 1 '^size differs: 1280x800 vs 640x480$'
+	TMPDIR="$ui/profiles" capped 2 node "$cdp" "$ui/f.html" --wait-for '#missing' --timeout 20000
+	[ "$rc" = 143 ] && ok || dump "cdp killed mid-wait: want exit 143, got $rc:"
 	pgrep -f "$ui/profiles" > /dev/null && bad "cdp: Chrome still running after exit" || ok
 	[ -z "$(ls -A "$ui/profiles")" ] && ok || bad "cdp: temp profile left behind: $(ls "$ui/profiles")"
 fi
