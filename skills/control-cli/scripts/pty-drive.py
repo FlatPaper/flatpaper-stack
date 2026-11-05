@@ -11,14 +11,15 @@ Steps run in order:
   --wait REGEX       wait for REGEX in the output since the last match
   --send TEXT        write TEXT; backslash escapes work, so "\\r" is Enter
                      and "\\x03" is Ctrl-C
+  --wait-exit        wait for the command to exit and print
+                     "pty-drive: command exited with status N" on stderr
 
 Matching strips terminal escape sequences and turns \\r\\n into \\n first.
-At the end it prints the transcript and exits 0. It exits 1 if the command
-exited before a match, 2 on a usage error, 124 on a wait timeout, and 130 or
-143 on SIGINT or SIGTERM, printing the transcript so far. If the command
-exits on its own during the run, the last line on stderr is
-"pty-drive: command exited with status N". It always kills the command's
-process group.
+At the end it prints the transcript and exits 0, or 3 if --wait-exit saw a
+non-zero status. It exits 1 if the command exited before a match, 2 on a
+usage error, 124 on a timeout, and 130 or 143 on SIGINT or SIGTERM,
+printing the transcript so far. It always kills the command's process
+group.
 """
 
 import fcntl
@@ -47,6 +48,9 @@ def parse(argv):
     size, transcript, steps = (120, 40), None, []
     while argv and argv[0] != "--":
         flag = argv.pop(0)
+        if flag == "--wait-exit":
+            steps.append(("wait-exit", None))
+            continue
         if not argv:
             usage("%s needs a value" % flag)
         value = argv.pop(0)
@@ -71,7 +75,10 @@ def parse(argv):
             except re.error as err:
                 usage("bad --wait regex %r: %s" % (value, err))
         elif flag == "--send":
-            steps.append(("send", value.encode().decode("unicode_escape").encode("latin-1")))
+            try:
+                steps.append(("send", value.encode().decode("unicode_escape").encode("latin-1")))
+            except UnicodeError as err:
+                usage("bad escape in --send %r: %s" % (value, err))
         else:
             usage("unknown option %s" % flag)
     if len(argv) < 2:
@@ -85,6 +92,7 @@ class Session:
         self.raw = bytearray()
         self.seen = 0
         self.exited = False
+        self.status = None
         self.pid, self.fd = pty.fork()
         if self.pid == 0:
             try:
@@ -121,6 +129,28 @@ class Session:
             if left <= 0:
                 self.finish(124, "timed out after %gs waiting for /%s/" % (timeout, regex))
             self.pump(min(left, 0.25))
+
+    def wait_exit(self, timeout):
+        deadline = time.monotonic() + timeout
+        while True:
+            try:
+                pid, raw_status = os.waitpid(self.pid, os.WNOHANG)
+            except ChildProcessError:
+                return self.status
+            if pid:
+                self.status = os.waitstatus_to_exitcode(raw_status)
+                break
+            left = deadline - time.monotonic()
+            if left <= 0:
+                self.finish(124, "timed out after %gs waiting for the command to exit" % timeout)
+            self.pump(min(left, 0.1))
+        while not self.exited:
+            before = len(self.raw)
+            self.pump(0.05)
+            if len(self.raw) == before:
+                break
+        print("pty-drive: command exited with status %d" % self.status, file=sys.stderr)
+        return self.status
 
     def finish(self, code, message=None):
         sys.stdout.write(self.raw.decode(errors="replace"))
@@ -167,12 +197,14 @@ def main():
             timeout = value
         elif kind == "send":
             os.write(s.fd, value)
+        elif kind == "wait-exit":
+            s.wait_exit(timeout)
         else:
             s.wait(value[0], value[1], timeout)
     end = time.monotonic() + 0.2
     while not s.exited and time.monotonic() < end:
         s.pump(0.05)
-    s.finish(0)
+    s.finish(3 if s.status else 0)
 
 
 if __name__ == "__main__":

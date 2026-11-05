@@ -53,10 +53,10 @@ s="app-$$"
 ```
 
 - `start <session> [--size <cols>x<rows>] -- <command>` runs the command in a new 120x40 session. The pane stays after the command exits, so its output can still be read.
-- `wait <session> <regex>` polls the screen with `grep -E`. On a match it prints the screen and exits 0. If the command exits first, it prints the output and exits 1. After `--timeout` whole seconds (default 10) it prints the last screen and exits 124.
-- `type` sends literal text. `send` sends tmux key names, such as `Enter`, `Escape`, `C-c`, and `Up`.
-- `capture` prints the screen. `status` prints `running`, or the command's exit status once it has exited. `kill` ends the session and its command.
-- Exit codes: 0 ok, 1 the command exited before the match or the session does not exist, 2 a usage error (such as `--timeout 1.5`), and 124 a timeout.
+- `wait <session> <regex>` polls the screen with `grep -E`. On a match it prints the screen and exits 0. If the command exits first, it prints the output and exits 1. `--timeout` is a whole number of seconds (default 10). The wait gives up after at least that long and at most one second more, then prints the last screen and exits 124.
+- `type` sends its text byte for byte, a trailing `;` included. `send` sends tmux key names, such as `Enter`, `Escape`, `C-c`, and `Up`.
+- `capture` prints the screen. `status` prints `running`, or the command's exit status once it has exited. Both exit 1, silently, when the session does not exist. `kill` ends the session and its command.
+- Exit codes: 0 ok, 1 the command exited before the match or the session does not exist, 2 a usage error (such as `--timeout 1.5`), and 124 a timeout. When tmux itself fails, as for `start` with a name that is already taken, its message goes to stderr and the exit is 1.
 
 Rules for reliable waits:
 
@@ -74,14 +74,15 @@ It runs the whole session in one call: the steps are flags, in order. It needs o
 ```bash
 "${CLAUDE_PLUGIN_ROOT}/skills/control-cli/scripts/pty-drive.py" --timeout 10 \
   --wait '<ready pattern>' --send 'help\r' --wait '<expected output>' \
-  --transcript "$OUT/session.txt" -- <command-under-test> <args>
+  --send 'quit\r' --wait-exit --transcript "$OUT/session.txt" -- <command-under-test> <args>
 ```
 
 - `--size <cols>x<rows>` sets the terminal size (default 120x40). `--transcript <file>` also writes the raw output, escape sequences included.
 - `--wait <regex>` matches only the output after the previous match. Terminal escape sequences are stripped and line endings become `\n` first, so `^42$` matches a line as it does in `drive.sh`. The echo of sent text is output too.
-- `--send <text>` takes backslash escapes, so `\r` is Enter and `\x03` is Ctrl-C.
-- `--timeout <seconds>` applies to the waits after it, and decimals work.
-- It prints the transcript and exits 0 when every step passed. It exits 1 if the command exits before a match, 2 on a usage error, 124 on a timeout, and 130 or 143 on SIGINT or SIGTERM. When the command exits on its own during the run, the last line on stderr is `pty-drive: command exited with status <n>`. Check that line to confirm a clean exit. It kills the command's process group on every exit.
+- `--send <text>` takes backslash escapes, so `\r` is Enter and `\x03` is Ctrl-C. A malformed escape such as `\x` is a usage error.
+- `--wait-exit` waits for the command to exit and prints `pty-drive: command exited with status <n>` on stderr. Use it to confirm a clean exit.
+- `--timeout <seconds>` applies to the waits after it, `--wait-exit` included, and decimals work.
+- It prints the transcript and exits 0 when every step passed, or 3 when `--wait-exit` saw a non-zero status. It exits 1 if the command exits before a `--wait` match, 2 on a usage error, 124 on a timeout, and 130 or 143 on SIGINT or SIGTERM. Without `--wait-exit`, a command still running at the end is killed, and its status is not checked. It kills the command's process group on every exit.
 
 ## Node and Bun CLIs
 

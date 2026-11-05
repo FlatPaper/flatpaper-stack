@@ -60,8 +60,10 @@ wait)
 			code=0 msg=
 		elif dead; then
 			code=1 msg="$session exited before /$regex/ appeared"
-		elif [ $((SECONDS - start)) -ge "$timeout" ]; then
-			code=124 msg="timed out after ${timeout}s waiting for /$regex/ in $session"
+		# SECONDS ticks on whole seconds, so "> timeout" means at least timeout
+		# seconds have passed, and at most one more.
+		elif [ $((SECONDS - start)) -gt "$timeout" ]; then
+			code=124 msg="no /$regex/ in $session within ${timeout}s"
 		else
 			sleep 0.1
 			continue
@@ -72,10 +74,16 @@ wait)
 	done
 	;;
 send) t send-keys -t "$session" "$@" ;;
-type) t send-keys -t "$session" -l -- "$*" ;;
-capture) t has-session -t "$session" && screen ;;
+type)
+	text=$*
+	# tmux reads an argument that ends in ";" as a command separator, and
+	# "\;" as a literal ";".
+	case "$text" in *';') text="${text%;}\\;" ;; esac
+	t send-keys -t "$session" -l -- "$text"
+	;;
+capture) t has-session -t "$session" 2> /dev/null && screen ;;
 status)
-	t has-session -t "$session" || exit 1
+	t has-session -t "$session" 2> /dev/null || exit 1
 	if dead; then t display-message -p -t "$session" '#{pane_dead_status}'; else echo running; fi
 	;;
 kill) t kill-session -t "$session" ;;
