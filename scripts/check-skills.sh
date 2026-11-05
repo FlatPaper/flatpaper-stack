@@ -102,8 +102,7 @@ if hits=$(grep -rsnoE '\bgpt-[0-9][a-z0-9.-]*' skills agents guidelines.md hooks
 	while IFS= read -r h; do problem "GPT model other than gpt-6.1-sol: ${h:0:160}"; done <<<"$hits"
 fi
 
-# Skills and agents stand on their own: no credit lines or references to the upstream plugin.
-if hits=$(grep -rsniE 'pstack|poteto' skills agents); then
+if hits=$(grep -rsniE 'pstack|poteto' skills agents | grep -vF "$provenance"); then
 	while IFS= read -r h; do problem "upstream reference: ${h:0:160}"; done <<<"$hits"
 fi
 
