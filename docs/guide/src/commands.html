@@ -51,6 +51,7 @@ raise a draft PR.</pre>
       <tr id="cp-refactoring"><td>Clean up code without changing what it does</td><td><code>/flatpaper-stack:flatpaper-mode restructure the config loader without changing behavior. record current output first.</code></td></tr>
       <tr><td>Run a large migration or a change no playbook fits</td><td><code>/flatpaper-stack:flatpaper-mode move every service from the old config loader to the new one. done means zero old imports and all suites pass.</code></td></tr>
       <tr id="cp-perf"><td>Make something faster or cheaper</td><td><code>/flatpaper-stack:flatpaper-mode speed up cold start. 1.8s now. done means under 1s, median of 5.</code></td></tr>
+      <tr id="cp-hillclimb"><td>Push one number to a target over many attempts</td><td><code>/flatpaper-stack:flatpaper-mode push the export suite pass rate up. 71% now. iterate until 90%, at least 10 attempts.</code></td></tr>
     </tbody>
   </table></div>
 
@@ -113,6 +114,7 @@ raise a draft PR.</pre>
     <tbody>
       <tr><td>Stop a mistake you've corrected twice</td><td><code>/flatpaper-stack:correct agents keep importing from internal/ directly</code></td></tr>
       <tr><td>Turn a long session into lessons</td><td><code>/flatpaper-stack:reflect</code></td></tr>
+      <tr id="cp-eval"><td>Check whether a skill or prompt change helps</td><td><code>/flatpaper-stack:flatpaper-mode eval this skill. is the new tidy wording better than the old one at catching dead code?</code></td></tr>
       <tr><td>Let the agent drive your app to prove its work</td><td><code>/flatpaper-stack:create-verification-skill</code></td></tr>
       <tr><td>Recheck that verification skill after the app changed</td><td><code>/flatpaper-stack:maintain-verification-skill</code></td></tr>
       <tr><td>Prove a race or invariant holds past what tests reach</td><td><code>/flatpaper-stack:create-formal-verification-skill</code></td></tr>
@@ -223,7 +225,7 @@ raise a draft PR.</pre>
 
   <div class="cmd" id="c-benchmark-checklist">
     <h4>/flatpaper-stack:benchmark-checklist</h4>
-    <p><b>Use it</b> before you report or act on a speedup or regression you measured. Seven questions test the number: what limits it, whether both sides were tuned, whether it breaks a physical limit, errors, repeat runs, its share of the end-to-end path, and whether the work ran. The Perf playbook runs it on every number.</p>
+    <p><b>Use it</b> before you report or act on a speedup or regression you measured. Seven questions test the number: what limits it, whether both sides were tuned, whether it breaks a physical limit, errors, repeat runs, its share of the end-to-end path, and whether the work ran. The Perf and Hillclimb playbooks run it on every number.</p>
 <pre>/flatpaper-stack:benchmark-checklist the cache change made export 30% faster</pre>
   </div>
 
