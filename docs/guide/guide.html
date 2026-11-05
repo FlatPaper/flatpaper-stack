@@ -503,10 +503,10 @@ raise a draft PR.</pre>
       <tr><td>Strip comments that narrate or excuse code</td><td><code>/flatpaper-stack:no-comments src/billing/</code></td></tr>
       <tr id="cp-opening-a-pr"><td>Open a PR after the work is done</td><td><code>raise a draft PR.</code> as a follow-up. Written repo rules replace flatpaper's format defaults. Its review steps always run.</td></tr>
       <tr id="cp-babysit"><td>Get a PR green and answer its review comments</td><td><code>/flatpaper-stack:flatpaper-mode babysit PR 123</code></td></tr>
-      <tr id="cp-shipping"><td>Land a verified stack, bottom PR first</td><td><code>/flatpaper-stack:flatpaper-mode land it. ship the stack from PR 120 to PR 124.</code></td></tr>
+      <tr id="cp-shipping"><td>Land a verified stack, bottom PR first</td><td><code>/flatpaper-stack:flatpaper-mode land the stack from PR 120 to PR 124.</code></td></tr>
     </tbody>
   </table></div>
-  <p>Babysit has four modes. <b>babysit this</b> loops until the PR is merge-ready or needs a person. <b>background</b> runs the same loop while the session keeps building. <b>is it green?</b> does one status pass. <b>threads only</b> answers review threads and never retriggers CI. On a stack, Babysit works the lowest unmerged PR first. Babysit never merges. Say <b>land it</b> to run Shipping, which merges only the verified PRs from the bottom of the stack up.</p>
+  <p>Babysit has four modes. <b>babysit this</b> loops until the PR is merge-ready or needs a person. <b>background</b> runs the same loop while the session keeps building. <b>is it green?</b> does one status pass. <b>threads only</b> answers review threads and never retriggers CI. On a stack, Babysit works the lowest unmerged PR first. Babysit never merges. Say <b>land it</b> to run Shipping, which merges only the verified PRs from the bottom of the stack up. It restates the run and waits for your yes before the first merge, unless you named the PRs. "Ship" alone means commit or open a PR.</p>
 
   <h3>Ship a story that spans several PRs</h3>
   <p>When a story needs three or more PRs, flatpaper-mode switches to Multi-phase plan on its own and says so. It never starts the build without your go. Read the plan, then pick who lands the PRs. Say "just build it" to skip the plan.</p>

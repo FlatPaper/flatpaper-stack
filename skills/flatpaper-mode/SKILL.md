@@ -48,7 +48,7 @@ Run these once, after the playbook's last step and before the reply. Pause safel
 - **Hillclimb.** Climb one metric toward a target over many measured attempts, keeping or reverting each one. The metric can be an eval score, a bundle size, a pass rate, or a latency ("hillclimb", "push this metric up", "iterate until X%"). `playbooks/hillclimb.md`.
 - **Eval.** Test whether a variant of a skill, prompt, or playbook changes what agents do, with blinded candidates and a judge from another vendor ("eval this skill", "A/B these prompts", "is variant B better"). `playbooks/eval.md`.
 - **Babysit.** Drive an open PR to merge-ready: conflicts, review comments, CI ("babysit", "get it green", "address the review comments", "check on the PR"). `playbooks/babysit.md`.
-- **Shipping.** Land a stack on the user's explicit request, bottom-up, merging only the contiguous run of verified PRs from the bottom ("land it", "ship the stack", "merge the verified PRs"). `playbooks/shipping.md`.
+- **Shipping.** Land a stack on the user's explicit request, bottom-up, merging only the contiguous run of verified PRs from the bottom ("land it", "land the stack", "merge the verified PRs"). "Ship" alone means commit or open a PR, not merge. `playbooks/shipping.md`.
 - **Session pickup.** Continue work another session started ("pick up", "take over this branch", "continue from the log"). `playbooks/session-pickup.md`.
 - **Pause safely.** Stop mid-task so the work can resume later ("pause", "stop for now", "pick this up tomorrow"). `playbooks/pause-safely.md`.
 - **Worktree cleanup.** Find and remove stale git worktrees ("clean up worktrees"). `playbooks/worktree-cleanup.md`.
@@ -70,8 +70,8 @@ If such a step touches a UI, CLI, or service and no `verify-<app>` skill exists,
 ## Autonomy
 
 - Reversible work proceeds without asking.
-- Always pause for irreversible actions: force-push to shared branches, deploys, data deletion, messages to other people. Replies on a PR the user asked you to babysit are an exception. So are an Autopilot stack or Orchestrate owner's replies on its own PR and its lease-pinned force-push of its own branch.
-- Merges are user-granted. After the user's go on an Orchestrate program, its owners merge their own PRs on a verifier's pass at the current head. After the user's go on an Autopilot-full queue, its owners merge their own PRs in the queue on a verdict at the current head. On the user's explicit request to land a stack, Shipping merges its verified run, posts each verdict on its PR, and moves each next PR onto trunk with a lease-pinned push.
+- Always pause for irreversible actions: force-push to shared branches, deploys, data deletion, messages to other people. Replies on a PR the user asked you to babysit are an exception. So are an Autopilot stack, Autopilot-full, or Orchestrate owner's replies on its own PR and its lease-pinned force-push of its own branch.
+- Merges are user-granted. After the user's go on an Orchestrate program, its owners merge their own PRs on a verifier's pass at the current head. After the user's go on an Autopilot-full queue, its owners merge their own PRs in the queue on a verdict at the current head. On the user's explicit request to land or merge a stack, Shipping merges its verified run once the request names those PRs or the user confirms the run. It also posts each verdict on its PR and moves each next PR onto trunk with a lease-pinned push.
 - Session overrides ("don't stop", "going to bed", "run until done") mean keep going and log decisions with the show-me-your-work skill.
 - A skill or playbook that breaks mid-task gets fixed in its own PR. Don't block on it, and don't silently work around it.
 

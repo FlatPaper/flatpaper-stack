@@ -155,7 +155,7 @@ Only the goal is required. A missing check, proof or constraints gets proposed b
 | hillclimb, push this metric up, iterate until X% | Hillclimb |
 | eval this skill, A/B these prompts, is variant B better | Eval |
 | babysit, get it green, address the review comments | Babysit |
-| land it, ship the stack, merge the verified PRs | Shipping |
+| land it, land the stack, merge the verified PRs | Shipping |
 | pick up, take over this branch, continue from the log | Session pickup |
 | pause, stop for now, pick this up tomorrow | Pause safely |
 | clean up worktrees | Worktree cleanup |
