@@ -21,6 +21,7 @@ printf '%s\n' 'Spawn a generalPurpose agent.' 'Adapted from pstack.' \
 	"<!-- ported from cursor/plugins@$sha cursor-team-kit/skills/x/SKILL.md pstack/skills/poteto-mode/playbooks/x.md (MIT) -->" \
 	"# ported from cursor/plugins@$sha cursor-team-kit/skills/x/SKILL.md (MIT)" \
 	"// ported from cursor/plugins@$sha pstack/skills/poteto-mode/playbooks/x.md (MIT)" \
+	"<!-- ported from cursor/plugins@$sha use AskQuestion (MIT) -->" \
 	'Keep is_background wording, as ported from cursor/plugins@ upstream.' \
 	'Keep pstack wording, as ported from cursor/plugins@ upstream.' >> "$tmp/lint/skills/tidy/SKILL.md"
 "$root/scripts/check-skills.sh" "$tmp/lint" > "$tmp/out" 2>&1
@@ -29,13 +30,14 @@ lint_has() {
 	local name=$1 pattern=$2
 	if grep -q "^FAIL $pattern" "$tmp/out"; then ok; else bad "check-skills $name: want a FAIL matching '$pattern'"; sed 's/^/  /' "$tmp/out"; fi
 }
-if [ "$code" = 1 ] && [ "$(grep -c '^FAIL' "$tmp/out")" = 4 ]; then ok; else
-	bad "check-skills: want exit 1 and four FAILs on the planted prose lines, with the three provenance comments exempt, got exit $code"; sed 's/^/  /' "$tmp/out"
+if [ "$code" = 1 ] && [ "$(grep -c '^FAIL' "$tmp/out")" = 5 ]; then ok; else
+	bad "check-skills: want exit 1 and five FAILs on the planted lines, with the three provenance comments exempt, got exit $code"; sed 's/^/  /' "$tmp/out"
 fi
 lint_has "banned term" 'banned term: skills/tidy/SKILL.md:[0-9]*:Spawn a generalPurpose'
 lint_has "upstream reference" 'upstream reference: skills/tidy/SKILL.md:[0-9]*:Adapted from pstack'
 lint_has "banned term in prose that holds the provenance marker" 'banned term: skills/tidy/SKILL.md:[0-9]*:Keep is_background wording'
 lint_has "upstream reference in prose that holds the provenance marker" 'upstream reference: skills/tidy/SKILL.md:[0-9]*:Keep pstack wording'
+lint_has "banned term in a provenance comment with no source path" 'banned term: skills/tidy/SKILL.md:[0-9]*:<!-- ported from cursor/plugins@0* use '
 
 awk '/^````markdown$/{f=1;next} /^````$/{f=0} f' "$root/skills/flatpaper-mode/playbooks/multi-phase-plan.md" |
 	grep -v 'One box per further lane' | sed -E 's/<[^>]*>/filler/g' > "$tmp/base.md"

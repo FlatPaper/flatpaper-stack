@@ -88,7 +88,7 @@ for f in agents/*.md; do
 done
 
 banned='grok|gemini|llama|mistral|deepseek|composer-[0-9]|AskQuestion|poteto-agent|cursor-team-kit|/deslop|generalPurpose|\.cursor/|is_background'
-license_notice='^[^:]+:[0-9]+:[[:space:]]*(<!--|#|//) ported from cursor/plugins@[0-9a-f]{40}( [^ ]+)+ \(MIT\)( -->)?$'
+license_notice='^[^:]+:[0-9]+:[[:space:]]*(<!--|#|//) ported from cursor/plugins@[0-9a-f]{40}( [A-Za-z0-9._/-]+\.(md|sh|mjs|py|json))+ \(MIT\)( -->)?$'
 if hits=$(grep -rsniE "$banned" skills agents guidelines.md hooks README.md | grep -vE "$license_notice"); then
 	while IFS= read -r h; do problem "banned term: ${h:0:160}"; done <<<"$hits"
 fi
