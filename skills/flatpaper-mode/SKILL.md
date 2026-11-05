@@ -84,15 +84,15 @@ If such a step touches a UI, CLI, or service and no `verify-<app>` skill exists,
 
 | Role | `model` | Effort | Why |
 |---|---|---|---|
-| Code writers: `flatpaper-agent` delegates, Autopilot stack and Orchestrate owners, `swarm` writers and writer race arms | session (omit) | `high` | The strongest model in the session writes the code. An owner retried after a tool error runs on `opus` or `fable`, whichever is not the session model |
+| Code writers: `flatpaper-agent` delegates, Autopilot stack and Orchestrate owners, `swarm` writers | session (omit) | `high` | The strongest model in the session writes the code. An owner retried after a tool error runs on `opus` or `fable`, whichever is not the session model |
 | Reviewers and verifiers: the `show-me-your-work` reviewer, `tidy` reviewers, `swarm` verifiers | session (omit) | `high` | Independence comes from a fresh context, not a different model |
 | Comment Sicko | `opus`, pinned in its agent file | `high` | Judging which comments earn their place takes a strong model at a fixed cost |
 | Orchestrate verifiers | whichever of `opus` or `fable` the owner is not running on | `high` | A verifier on another model than its owner catches what the owner's model misses, and its pass lets the owner merge |
 | Read-only search: ad-hoc `Explore`, `how` explorers, `why` investigators | `sonnet` | `medium` | Tracing code takes judgment, not the top model |
 | Bulk extraction: `recall` miners, `swarm` bulk readers | `haiku` | `low` | High-volume reading and classification |
 | Synthesis: the `how` explainer, the `why` synthesizer, the `reflect` synthesizer | `opus` | `high` | Reasoning quality decides the answer here |
-| Cross-vendor panels: `swarm` read-only race arms, `arena` runners on non-code artifacts | Codex `gpt-6.1-sol` first, then `opus`, `sonnet`, `fable` | `high` | Different vendors miss different things. A Codex seat that falls back leaves the Anthropic seats |
-| Same-vendor panels: `interrogate` adversaries, `arena` runners on code, `swarm` writer race arms | `opus`, `sonnet`, `fable` | `high` | Claude writes the code, so code panels stay Anthropic. On two seeded-bug corpora (6 reverted fixes), a Codex adversary caught every bug and none the Claude adversaries missed, so `interrogate` has no Codex seat |
+| Two-family panels: `interrogate` adversaries, `arena` runners, `architect` runners, `swarm` read-only race arms | Codex `gpt-6.1-sol` first, then `opus`. If the Codex seat falls back, `sonnet` takes its place | `high` | Different families miss different things. Codex runs read-only, so on code it proposes a diff and Claude writes what lands |
+| `swarm` writer race arms | `opus`, `sonnet`, `fable` | `high` | Claude writes the code, so writer races stay on Claude |
 | `reflect` reviewers | judgment `opus`, tooling `sonnet`, divergent `fable` | `high` | One lens per model |
 | `arena` judge | Codex `gpt-6.1-sol`. On fallback, the first of `fable`, `opus`, `sonnet` that is not the session model | `high` | The judge sees all candidates, so it gets a model from another vendor, then the strongest other Claude model |
 
