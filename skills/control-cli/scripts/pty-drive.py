@@ -225,4 +225,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-# ported from cursor/plugins@2776ddd2355d6d6c8747d3964600f28daf62f049 skills/control-cli/SKILL.md (MIT)
+# ported from cursor/plugins@2776ddd2355d6d6c8747d3964600f28daf62f049 cursor-team-kit/skills/control-cli/SKILL.md (MIT)
