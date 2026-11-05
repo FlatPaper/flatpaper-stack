@@ -72,20 +72,21 @@ function parseArgs(argv) {
   return opts;
 }
 
+const onPath = (names) => (process.env.PATH || "").split(":").flatMap((dir) => names.map((name) => join(dir, name)));
+
 function findChrome() {
-  if (process.env.CHROME) {
-    if (!existsSync(process.env.CHROME)) throw new Exit(2, `CHROME=${process.env.CHROME} does not exist`);
-    return process.env.CHROME;
+  const chrome = process.env.CHROME;
+  if (chrome) {
+    const isPath = chrome.includes("/");
+    const found = (isPath ? [chrome] : onPath([chrome])).find((p) => existsSync(p));
+    if (!found) throw new Exit(2, `CHROME=${chrome} ${isPath ? "does not exist" : "is not on PATH"}`);
+    return found;
   }
   const candidates = [
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     "/Applications/Chromium.app/Contents/MacOS/Chromium",
+    ...onPath(["google-chrome", "google-chrome-stable", "chromium", "chromium-browser", "chrome"]),
   ];
-  for (const dir of (process.env.PATH || "").split(":")) {
-    for (const name of ["google-chrome", "google-chrome-stable", "chromium", "chromium-browser", "chrome"]) {
-      candidates.push(join(dir, name));
-    }
-  }
   const found = candidates.find((p) => existsSync(p));
   if (!found) throw new Exit(2, "no Chrome or Chromium found; set CHROME to its binary");
   return found;

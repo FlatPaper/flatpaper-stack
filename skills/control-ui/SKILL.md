@@ -28,7 +28,7 @@ Reuse the repo's own harness first: Playwright or Cypress specs, Storybook, brow
 
 ## cdp.mjs
 
-It needs Node 22 or later and a local Chrome or Chromium. It looks for `/Applications/Google Chrome.app`, then `/Applications/Chromium.app`, then `google-chrome`, `google-chrome-stable`, `chromium`, `chromium-browser`, and `chrome` on `PATH`. Set `CHROME` to a browser binary to choose one. With no browser found, it prints `no Chrome or Chromium found; set CHROME to its binary` and exits 2. A `CHROME` that does not exist, or a binary that cannot start, also exits 2 and names the binary.
+It needs Node 22 or later and a local Chrome or Chromium. It looks for `/Applications/Google Chrome.app`, then `/Applications/Chromium.app`, then `google-chrome`, `google-chrome-stable`, `chromium`, `chromium-browser`, and `chrome` on `PATH`. Set `CHROME` to a browser binary to choose one, as a path or as a name on `PATH`. With no browser found, it prints `no Chrome or Chromium found; set CHROME to its binary` and exits 2. A `CHROME` path that does not exist, a `CHROME` name that is not on `PATH`, or a binary that cannot start also exits 2 and names the binary.
 
 Without `--port`, it launches headless Chrome in a temp directory under `$TMPDIR`, in its own process group. It kills the group and removes the directory on every exit, including a failed step and a signal. Chrome on macOS ignores `TMPDIR`, so `cdp.mjs` also sets `MAC_CHROMIUM_TMPDIR` to keep Chrome's own temp files in that directory.
 
