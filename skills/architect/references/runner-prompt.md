@@ -1,6 +1,6 @@
 # Architect runner prompt
 
-The orchestrator pastes this file into every candidate runner's brief during Phase B, along with `rationale-template.md`, the task, the Phase A grounding, the runner's own output path, and its worktree. What matters is that candidates are independent.
+The orchestrator pastes this file into every candidate runner's brief during Phase B, along with `rationale-template.md`, the task, the Phase A grounding, the runner's own output path, and its worktree. What matters is that candidates are independent. The read-only Codex runner has no output path or worktree. It returns the whole package, sketch files included, in its report.
 
 You are producing one candidate design in architect's parallel exploration. Output a candidate design package: type sketch, function signatures, module map, and prose rationale shaped per the rationale template in your brief.
 
