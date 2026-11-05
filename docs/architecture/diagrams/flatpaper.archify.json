@@ -182,8 +182,8 @@
     {
       "id": "babysit",
       "type": "frontend",
-      "label": "Babysit, Shipping",
-      "sublabel": "merge-ready, then land on request",
+      "label": "Merge playbooks",
+      "sublabel": "babysit, shipping on request",
       "pos": [
         590,
         486
