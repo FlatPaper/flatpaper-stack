@@ -63,6 +63,7 @@ here=$(g rev-parse --show-toplevel 2>/dev/null)
 [ -z "$repo" ] && { echo "not in a git repo; pass a repo path" >&2; exit 1; }
 cd "$repo" 2>/dev/null || { echo "cannot cd to $repo" >&2; exit 1; }
 g rev-parse --git-dir >/dev/null 2>&1 || { echo "$repo is not a git repo" >&2; exit 1; }
+[ -z "$base" ] || g rev-parse --verify --quiet "$base^{commit}" >/dev/null || { echo "-b $base is not a commit in $repo" >&2; exit 1; }
 
 tmp=$(mktemp -d 2>/dev/null || mktemp -d -t wtaudit)
 trap 'rm -rf "$tmp"' EXIT
@@ -78,11 +79,7 @@ done | sort -u > "$tmp/wt_paths"
 
 # Base for the merge check: -b, else origin's default branch, else local main
 # or master. No fetch, so this is as fresh as the last fetch.
-if [ -n "$base" ]; then
-	g rev-parse --verify --quiet "$base^{commit}" >/dev/null || { echo "-b $base is not a commit in $repo" >&2; exit 1; }
-else
-	base=$(g symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)
-fi
+[ -n "$base" ] || base=$(g symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)
 if [ -z "$base" ]; then
 	for b in origin/main origin/master main master; do
 		g rev-parse --verify --quiet "$b" >/dev/null && { base=$b; break; }
