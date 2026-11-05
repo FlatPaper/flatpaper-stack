@@ -252,6 +252,20 @@ elif [ -n "${rc:-}" ]; then
 	expect "cdp CHROME that does not exist" 2 '^cdp: CHROME=/nonexistent does not exist$'
 	CHROME="$ui/f.html" cdp_run about:blank
 	expect "cdp CHROME that cannot run" 2 '^cdp: Chrome did not start: .*EACCES'
+	CHROME=fp-no-such-chrome cdp_run about:blank
+	expect "cdp CHROME name not on PATH" 2 '^cdp: CHROME=fp-no-such-chrome is not on PATH$'
+	real_chrome=
+	for c in "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" "/Applications/Chromium.app/Contents/MacOS/Chromium" \
+		$(command -v google-chrome google-chrome-stable chromium chromium-browser chrome 2> /dev/null); do
+		[ -x "$c" ] && { real_chrome=$c; break; }
+	done
+	if [ -n "$real_chrome" ]; then
+		mkdir -p "$ui/bin"
+		printf '#!/bin/sh\nexec "%s" "$@"\n' "$real_chrome" > "$ui/bin/fp-chrome"
+		chmod +x "$ui/bin/fp-chrome"
+		PATH="$ui/bin:$PATH" CHROME=fp-chrome cdp_run about:blank --eval '6 * 7'
+		expect "cdp CHROME as a bare name on PATH" 0 '^42$'
+	fi
 	cdp_run "$ui/click.html" --eval 'document.getElementById("save").click()' --wait-for '#saved' --dom '#saved'
 	expect "cdp --eval clicks, then --wait-for sees the result" 0 '^saved$'
 	cdp_run "$ui/click.html" --eval 'await null; new Promise((r) => setTimeout(() => r("promised"), 50))'
@@ -367,6 +381,11 @@ else
 	tr -d '\r' < "$tmp/out" | grep -qx after && ok || dump "pty-drive.py --wait-exit: want the output printed before the exit:"
 	capped 10 "$pty" --timeout 5 --wait-exit -- sh -c 'echo fine'
 	expect "pty-drive.py --wait-exit on status 0" 0 '^pty-drive: command exited with status 0$'
+	capped 10 "$pty" --timeout 5 --wait-exit -- sh -c 'kill -TERM $$'
+	expect "pty-drive.py --wait-exit on a signal" 3 '^pty-drive: command exited with signal 15$'
+	capped 10 "$pty" --timeout 5 --wait-exit --send 'x\r' -- sh -c 'echo done'
+	expect "pty-drive.py --send after the command exited" 1 'command exited before --send'
+	tr -d '\r' < "$tmp/out" | grep -qx done && ok || dump "pty-drive.py --send after exit: want the transcript printed:"
 fi
 
 [ "$skipped" -eq 0 ] || echo "test-scripts: $skipped inconclusive, not counted as passes"
