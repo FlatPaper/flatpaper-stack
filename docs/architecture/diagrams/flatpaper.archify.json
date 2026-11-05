@@ -603,7 +603,7 @@
         "Playbook steps call how, why, architect, interrogate, swarm, arena, tidy, no-comments, unslop, technical-writing, statechart, benchmark-checklist; large work that fits in one run, or no match, routes to figure-it-out",
         "By hand only: correct, reflect, recall, ketchup, ketchup-video, teach, bro, sharpen, flatpaper-help, blast-radius, the verification and formal verification skills",
         "show-me-your-work keeps the decision log",
-        "Subagents run on opus, sonnet, haiku, or fable per a role table that also sets each role's effort; arena runners on non-code work, the arena judge, and swarm read-only race arms run a read-only Codex seat first through codex-seat.sh"
+        "Subagents run on opus, sonnet, haiku, or fable per a role table that also sets each role's effort; interrogate, arena, and architect panels and swarm read-only races pair a read-only Codex seat, run first through codex-seat.sh, with opus, and the arena judge runs on Codex"
       ]
     },
     {
