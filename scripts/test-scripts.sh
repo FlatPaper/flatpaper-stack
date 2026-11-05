@@ -142,8 +142,6 @@ printf '{"transcript_path":"%s","tool_name":"Bash","tool_input":{"command":"mome
 printf '{"transcript_path":"%s","tool_name":"Bash","tool_input":{"command":"git push && gh  pr create --fill"}}' "$tmp/t-none.jsonl" |
 	"$scripts/pr-gate.sh" 2> /dev/null; [ $? -eq 2 ] && ok || bad "pr-gate chained gh pr create: want exit 2"
 
-# codex-seat.sh. A fake companion acts on the model name, and a fake codex
-# sits on PATH. Each case wants an exit code and an output line.
 mkdir -p "$tmp/seat/bin" "$tmp/seat/repo"
 git -C "$tmp/seat/repo" init -q
 printf '#!/bin/sh\nexit 0\n' > "$tmp/seat/bin/codex"
@@ -160,11 +158,12 @@ else if (model === "blank") console.log("");
 else fail("socket closed");
 EOF
 echo "prompt" > "$tmp/seat/prompt.txt"
-seat_case() { # model, want exit, want output pattern, [PATH]
-	out=$(PATH="${4:-$tmp/seat/bin:$PATH}" CODEX_COMPANION="$tmp/seat/companion.cjs" "$scripts/codex-seat.sh" \
-		--model "$1" --effort high --fallback "the opus seat" --timeout 1 --cwd "$tmp/seat/repo" "$tmp/seat/prompt.txt" 2>&1)
+seat_case() {
+	local model=$1 want_exit=$2 want_line=$3 path=${4:-$tmp/seat/bin:$PATH}
+	out=$(PATH="$path" CODEX_COMPANION="$tmp/seat/companion.cjs" "$scripts/codex-seat.sh" \
+		--model "$model" --effort high --fallback "the opus seat" --timeout 1 --cwd "$tmp/seat/repo" "$tmp/seat/prompt.txt" 2>&1)
 	got=$?
-	if [ "$got" = "$2" ] && printf '%s' "$out" | grep -qE "$3"; then ok; else bad "codex-seat $1: want exit $2 and /$3/, got $got: $out"; fi
+	if [ "$got" = "$want_exit" ] && printf '%s' "$out" | grep -qE "$want_line"; then ok; else bad "codex-seat $model: want exit $want_exit and /$want_line/, got $got: $out"; fi
 }
 seat_case ok 0 '^finding one$'
 seat_case reject 3 '^codex seat fallback: model-rejected: .*Running the opus seat instead\.$'

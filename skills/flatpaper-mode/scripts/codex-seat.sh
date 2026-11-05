@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 # Run one read-only Codex seat through the codex plugin's companion script.
-# It never passes --write, so the companion starts Codex in its read-only
-# sandbox. It also checks that `git status` in the seat's directory did not
-# change.
+# It never passes --write, so the companion starts Codex in its read-only sandbox.
 #
 # Usage: codex-seat.sh --model <id> --effort <low|medium|high|xhigh>
 #                      --fallback <what runs instead> [--timeout <seconds>]
@@ -13,8 +11,6 @@
 #   codex seat fallback: <cause>: <detail>. Running <fallback> instead.
 # The cause is one of: missing, timeout, model-rejected, throttled,
 # tree-changed, empty, error.
-#
-# CODEX_COMPANION overrides the companion path. Tests use it.
 set -uo pipefail
 
 model="" effort="" fallback="" timeout=1200 cwd="$PWD" prompt=""
@@ -47,22 +43,24 @@ trap 'rm -rf "$tmp"' EXIT
 tree_state() { git -C "$cwd" --no-optional-locks status --porcelain 2>/dev/null; }
 before=$(tree_state)
 
-# Run the companion in its own process group so a timeout also stops the
-# app-server it starts.
-perl -e '
-	my $t = shift;
-	my $pid = fork // die;
-	if (!$pid) { setpgrp(0, 0); exec @ARGV or exit 127 }
-	$SIG{ALRM} = sub {
-		kill "TERM", -$pid;
-		for (1 .. 20) { waitpid($pid, 1); last unless kill 0, -$pid; select undef, undef, undef, 0.1 }
-		kill "KILL", -$pid;
-		exit 124;
-	};
-	alarm $t;
-	waitpid($pid, 0);
-	exit($? & 127 ? 128 + ($? & 127) : $? >> 8);
-' "$timeout" node "$companion" task --fresh --model "$model" --effort "$effort" \
+run_with_timeout() {
+	perl -e '
+		my $t = shift;
+		my $pid = fork // die;
+		if (!$pid) { setpgrp(0, 0); exec @ARGV or exit 127 }
+		$SIG{ALRM} = sub {
+			kill "TERM", -$pid;
+			for (1 .. 20) { waitpid($pid, 1); last unless kill 0, -$pid; select undef, undef, undef, 0.1 }
+			kill "KILL", -$pid;
+			exit 124;
+		};
+		alarm $t;
+		waitpid($pid, 0);
+		exit($? & 127 ? 128 + ($? & 127) : $? >> 8);
+	' "$@"
+}
+
+run_with_timeout "$timeout" node "$companion" task --fresh --model "$model" --effort "$effort" \
 	--cwd "$cwd" --prompt-file "$prompt" > "$tmp/out" 2> "$tmp/err"
 rc=$?
 

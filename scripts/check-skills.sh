@@ -87,20 +87,16 @@ for f in agents/*.md; do
 	fi
 done
 
-# Only Anthropic models and Codex, and no Cursor-only tools or plugins.
 banned='grok|gemini|llama|mistral|deepseek|composer-[0-9]|AskQuestion|poteto-agent|cursor-team-kit|/deslop|generalPurpose|\.cursor/|is_background'
 if hits=$(grep -rsniE "$banned" skills agents guidelines.md hooks README.md); then
 	while IFS= read -r h; do problem "banned term: ${h:0:160}"; done <<<"$hits"
 fi
 
-# Codex runs only through codex-seat.sh, which keeps it read-only. A direct call
-# to the companion, the rescue agent, or a slash command could write.
-# codex-seat.sh rejects unknown options, so it cannot pass --write on.
+# A direct call to the companion, the rescue agent, or a slash command could write.
 if hits=$(grep -rsnE 'codex-companion|codex-rescue|/codex:' skills agents guidelines.md hooks | grep -v '^skills/flatpaper-mode/scripts/codex-seat\.sh:'); then
 	while IFS= read -r h; do problem "Codex outside codex-seat.sh: ${h:0:160}"; done <<<"$hits"
 fi
 
-# The only GPT model a role may name is the Codex seat's.
 if hits=$(grep -rsnoE '\bgpt-[0-9][a-z0-9.-]*' skills agents guidelines.md hooks README.md | grep -v ':gpt-6\.1-sol$'); then
 	while IFS= read -r h; do problem "GPT model other than gpt-6.1-sol: ${h:0:160}"; done <<<"$hits"
 fi
