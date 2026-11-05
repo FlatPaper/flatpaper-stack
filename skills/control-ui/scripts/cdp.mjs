@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, dirname, join, resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const USAGE = `Drive one page of headless Chrome over raw CDP. Zero dependencies, Node 22+.
@@ -95,27 +95,11 @@ const killGroup = (chrome, signal) => {
   } catch {}
 };
 
-// On macOS Chrome keeps its singleton socket in a com.google.Chrome.* dir
-// under the real temp dir, whatever TMPDIR says, and links to it from the
-// profile.
-function singletonDir(chrome) {
-  try {
-    const dir = dirname(readlinkSync(join(chrome.dir, "profile", "SingletonSocket")));
-    if (basename(dir).startsWith("com.google.Chrome.") || basename(dir).startsWith("org.chromium.Chromium.")) return dir;
-  } catch {}
-  return undefined;
-}
-
-function removeDirs(chrome) {
-  chrome.singleton ??= singletonDir(chrome);
-  for (const dir of [chrome.singleton, chrome.dir]) if (dir) rmSync(dir, { recursive: true, force: true });
-}
-
 for (const [signal, code] of [["SIGINT", 130], ["SIGTERM", 143], ["SIGHUP", 129]]) {
   process.on(signal, () => {
     for (const c of running) {
       killGroup(c, "SIGKILL");
-      removeDirs(c);
+      rmSync(c.dir, { recursive: true, force: true });
     }
     process.exit(code);
   });
@@ -127,13 +111,14 @@ async function launchChrome() {
   mkdirSync(profile);
   const proc = spawn(findChrome(), [
     "--headless=new", `--user-data-dir=${profile}`, "--remote-debugging-port=0",
-    "--no-first-run", "--no-default-browser-check", "--disable-component-update",
-    "--disable-component-extensions-with-background-pages", "--disable-default-apps", "--disable-extensions",
-    "--disable-background-networking", "--disable-sync", "--disable-domain-reliability", "--metrics-recording-only",
-    "--disable-features=OptimizationHints,OptimizationGuideModelDownloading,OptimizationHintsFetching,Translate,MediaRouter",
-    "--use-mock-keychain", "--password-store=basic",
-    "--disable-gpu", "--hide-scrollbars", "--mute-audio", "about:blank",
-  ], { stdio: ["ignore", "ignore", "pipe"], detached: true, env: { ...process.env, TMPDIR: dir } });
+    "--no-first-run", "--no-default-browser-check", "--disable-gpu", "--hide-scrollbars",
+    "--mute-audio", "about:blank",
+  ], {
+    stdio: ["ignore", "ignore", "pipe"],
+    detached: true,
+    // Chrome on macOS ignores TMPDIR and reads MAC_CHROMIUM_TMPDIR instead.
+    env: { ...process.env, TMPDIR: dir, MAC_CHROMIUM_TMPDIR: dir },
+  });
   let stderr = "";
   proc.stderr.on("data", (d) => { stderr += d; });
   const exited = new Promise((r) => proc.once("exit", r));
@@ -145,7 +130,6 @@ async function launchChrome() {
     const lines = existsSync(portFile) ? readFileSync(portFile, "utf8").split("\n") : [];
     if (lines.length >= 2) {
       chrome.ws = `ws://127.0.0.1:${lines[0]}${lines[1]}`;
-      chrome.singleton = singletonDir(chrome);
       return chrome;
     }
     if (proc.exitCode !== null || Date.now() > deadline) {
@@ -169,7 +153,7 @@ async function killChrome(chrome) {
   killGroup(chrome, "SIGKILL");
   for (let i = 0; i < 20; i++) {
     try {
-      removeDirs(chrome);
+      rmSync(chrome.dir, { recursive: true, force: true });
       return;
     } catch {
       await sleep(100);

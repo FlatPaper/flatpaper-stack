@@ -254,9 +254,9 @@ elif [ -n "${rc:-}" ]; then
 		expect "cdp --port to a server that never answers" 124 'waiting for http://127\.0\.0\.1:'
 		{ kill "$listener" && wait "$listener"; } 2> /dev/null
 	fi
-	cdp_run "$ui/f.html" --wait-for '#missing' --timeout 500
+	cdp_run "$ui/f.html" --wait-for '#missing' --timeout 3000
 	expect "cdp --wait-for a missing element" 124 'waiting for #missing'
-	cdp_run "$ui/f.html" --eval 'while (true) {}' --timeout 1500
+	cdp_run "$ui/f.html" --eval 'while (true) {}' --timeout 3000
 	expect "cdp call into a hung page" 124 'waiting for Runtime.evaluate'
 	cdp_run "file://$ui/f.html#nodot" --wait-for '#late' --screenshot "$ui/b.png"
 	cdp_run "$ui/f.html" --viewport 640x480 --screenshot "$ui/small.png"

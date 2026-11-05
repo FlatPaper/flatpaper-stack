@@ -30,7 +30,7 @@ Reuse the repo's own harness first: Playwright or Cypress specs, Storybook, brow
 
 It needs Node 22 or later and a local Chrome or Chromium. It looks for `/Applications/Google Chrome.app`, then `/Applications/Chromium.app`, then `google-chrome`, `google-chrome-stable`, `chromium`, `chromium-browser`, and `chrome` on `PATH`. Set `CHROME` to a browser binary to choose one. With no browser found, it prints `no Chrome or Chromium found; set CHROME to its binary` and exits 2.
 
-Without `--port`, it launches headless Chrome in a temp directory under `$TMPDIR`, in its own process group. It kills the group and removes the directory on every exit, including a failed step and a signal. On macOS it also removes the `com.google.Chrome.*` directory that Chrome makes in the real temp directory.
+Without `--port`, it launches headless Chrome in a temp directory under `$TMPDIR`, in its own process group. It kills the group and removes the directory on every exit, including a failed step and a signal. Chrome on macOS ignores `TMPDIR`, so `cdp.mjs` also sets `MAC_CHROMIUM_TMPDIR` to keep Chrome's own temp files in that directory.
 
 In these examples, `$OUT` is a directory you make for this run's files in the session scratchpad, for example `OUT=<scratchpad>/ui-<slug>; mkdir -p "$OUT"`. Run `node "$cdp" --help` for the full usage.
 
