@@ -16,12 +16,28 @@ inconclusive() { printf 'INCONCLUSIVE %s: %s\n' "$1" "$2"; skipped=$((skipped + 
 
 mkdir -p "$tmp/lint"
 cp -R "$root"/* "$tmp/lint/"
-printf '%s\n' 'Spawn a generalPurpose agent.' '<!-- ported from cursor/plugins@0000000 pstack/skills/poteto-mode/playbooks/x.md (MIT) -->' 'Adapted from pstack.' >> "$tmp/lint/skills/tidy/SKILL.md"
+sha=0000000000000000000000000000000000000000
+printf '%s\n' 'Spawn a generalPurpose agent.' 'Adapted from pstack.' \
+	"<!-- ported from cursor/plugins@$sha cursor-team-kit/skills/x/SKILL.md pstack/skills/poteto-mode/playbooks/x.md (MIT) -->" \
+	"# ported from cursor/plugins@$sha cursor-team-kit/skills/x/SKILL.md (MIT)" \
+	"// ported from cursor/plugins@$sha pstack/skills/poteto-mode/playbooks/x.md (MIT)" \
+	"<!-- ported from cursor/plugins@$sha use AskQuestion (MIT) -->" \
+	'Keep is_background wording, as ported from cursor/plugins@ upstream.' \
+	'Keep pstack wording, as ported from cursor/plugins@ upstream.' >> "$tmp/lint/skills/tidy/SKILL.md"
 "$root/scripts/check-skills.sh" "$tmp/lint" > "$tmp/out" 2>&1
-if [ $? = 1 ] && [ "$(grep -c '^FAIL' "$tmp/out")" = 2 ] && grep -q '^FAIL banned term: skills/tidy/SKILL.md:[0-9]*:Spawn a generalPurpose' "$tmp/out" &&
-	grep -q '^FAIL upstream reference: skills/tidy/SKILL.md:[0-9]*:Adapted from pstack' "$tmp/out"; then ok; else
-	bad "check-skills: want exit 1 and two FAILs, the banned term and the upstream reference on the planted lines, with provenance lines exempt"; sed 's/^/  /' "$tmp/out"
+code=$?
+lint_has() {
+	local name=$1 pattern=$2
+	if grep -q "^FAIL $pattern" "$tmp/out"; then ok; else bad "check-skills $name: want a FAIL matching '$pattern'"; sed 's/^/  /' "$tmp/out"; fi
+}
+if [ "$code" = 1 ] && [ "$(grep -c '^FAIL' "$tmp/out")" = 5 ]; then ok; else
+	bad "check-skills: want exit 1 and five FAILs on the planted lines, with the three provenance comments exempt, got exit $code"; sed 's/^/  /' "$tmp/out"
 fi
+lint_has "banned term" 'banned term: skills/tidy/SKILL.md:[0-9]*:Spawn a generalPurpose'
+lint_has "upstream reference" 'upstream reference: skills/tidy/SKILL.md:[0-9]*:Adapted from pstack'
+lint_has "banned term in prose that holds the provenance marker" 'banned term: skills/tidy/SKILL.md:[0-9]*:Keep is_background wording'
+lint_has "upstream reference in prose that holds the provenance marker" 'upstream reference: skills/tidy/SKILL.md:[0-9]*:Keep pstack wording'
+lint_has "banned term in a provenance comment with no source path" 'banned term: skills/tidy/SKILL.md:[0-9]*:<!-- ported from cursor/plugins@0* use '
 
 awk '/^````markdown$/{f=1;next} /^````$/{f=0} f' "$root/skills/flatpaper-mode/playbooks/multi-phase-plan.md" |
 	grep -v 'One box per further lane' | sed -E 's/<[^>]*>/filler/g' > "$tmp/base.md"
@@ -80,7 +96,7 @@ git init -q -b main "$r"
 printf '.env\nnode_modules/\nsecret.txt\n' > "$r/.gitignore"
 G add .gitignore && G commit -qm init
 
-for c in clean env cache nested reflog rebased tagged; do G worktree add -q -b "$c" "$tmp/wt-$c" main; done
+for c in clean env cache nested reflog rebased tagged rel; do G worktree add -q -b "$c" "$tmp/wt-$c" main; done
 echo secret > "$tmp/wt-env/.env"
 mkdir -p "$tmp/wt-cache/node_modules/x" && echo x > "$tmp/wt-cache/node_modules/x/i.js"
 # An ignored file inside a dir named like a cache dir is not cache output.
@@ -96,10 +112,17 @@ G -C "$tmp/wt-tagged" switch -q --detach
 G -C "$tmp/wt-tagged" commit -q --allow-empty -m tagged
 G -C "$tmp/wt-tagged" tag kept
 G -C "$tmp/wt-tagged" switch -q tagged
+G -C "$tmp/wt-rel" commit -q --allow-empty -m release-fix
+G branch release rel
 
-HOME="$tmp/home" CLAUDE_SESSION_ID='' "$scripts/worktree-audit.sh" "$r" > "$tmp/audit" 2>/dev/null
+audit() { HOME="$tmp/home" CLAUDE_SESSION_ID='' "$scripts/worktree-audit.sh" "$r" "$@" > "$tmp/audit" 2> "$tmp/err"; }
+audit_col() {
+	local wt=$1 col=$2
+	awk -F'\t' -v w="/wt-$wt" -v c="$col" 'substr($8, length($8) - length(w) + 1) == w { print $c }' "$tmp/audit"
+}
+audit
 audit_case() { # worktree suffix, want bucket
-	got=$(awk -F'\t' -v w="/wt-$1" 'substr($8, length($8) - length(w) + 1) == w { print $1 }' "$tmp/audit")
+	got=$(audit_col "$1" 1)
 	if [ "$got" = "$2" ]; then ok; else bad "worktree-audit wt-$1: want $2, got ${got:-no row}"; sed 's/^/  /' "$tmp/audit"; fi
 }
 audit_case clean safe
@@ -109,6 +132,26 @@ audit_case nested hold-ignored
 audit_case reflog hold-reflog
 audit_case rebased safe
 audit_case tagged safe
+got=$(audit_col rel 3)
+if [ "$got" = no ]; then ok; else bad "worktree-audit wt-rel without -b: want MERGED no, got ${got:-no row}"; sed 's/^/  /' "$tmp/audit"; fi
+for flag in "-b release" "--base release" "--base=release"; do
+	audit $flag
+	got=$(audit_col rel 3)
+	if [ "$got" = yes ] && grep -qx 'note: merged means reachable from release as of the last fetch' "$tmp/err"; then ok; else
+		bad "worktree-audit wt-rel with $flag: want MERGED yes and the note naming release, got ${got:-no row}"; sed 's/^/  /' "$tmp/audit" "$tmp/err"
+	fi
+done
+bad_base() {
+	local want=$1; shift
+	audit "$@"
+	code=$?
+	if [ "$code" = 1 ] && [ ! -s "$tmp/audit" ] && grep -qxF -- "$want" "$tmp/err"; then ok; else
+		bad "worktree-audit $*: want exit 1, no table, and '$want', got exit $code"; sed 's/^/  /' "$tmp/audit" "$tmp/err"
+	fi
+}
+bad_base "-b no-such-ref is not a commit in $r" -b no-such-ref
+bad_base "-b needs a ref" -b
+bad_base "--base needs a ref" --base=
 
 # pr-gate.sh. gh pr create is blocked until the transcript shows a Skill call
 # for each gated skill, with or without a plugin prefix. Without a readable
