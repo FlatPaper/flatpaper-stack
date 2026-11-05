@@ -95,7 +95,7 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 </style>
 <header class="top">
-  <div class="eyebrow">A Claude Code plugin · version 0.8.19</div>
+  <div class="eyebrow">A Claude Code plugin · version 0.8.20</div>
   <h1>Using flatpaper</h1>
   <p class="lede">flatpaper makes agent work you can trust and still understand a month later. Part 1 gets you running. Part 2 covers the ideas behind it: how to work with agents so the result holds up. Part 3 shows what to type for the situation you're in.</p>
   <div class="five"><span>goal</span><span>done check</span><span>proof</span><span>what you know</span><span>constraints</span></div>
@@ -653,6 +653,18 @@ raise a draft PR.</pre>
 <pre>/flatpaper-stack:benchmark-checklist the cache change made export 30% faster</pre>
   </div>
 
+  <div class="cmd" id="c-control-ui">
+    <h4>/flatpaper-stack:control-ui</h4>
+    <p><b>Use it</b> to check a web, IDE, or Electron UI on the real page when the project has no <code>verify-&lt;app&gt;</code> skill. <code>cdp.mjs</code> drives headless Chrome with no dependencies: it runs JS, waits for an element, reads the DOM, takes screenshots, captures console errors, and counts the pixels that differ between two screenshots. A timeout exits 124 instead of hanging. Playbooks that check a UI call it when no verification skill exists.</p>
+<pre>/flatpaper-stack:control-ui screenshot the settings page before and after the theme change, and diff them</pre>
+  </div>
+
+  <div class="cmd" id="c-control-cli">
+    <h4>/flatpaper-stack:control-cli</h4>
+    <p><b>Use it</b> to check an interactive CLI or TUI the same way. <code>drive.sh</code> runs the command in tmux, types input, and waits for a pattern on screen. <code>pty-drive.py</code> does the same through a PTY on a host without tmux. A command that hangs exits 124 at the timeout, so a hang is a verdict, not a stall.</p>
+<pre>/flatpaper-stack:control-cli drive the setup wizard and check that it accepts an empty project name</pre>
+  </div>
+
   <div class="cmd" id="c-interrogate">
     <h4>/flatpaper-stack:interrogate</h4>
     <p><b>Use it</b> before a PR you're unsure about. Two fresh adversaries from different model families, a read-only Codex seat and Claude on opus, try to break it. Only findings whose command still fails when rerun survive, so style and what-if risks drop out. It applies no fixes.</p>
@@ -794,17 +806,20 @@ new task: review the open PR.</pre>
     <thead><tr><th>Script</th><th>When</th><th>Command</th></tr></thead>
     <tbody>
       <tr><td class="nw">check-skills.sh</td><td>After editing any skill, agent, or playbook</td><td><code>scripts/check-skills.sh</code></td></tr>
-      <tr><td class="nw">test-scripts.sh</td><td>After editing <code>check-plan.sh</code>, <code>worktree-audit.sh</code>, <code>pr-gate.sh</code>, or <code>codex-seat.sh</code>. CI runs it with <code>check-skills.sh</code> on Linux and macOS</td><td><code>scripts/test-scripts.sh</code></td></tr>
+      <tr><td class="nw">test-scripts.sh</td><td>After editing <code>check-plan.sh</code>, <code>worktree-audit.sh</code>, <code>pr-gate.sh</code>, <code>codex-seat.sh</code>, <code>cdp.mjs</code>, <code>drive.sh</code>, or <code>pty-drive.py</code>. A case whose tool is missing (Chrome, Node 22, tmux) prints INCONCLUSIVE, not a pass. CI runs it with <code>check-skills.sh</code> on Linux and macOS</td><td><code>scripts/test-scripts.sh</code></td></tr>
       <tr><td class="nw">docs/guide/build.sh</td><td>After editing this guide</td><td><code>docs/guide/build.sh</code></td></tr>
       <tr><td class="nw">arch-drift.sh</td><td>Runs at session start; run by hand to recheck</td><td><code>scripts/arch-drift.sh</code></td></tr>
       <tr><td class="nw">check-plan.sh</td><td>After writing a multi-phase plan</td><td><code>skills/flatpaper-mode/scripts/check-plan.sh docs/plans/&lt;slug&gt;.md</code></td></tr>
       <tr><td class="nw">worktree-audit.sh</td><td>Before removing worktrees. Holds uncommitted work, open PRs, ignored files such as <code>.env</code>, and commits only the worktree's reflog keeps</td><td><code>skills/flatpaper-mode/scripts/worktree-audit.sh [--self &lt;session-id&gt;] [repo]</code></td></tr>
       <tr><td class="nw">codex-seat.sh</td><td>Run by <code>interrogate</code>, <code>arena</code>, <code>architect</code>, and <code>swarm</code> for their Codex seat. Read-only. Prints one <code>codex seat fallback:</code> line and exits 3 when Codex is missing, throttled, times out, or rejects the model</td><td><code>skills/flatpaper-mode/scripts/codex-seat.sh --model gpt-6.1-sol --effort high --fallback "&lt;what runs instead&gt;" --cwd &lt;dir&gt; &lt;prompt-file&gt;</code></td></tr>
       <tr><td class="nw">pr-gate.sh</td><td>Runs as a hook on every <code>gh pr create</code> after flatpaper-mode starts. Lets through any command that does not run <code>gh pr create</code></td><td><code>skills/flatpaper-mode/scripts/pr-gate.sh</code> (reads hook JSON on stdin)</td></tr>
+      <tr><td class="nw">cdp.mjs</td><td>Driving a UI by hand, as the <code>control-ui</code> skill does. Exits 124 on a timeout and 2 on a usage or launch error. Run <code>--help</code> for every flag</td><td><code>node skills/control-ui/scripts/cdp.mjs &lt;url&gt; --wait-for &lt;css&gt; --screenshot &lt;png&gt;</code></td></tr>
+      <tr><td class="nw">drive.sh</td><td>Driving a CLI in tmux by hand, as the <code>control-cli</code> skill does. <code>wait</code> exits 124 on a timeout</td><td><code>skills/control-cli/scripts/drive.sh start &lt;session&gt; -- &lt;command&gt;</code>, then <code>wait</code>, <code>type</code>, <code>send</code>, <code>capture</code>, <code>status</code>, <code>kill</code></td></tr>
+      <tr><td class="nw">pty-drive.py</td><td>The same on a host without tmux. Exits 124 on a timeout, and 3 when <code>--wait-exit</code> sees a non-zero status</td><td><code>skills/control-cli/scripts/pty-drive.py --wait &lt;regex&gt; --send &lt;text&gt; --wait-exit -- &lt;command&gt;</code></td></tr>
       <tr><td class="nw">log.sh</td><td>Adding a decision row by hand</td><td><code>skills/show-me-your-work/scripts/log.sh &lt;log&gt; &lt;phase&gt; &lt;decision&gt; &lt;why&gt; &lt;evidence&gt; &lt;result&gt;</code></td></tr>
     </tbody>
   </table></div>
 </section>
 </main>
 </div>
-<footer>Built from the flatpaper repo at version 0.8.19 with <code>docs/guide/build.sh</code>.</footer>
+<footer>Built from the flatpaper repo at version 0.8.20 with <code>docs/guide/build.sh</code>.</footer>
