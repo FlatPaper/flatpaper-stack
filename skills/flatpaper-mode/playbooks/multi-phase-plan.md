@@ -59,7 +59,7 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 
 - [ ] Get the verdict from agents that did not write the change. Under Autopilot stack or Autopilot-full, a full swarm runs once at the code-ready head, per the `swarm` skill. Under Orchestrate, the owner's verifier on the other model runs the same lanes. Otherwise a fresh subagent reviews the head. Re-verify a new head per the execution playbook.
 - [ ] The verdict runs one gates lane, the live lanes from the PR's **Verify, live** block, the perf lane from its **Verify, perf** block, and two or more audit lanes. Each audit lane has its own focus, reads the diff and the receipts, and distrusts the PR body. Check the receipts in the owner's report before the verdict.
-- [ ] Judge every finding by the execution playbook's blocking rule. The verdict is clean when none blocks. A failure on trunk behavior in the lane marked `Regression lane against trunk.` is recorded against trunk and does not block the PR. A new head gets a fresh verdict at that head. Its verifier skips only the lanes that step 3 of the Shipping playbook (`playbooks/shipping.md`) lets it skip.
+- [ ] Judge every finding by the execution playbook's blocking rule. The verdict is clean when none blocks. A failure on trunk behavior in the lane marked `Regression lane against trunk.` is recorded against trunk and does not block the PR.
 - [ ] Merge only at the exact head SHA a verdict names. <The merge or handoff rule from the execution playbook.>
 
 ### Boot recipe, for every live lane
@@ -114,8 +114,8 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 
 - [ ] Clean review verdict at the exact head SHA.
 - [ ] Review comments triaged.
-- [ ] On the PR's base at the verdict's head SHA. A rebase to get there makes a new head that needs a fresh verdict. Only an owner, or Shipping on an explicit land request, rebases. On the per-task path, a needed rebase is reported, not done.
-- [ ] <Who merges. Under Autopilot stack the user lands the stack bottom-up, because it never merges. Under Autopilot-full the owner merges after merge prep, on a verdict that names its exact head SHA. A review-gated PR stops at merge-ready for the user under every path. Under Orchestrate the owner merges on its verifier's pass at that exact head SHA. Otherwise the user merges it, or lands the stack through the Shipping playbook on an explicit land request.>
+- [ ] On the PR's base at the verdict's head SHA. Only an owner, or Shipping on an explicit land request, rebases to get there. On the per-task path, a needed rebase is reported, not done.
+- [ ] <Who merges. Under Autopilot stack the user lands the stack bottom-up, because it never merges. Under Autopilot-full the owner merges after merge prep, on the verdict at its head. A review-gated PR stops at merge-ready for the user under every path. Under Orchestrate the owner merges on its verifier's pass at the head. Otherwise the user merges it, or lands the stack through the Shipping playbook on an explicit land request.>
 
 ## Close the program
 
