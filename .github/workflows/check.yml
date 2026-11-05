@@ -17,6 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - if: runner.os == 'macOS'
-        run: brew install tmux
+        run: HOMEBREW_NO_AUTO_UPDATE=1 brew install tmux
       - run: scripts/check-skills.sh
       - run: scripts/test-scripts.sh

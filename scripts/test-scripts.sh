@@ -14,19 +14,15 @@ ok() { pass=$((pass + 1)); }
 bad() { printf 'FAIL %s\n' "$1"; fail=1; }
 inconclusive() { printf 'INCONCLUSIVE %s: %s\n' "$1" "$2"; skipped=$((skipped + 1)); }
 
-# check-skills.sh on a copy of the plugin, with one line appended to a skill.
-lint="$tmp/lint"
-mkdir -p "$lint"
-cp -R "$root/skills" "$root/agents" "$root/hooks" "$root/README.md" "$root/guidelines.md" "$lint/"
-cp "$lint/skills/tidy/SKILL.md" "$tmp/tidy.md"
-lint_case() { # name, want (pass|fail), appended line
-	{ cat "$tmp/tidy.md"; printf '%s\n' "$3"; } > "$lint/skills/tidy/SKILL.md"
-	if "$root/scripts/check-skills.sh" "$lint" > "$tmp/out" 2>&1; then got=pass; else got=fail; fi
-	if [ "$got" = "$2" ]; then ok; else bad "check-skills $1: want $2, got $got"; sed 's/^/  /' "$tmp/out"; fi
-}
-lint_case "provenance line naming its source" pass '<!-- ported from cursor/plugins@2776ddd2355d6d6c8747d3964600f28daf62f049 cursor-team-kit/skills/deslop/SKILL.md (MIT) -->'
-lint_case "banned term on any other line" fail 'Adapted from cursor-team-kit/skills/deslop/SKILL.md.'
-grep -q '^FAIL banned term: skills/tidy/SKILL.md:[0-9]*:Adapted from cursor-team-kit' "$tmp/out" && ok || bad "check-skills: want the banned term reported at its line, got: $(cat "$tmp/out")"
+# check-skills.sh on a copy of the plugin, whose provenance lines name banned
+# terms. A banned term on any other line is the only failure.
+mkdir -p "$tmp/lint"
+cp -R "$root"/* "$tmp/lint/"
+echo 'Adapted from cursor-team-kit/skills/deslop/SKILL.md.' >> "$tmp/lint/skills/tidy/SKILL.md"
+"$root/scripts/check-skills.sh" "$tmp/lint" > "$tmp/out" 2>&1
+if [ $? = 1 ] && [ "$(grep -c '^FAIL' "$tmp/out")" = 1 ] && grep -q '^FAIL banned term: skills/tidy/SKILL.md:[0-9]*:Adapted from' "$tmp/out"; then ok; else
+	bad "check-skills: want exit 1 and one FAIL, the banned term on the Adapted line"; sed 's/^/  /' "$tmp/out"
+fi
 
 # check-plan.sh. The base plan is the playbook skeleton with every placeholder
 # filled, so it must pass. Each case appends to it and expects a verdict.
