@@ -129,7 +129,10 @@ async function launchChrome() {
     "--headless=new", `--user-data-dir=${profile}`, "--remote-debugging-port=0",
     "--no-first-run", "--no-default-browser-check", "--disable-component-update",
     "--disable-component-extensions-with-background-pages", "--disable-default-apps", "--disable-extensions",
-    "--disable-background-networking", "--disable-gpu", "--hide-scrollbars", "--mute-audio", "about:blank",
+    "--disable-background-networking", "--disable-sync", "--disable-domain-reliability", "--metrics-recording-only",
+    "--disable-features=OptimizationHints,OptimizationGuideModelDownloading,OptimizationHintsFetching,Translate,MediaRouter",
+    "--use-mock-keychain", "--password-store=basic",
+    "--disable-gpu", "--hide-scrollbars", "--mute-audio", "about:blank",
   ], { stdio: ["ignore", "ignore", "pipe"], detached: true, env: { ...process.env, TMPDIR: dir } });
   let stderr = "";
   proc.stderr.on("data", (d) => { stderr += d; });
