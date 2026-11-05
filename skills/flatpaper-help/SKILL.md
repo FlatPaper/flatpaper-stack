@@ -89,7 +89,7 @@ Each skill lives at `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md`. If a skill d
 Close calls:
 
 - `/flatpaper-stack:how` explains how code works now. `/flatpaper-stack:why` finds the reasons. The Investigation playbook runs both.
-- `/flatpaper-stack:benchmark-checklist` vets one number. The Perf playbook runs it on every number while it makes something faster.
+- `/flatpaper-stack:benchmark-checklist` vets one number. The Perf and Hillclimb playbooks run it on the baseline, on each attempt, and on the final number.
 - `/flatpaper-stack:arena` gives every worker the same brief and merges the best parts. `/flatpaper-stack:swarm` splits work into slices or a race and returns one table.
 - `/flatpaper-stack:architect` implements right after it settles the design. Add "with checkpoint" to review the design before it writes code.
 - `/flatpaper-stack:interrogate` reviews the diff. `/flatpaper-stack:blast-radius` looks for breakage outside the diff and proves the one fact that makes the change safe.

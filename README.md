@@ -17,7 +17,7 @@ Three ideas carry it:
 | `guidelines.md` | Always-on rules, loaded at session start by a hook |
 | `UserPromptSubmit` hook | One-line reminder on every prompt: concise replies, a done check, proof, and constraints, and the principles footer in flatpaper-mode sessions |
 | `gh pr create` gate | In a flatpaper-mode session, blocks `gh pr create` until the session has run `tidy`, `no-comments`, `technical-writing`, and `unslop`, and lists the Opening a PR steps that always run. A `PreToolUse` hook in the flatpaper-mode skill's frontmatter |
-| `/flatpaper-stack:flatpaper-mode` | Rigorous mode. Matches the task to a playbook (investigation, bug fix, feature, refactoring, prototype, autonomous run, autopilot stack, orchestrate, architecture page, perf, babysit, session pickup, pause safely, worktree cleanup, multi-phase plan, runtime forensics, trace forensics, opening a PR) |
+| `/flatpaper-stack:flatpaper-mode` | Rigorous mode. Matches the task to a playbook (investigation, bug fix, feature, refactoring, prototype, autonomous run, autopilot stack, orchestrate, architecture page, perf, hillclimb, eval, babysit, session pickup, pause safely, worktree cleanup, multi-phase plan, runtime forensics, trace forensics, opening a PR) |
 | Architecture drift line | At session start, says when `docs/architecture/` is behind this repo's commits, or behind the latest release of the repo it describes. Silent otherwise. |
 | `/flatpaper-stack:show-me-your-work` | Decision log (TSV), audited against the transcript, with an Attention section from a fresh reviewer |
 | `/flatpaper-stack:create-verification-skill` | Generates a project-local `verify-<app>` skill (launch, doctor, drive, evidence, cleanup, feature map) and proves it once, including that Doctor can fail. flatpaper-mode playbooks drive the app through it and offer to create one when a task needs it |
@@ -33,22 +33,22 @@ You don't type these. A playbook step runs them. You can still call one directly
 | Skill | Called from | What it does |
 |---|---|---|
 | `/flatpaper-stack:why` | Investigation | Finds why code is the way it is, from git, PRs, and whichever trackers, docs, chat, and observability connectors the session can reach. Every claim gets a confidence tier |
-| `/flatpaper-stack:how` | Investigation | Explains how code works for an engineer new to the area, and where new code should live. A narrow question is read directly. For a large area, read-only explorers on `sonnet` trace it in parallel, and one explainer on `opus` writes the answer |
+| `/flatpaper-stack:how` | Investigation, Perf, Hillclimb | Explains how code works for an engineer new to the area, and where new code should live. A narrow question is read directly. For a large area, read-only explorers on `sonnet` trace it in parallel, and one explainer on `opus` writes the answer |
 | `/flatpaper-stack:figure-it-out` | flatpaper-mode, for large or cross-cutting work and any task no playbook fits | Designs a bespoke playbook: a falsifiable done check, a rigor level, a verification harness built before the work, a hypothesis loop with a VERIFIED, NOT VERIFIED, or INCONCLUSIVE verdict per unit, and a decision log |
-| `/flatpaper-stack:architect` | Feature | Sketches types, signatures, and module structure in competing designs before code |
+| `/flatpaper-stack:architect` | Feature, Perf | Sketches types, signatures, and module structure in competing designs before code |
 | `/flatpaper-stack:interrogate` | Feature, Refactoring | Two fresh adversaries, a read-only Codex seat first and then `opus`, try to break the change. Keeps only findings whose run fails when rerun |
-| `/flatpaper-stack:swarm` | Feature, Perf, Multi-phase plan | Fans out parallel workers and returns one table |
+| `/flatpaper-stack:swarm` | Feature, Hillclimb, Multi-phase plan | Fans out parallel workers and returns one table |
 | `/flatpaper-stack:arena` | Prototype | Runs two candidates, a read-only Codex seat first and then `opus`. On code, Codex proposes a diff and Claude writes what lands. A Codex judge scores the candidates by anonymous label. Picks a base and grafts the best parts of the others |
 | `/flatpaper-stack:statechart` | Bug fix, and the skills `create-formal-verification-skill` writes | Checks a TLA+ model and draws how the system moves between states as a Mermaid statechart. The report gives the shortest path to each state that breaks a rule. Needs Node 22.18+ (23.6+ on 23.x), Bun 1.1.5+, or Deno 2.0+. Installs TLC and Java with mise on first run |
 | `/flatpaper-stack:control-ui` | Driving the app, when no `verify-<app>` skill exists | Drives a local web, IDE, or Electron UI in headless Chrome over CDP with a zero-dependency Node script: screenshots, DOM reads, console and exception capture, a wait for an element that fails on timeout, and a pixel diff of two screenshots. Needs Node 22+ and a local Chrome or Chromium |
 | `/flatpaper-stack:control-cli` | Driving the app, when no `verify-<app>` skill exists | Drives an interactive CLI or TUI through tmux, or a PTY on a host without tmux. Sends keys and waits for a screen pattern, and a hang exits 124 at the timeout instead of stalling the run |
-| `/flatpaper-stack:benchmark-checklist` | Perf | Vets a performance number before you report or act on it: the limiter, tuning, physical limits, errors, repeat runs, end-to-end share, and whether the work ran |
+| `/flatpaper-stack:benchmark-checklist` | Perf, Hillclimb | Vets a performance number before you report or act on it: the limiter, tuning, physical limits, errors, repeat runs, end-to-end share, and whether the work ran |
 | `/flatpaper-stack:tidy` | Opening a PR | Fresh reviewers check the diff for reuse, simplification, efficiency, altitude, and slop (defensive checks on trusted paths, type escape hatches, code off the local style). Applies the fixes that hold up and reports what it skipped. Quality only, not bugs |
 | `/flatpaper-stack:no-comments` | Opening a PR | A fresh reviewer deletes comments that don't earn their place and flags code that needs prose to make sense. Fixes the accepted flags and offers to turn claimed constraints into a type, test, or lint |
 | `/flatpaper-stack:unslop` | Every reply | Cuts AI tells from prose |
 | `/flatpaper-stack:technical-writing` | Docs and PR text | Layered writing standard for docs, READMEs, PR descriptions, and commit messages |
 
-Claude writes all code. Subagents run on `opus`, `sonnet`, `fable`, and `haiku`. Panels (`interrogate`, `arena`, `architect`, and `swarm` read-only races) pair `opus` with a read-only Codex seat, and the `arena` judge runs on Codex. Each Codex seat runs through `skills/flatpaper-mode/scripts/codex-seat.sh`, which calls the [codex plugin](https://github.com/openai/codex-plugin-cc) and bills your ChatGPT plan. When Codex is missing, throttled, times out, or rejects the model, the script prints one `codex seat fallback:` line naming the cause, and a `sonnet` seat takes its place. The flatpaper-mode skill's Subagents section maps every role to its model and effort.
+Claude writes all code. Subagents run on `opus`, `sonnet`, `fable`, and `haiku`. Panels (`interrogate`, `arena`, `architect`, and `swarm` read-only races) pair `opus` with a read-only Codex seat, and the `arena` and Eval judges run on Codex. Each Codex seat runs through `skills/flatpaper-mode/scripts/codex-seat.sh`, which calls the [codex plugin](https://github.com/openai/codex-plugin-cc) and bills your ChatGPT plan. When Codex is missing, throttled, times out, or rejects the model, the script prints one `codex seat fallback:` line naming the cause, and a `sonnet` seat takes its place. The `arena` and Eval judges fall back instead to the first of `fable`, `opus`, and `sonnet` that is not the session model. The flatpaper-mode skill's Subagents section maps every role to its model and effort.
 
 Run the session on Opus 5.5 at `high` effort: `claude --model opus --effort high`, or add both flags to the alias under Install. Opus 5.5 defaults to `medium` effort. Code writers and most reviewers run on the session model, so it sets the quality of the code. Comment Sicko runs on Opus. Switch to `--model fable` only for the hardest long unattended runs, when Opus falls short. Fable costs 2.5 times Opus per token.
 
@@ -151,6 +151,8 @@ Only the goal is required. A missing check, proof or constraints gets proposed b
 | orchestrate, run this whole project, own this migration until it lands | Orchestrate |
 | map this repo, update the architecture page | Architecture page |
 | speed up, make it faster, cut the cost | Perf |
+| hillclimb, push this metric up, iterate until X% | Hillclimb |
+| eval this skill, A/B these prompts, is variant B better | Eval |
 | babysit, get it green, address the review comments | Babysit |
 | pick up, take over this branch, continue from the log | Session pickup |
 | pause, stop for now, pick this up tomorrow | Pause safely |
