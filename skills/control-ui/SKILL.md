@@ -130,4 +130,4 @@ When several windows or tabs share one debug port:
 
 For a CLI or TUI, use the `control-cli` skill.
 
-<!-- ported from cursor/plugins@2776ddd2355d6d6c8747d3964600f28daf62f049 skills/control-ui/SKILL.md (MIT) -->
+<!-- ported from cursor/plugins@2776ddd2355d6d6c8747d3964600f28daf62f049 cursor-team-kit/skills/control-ui/SKILL.md (MIT) -->

@@ -88,7 +88,8 @@ for f in agents/*.md; do
 done
 
 banned='grok|gemini|llama|mistral|deepseek|composer-[0-9]|AskQuestion|poteto-agent|cursor-team-kit|/deslop|generalPurpose|\.cursor/|is_background'
-if hits=$(grep -rsniE "$banned" skills agents guidelines.md hooks README.md); then
+provenance='ported from cursor/plugins@'
+if hits=$(grep -rsniE "$banned" skills agents guidelines.md hooks README.md | grep -vF "$provenance"); then
 	while IFS= read -r h; do problem "banned term: ${h:0:160}"; done <<<"$hits"
 fi
 

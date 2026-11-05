@@ -110,4 +110,4 @@ For Bun, pass `--inspect` to `bun` and wait for the URL it prints. Attach DevToo
 - Do not hard-code paths from another repository. Adapt the commands to the current repo's scripts and runtime.
 - Clean up tmux sessions, temp directories, inspector processes, and demo files unless the user asks to keep them.
 
-<!-- ported from cursor/plugins@2776ddd2355d6d6c8747d3964600f28daf62f049 skills/control-cli/SKILL.md (MIT) -->
+<!-- ported from cursor/plugins@2776ddd2355d6d6c8747d3964600f28daf62f049 cursor-team-kit/skills/control-cli/SKILL.md (MIT) -->

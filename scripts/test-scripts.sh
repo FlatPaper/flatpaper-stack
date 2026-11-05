@@ -14,6 +14,14 @@ ok() { pass=$((pass + 1)); }
 bad() { printf 'FAIL %s\n' "$1"; fail=1; }
 inconclusive() { printf 'INCONCLUSIVE %s: %s\n' "$1" "$2"; skipped=$((skipped + 1)); }
 
+mkdir -p "$tmp/lint"
+cp -R "$root"/* "$tmp/lint/"
+echo 'Spawn a generalPurpose agent.' >> "$tmp/lint/skills/tidy/SKILL.md"
+"$root/scripts/check-skills.sh" "$tmp/lint" > "$tmp/out" 2>&1
+if [ $? = 1 ] && [ "$(grep -c '^FAIL' "$tmp/out")" = 1 ] && grep -q '^FAIL banned term: skills/tidy/SKILL.md:[0-9]*:Spawn a generalPurpose' "$tmp/out"; then ok; else
+	bad "check-skills: want exit 1 and one FAIL, the banned term on the planted line, with provenance lines exempt"; sed 's/^/  /' "$tmp/out"
+fi
+
 # check-plan.sh. The base plan is the playbook skeleton with every placeholder
 # filled, so it must pass. Each case appends to it and expects a verdict.
 awk '/^````markdown$/{f=1;next} /^````$/{f=0} f' "$root/skills/flatpaper-mode/playbooks/multi-phase-plan.md" |
