@@ -6,7 +6,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/FlatPaper/flatpaper-stack",
-      "revision": "3a7b53d3eba9ab12d1f70ad867811c878cdbaede"
+      "revision": "b480a19fe678339141779ce4c0100f7b3e2d8791"
     }
   },
   "components": [
@@ -601,7 +601,7 @@
         "Each playbook step and Finish step becomes a task",
         "Finish step 2 runs Opening a PR; written repo rules replace only its format defaults",
         "A PreToolUse hook blocks gh pr create until tidy, no-comments, technical-writing, and unslop ran",
-        "Merges are user-granted: Orchestrate and Autopilot-full owners after the user's go, Shipping on an explicit request to land",
+        "Merges are user-granted and need a verdict naming the exact head SHA: Orchestrate and Autopilot-full owners after the user's go, Shipping on an explicit request to land",
         "Re-match on every prompt when the kind of work changes"
       ]
     },
