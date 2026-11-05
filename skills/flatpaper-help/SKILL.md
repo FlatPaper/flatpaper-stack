@@ -101,7 +101,7 @@ Close calls:
 Not in flatpaper:
 
 - flatpaper has no skill for restating an ask. Ask flatpaper-mode to restate the issue in plain words first. For one long goal, use the Autonomous run playbook. For a queue of PRs, use the Multi-phase plan playbook, then the Autopilot stack playbook to build it. For a multi-day program, use the Orchestrate playbook.
-- Orchestrate and Autopilot-full merge unattended, and only after your go. Orchestrate owners merge on a verifier's pass at each PR's head. Autopilot-full owners merge on the swarm's verdict at each PR's head. Under both, a PR the plan marks review-gated waits for you, and its owner never merges it. Autopilot stack stops at verified PRs, and you land them, by hand or by asking for Shipping.
+- Orchestrate and Autopilot-full merge unattended, and only after your go. Orchestrate owners merge on a verifier's pass, and Autopilot-full owners merge on the coordinator's verdict. Either way, the verdict names the exact head SHA that merges. Under both, a PR the plan marks review-gated waits for you, and its owner never merges it. Autopilot stack stops at verified PRs, and you land them, by hand or by asking for Shipping.
 - `/loop`, `/code-review`, and `/simplify` are Claude Code built-ins. The Autonomous run playbook uses `/loop`. `/flatpaper-stack:tidy` is flatpaper's version of `/simplify`, and the one the Opening a PR playbook runs.
 - Plan mode is a Claude Code feature and works alongside flatpaper.
 
@@ -115,7 +115,7 @@ Playbooks are step lists inside `/flatpaper-stack:flatpaper-mode`, not skills, s
 - "pause" or "pick this up tomorrow" runs Pause safely.
 - "im stepping away" or "run until done" runs Autonomous run.
 - "autopilot" or "build the stack, I'll land it" runs Autopilot stack. Each PR gets its own owner agent and a verifying swarm. It never merges.
-- "autopilot and merge" or "run the queue to merged" runs Autopilot-full. It runs Autopilot stack with owners off trunk, and each owner merges its own PR on the swarm's verdict at its current head.
+- "autopilot and merge" or "run the queue to merged" runs Autopilot-full. It runs Autopilot stack with owners off trunk, and each owner merges its own PR on a verdict that names its exact head SHA.
 - "land it" or "merge the verified PRs" runs Shipping. It lands a verified stack bottom-up, and only the verified run from the bottom. Before the first merge it restates the run and waits for your yes, unless your request named each PR in the run and asked to merge them into trunk. "Ship" alone means commit or open a PR, not merge.
 - "run this whole project" or "own this migration until it lands" runs Orchestrate. One coordinator runs a multi-day program with one owner per PR. Each owner merges its own PR after a verifier on another model passes it.
 - "plan this migration" or "break this into PRs" runs Multi-phase plan. It writes the plan and doesn't implement it. A story that needs three or more PRs switches to it on its own, and flatpaper-mode says so. "Just build it" skips the plan. The plan names Autopilot stack, Autopilot-full, Orchestrate, or one task per PR as its next step. Part 3 of the guide, "Ship a story that spans several PRs", has the plan and build lines.
