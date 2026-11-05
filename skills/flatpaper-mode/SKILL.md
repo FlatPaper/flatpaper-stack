@@ -38,7 +38,6 @@ Run these once, after the playbook's last step and before the reply. Pause safel
 - **Bug fix.** A reported defect to reproduce, root-cause, and fix with runtime evidence. `playbooks/bug-fix.md`.
 - **Feature.** New or changed behavior. `playbooks/feature.md`.
 - **Refactoring.** A behavior-preserving change to structure. `playbooks/refactoring.md`.
-- **Visual parity.** Migrate or refactor a UI with no visual change, proven by a pixel diff against a frozen baseline ("match the old UI pixel for pixel", "migrate without visual change", "visual regression"). `playbooks/visual-parity.md`.
 - **Prototype.** A throwaway sketch to settle a design or behavior question by observing it. `playbooks/prototype.md`.
 - **Autonomous run.** A long task driven to a predicate without stopping ("run until done", "going to bed", "/loop until X"). `playbooks/autonomous-run.md`.
 - **Autopilot stack.** Build and verify a queue of PRs unattended, then hand them to the user to land. Nothing merges ("autopilot", "build the stack, I'll land it", "stack them, don't ship"). `playbooks/autopilot-stack.md`.
