@@ -225,23 +225,6 @@ EOF
 real_tmp=$(getconf DARWIN_USER_TEMP_DIR 2> /dev/null) || real_tmp=${TMPDIR:-/tmp}
 chrome_leftovers() { ls -A "$real_tmp" 2> /dev/null | grep -E '^\.?(com\.google\.Chrome|org\.chromium\.Chromium)\.' | sort; }
 chrome_leftovers > "$tmp/chrome-before"
-if [ "$(uname)" = Linux ]; then
-	diag_ms() { python3 -c 'import time; print(int(time.time() * 1000))'; }
-	echo "DIAG nproc=$(nproc) $(uptime)"
-	echo "DIAG fontconfig cache dirs: $(ls -d ~/.cache/fontconfig /var/cache/fontconfig 2> /dev/null | tr '\n' ' ')"
-	t0=$(diag_ms); fc-list > /dev/null 2>&1; echo "DIAG fc-list: $(($(diag_ms) - t0)) ms"
-	t0=$(diag_ms); fc-list > /dev/null 2>&1; echo "DIAG fc-list again: $(($(diag_ms) - t0)) ms"
-	for n in 1 2 3; do
-		d=$(mktemp -d)
-		t0=$(diag_ms)
-		google-chrome --headless=new --remote-debugging-port=0 --user-data-dir="$d/p" --no-first-run about:blank 2> "$d/err" &
-		cp=$!
-		while [ ! -s "$d/p/DevToolsActivePort" ] && [ $(($(diag_ms) - t0)) -lt 90000 ]; do sleep 0.05; done
-		echo "DIAG chrome start $n: $(($(diag_ms) - t0)) ms, port file: $([ -s "$d/p/DevToolsActivePort" ] && echo yes || echo no), stderr lines: $(wc -l < "$d/err")"
-		kill "$cp"; wait "$cp" 2> /dev/null
-		rm -rf "$d"
-	done
-fi
 rc=
 foreign_chrome=
 note_foreign_chrome() { pgrep -fl -- '--headless' 2> /dev/null | grep -v -- "$ui/profiles" | grep -qi chrom && foreign_chrome=1; }
