@@ -93,7 +93,7 @@ git init -q -b main "$r"
 printf '.env\nnode_modules/\nsecret.txt\n' > "$r/.gitignore"
 G add .gitignore && G commit -qm init
 
-for c in clean env cache nested reflog rebased tagged; do G worktree add -q -b "$c" "$tmp/wt-$c" main; done
+for c in clean env cache nested reflog rebased tagged rel; do G worktree add -q -b "$c" "$tmp/wt-$c" main; done
 echo secret > "$tmp/wt-env/.env"
 mkdir -p "$tmp/wt-cache/node_modules/x" && echo x > "$tmp/wt-cache/node_modules/x/i.js"
 # An ignored file inside a dir named like a cache dir is not cache output.
@@ -109,10 +109,17 @@ G -C "$tmp/wt-tagged" switch -q --detach
 G -C "$tmp/wt-tagged" commit -q --allow-empty -m tagged
 G -C "$tmp/wt-tagged" tag kept
 G -C "$tmp/wt-tagged" switch -q tagged
+# Merged into a branch other than the default, so it reads merged only with -b.
+G -C "$tmp/wt-rel" commit -q --allow-empty -m release-fix
+G branch release rel
 
-HOME="$tmp/home" CLAUDE_SESSION_ID='' "$scripts/worktree-audit.sh" "$r" > "$tmp/audit" 2>/dev/null
+audit() { HOME="$tmp/home" CLAUDE_SESSION_ID='' "$scripts/worktree-audit.sh" "$r" "$@" > "$tmp/audit" 2> "$tmp/err"; }
+audit_col() { # worktree suffix, column number
+	awk -F'\t' -v w="/wt-$1" -v c="$2" 'substr($8, length($8) - length(w) + 1) == w { print $c }' "$tmp/audit"
+}
+audit
 audit_case() { # worktree suffix, want bucket
-	got=$(awk -F'\t' -v w="/wt-$1" 'substr($8, length($8) - length(w) + 1) == w { print $1 }' "$tmp/audit")
+	got=$(audit_col "$1" 1)
 	if [ "$got" = "$2" ]; then ok; else bad "worktree-audit wt-$1: want $2, got ${got:-no row}"; sed 's/^/  /' "$tmp/audit"; fi
 }
 audit_case clean safe
@@ -122,25 +129,18 @@ audit_case nested hold-ignored
 audit_case reflog hold-reflog
 audit_case rebased safe
 audit_case tagged safe
-
-# A worktree merged into a branch other than the default reads merged only with -b.
-G worktree add -q -b relwork "$tmp/wt-rel" main
-G -C "$tmp/wt-rel" commit -q --allow-empty -m release-fix
-G branch release relwork
-merged_col() { awk -F'\t' 'substr($8, length($8) - 6) == "/wt-rel" { print $3 }' "$1"; }
-HOME="$tmp/home" CLAUDE_SESSION_ID='' "$scripts/worktree-audit.sh" "$r" > "$tmp/audit" 2>/dev/null
-got=$(merged_col "$tmp/audit")
+got=$(audit_col rel 3)
 if [ "$got" = no ]; then ok; else bad "worktree-audit wt-rel without -b: want MERGED no, got ${got:-no row}"; sed 's/^/  /' "$tmp/audit"; fi
 for flag in "-b release" "--base release" "--base=release"; do
-	HOME="$tmp/home" CLAUDE_SESSION_ID='' "$scripts/worktree-audit.sh" $flag "$r" > "$tmp/audit" 2> "$tmp/err"
-	got=$(merged_col "$tmp/audit")
+	audit $flag
+	got=$(audit_col rel 3)
 	if [ "$got" = yes ] && grep -qx 'note: merged means reachable from release as of the last fetch' "$tmp/err"; then ok; else
 		bad "worktree-audit wt-rel with $flag: want MERGED yes and the note naming release, got ${got:-no row}"; sed 's/^/  /' "$tmp/audit" "$tmp/err"
 	fi
 done
 bad_base() { # want stderr line, args...
 	local want=$1; shift
-	HOME="$tmp/home" CLAUDE_SESSION_ID='' "$scripts/worktree-audit.sh" "$r" "$@" > "$tmp/audit" 2> "$tmp/err"
+	audit "$@"
 	code=$?
 	if [ "$code" = 1 ] && [ ! -s "$tmp/audit" ] && grep -qxF -- "$want" "$tmp/err"; then ok; else
 		bad "worktree-audit $*: want exit 1, no table, and '$want', got exit $code"; sed 's/^/  /' "$tmp/audit" "$tmp/err"
