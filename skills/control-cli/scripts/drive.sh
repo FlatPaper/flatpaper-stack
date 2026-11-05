@@ -13,7 +13,7 @@
 # Both failures print the last screen. The default timeout is 10 seconds.
 set -uo pipefail
 
-usage() { sed -n '2,13s/^# \{0,1\}//p' "$0" >&2; exit 2; }
+usage() { sed -n '2,/^[^#]/s/^# \{0,1\}//p' "$0" >&2; exit 2; }
 t() { tmux -L control-cli "$@"; }
 # Print the pane without its trailing blank lines.
 capture() { t capture-pane -p -J -t "$session" "$@" | awk 'NF { while (n) { print ""; n-- } print; next } { n++ }'; }
@@ -49,20 +49,18 @@ wait)
 		# A dead pane scrolls its last output into history.
 		if [ "$dead" = 1 ]; then screen=$(capture -S -); else screen=$(capture); fi
 		if printf '%s\n' "$screen" | grep -qE -- "$regex"; then
-			printf '%s\n' "$screen"
-			exit 0
+			code=0 msg=
+		elif [ "$dead" = 1 ]; then
+			code=1 msg="$session exited before /$regex/ appeared"
+		elif [ $((SECONDS - start)) -ge "$timeout" ]; then
+			code=124 msg="timed out after ${timeout}s waiting for /$regex/ in $session"
+		else
+			sleep 0.1
+			continue
 		fi
-		if [ "$dead" = 1 ]; then
-			printf '%s\n' "$screen"
-			printf 'drive: %s exited before /%s/ appeared\n' "$session" "$regex" >&2
-			exit 1
-		fi
-		if [ $((SECONDS - start)) -ge "$timeout" ]; then
-			printf '%s\n' "$screen"
-			printf 'drive: timed out after %ss waiting for /%s/ in %s\n' "$timeout" "$regex" "$session" >&2
-			exit 124
-		fi
-		sleep 0.1
+		printf '%s\n' "$screen"
+		[ -n "$msg" ] && printf 'drive: %s\n' "$msg" >&2
+		exit "$code"
 	done
 	;;
 send) t send-keys -t "$session" "$@" ;;

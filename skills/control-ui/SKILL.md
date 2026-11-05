@@ -43,6 +43,7 @@ node "$cdp" diff "$OUT/before.png" "$OUT/after.png" --out "$OUT/diff.png"
 
 - The steps run in this order: open, `--wait-for`, `--eval`, `--dom`, `--screenshot`. `--console` is written last, even when a step fails.
 - `--wait-for <css>` polls until the element exists. After `--timeout <ms>` (default 10000) it exits 124 and names the selector.
+- The same timeout bounds every page load and CDP call, so a hung page also exits 124 and names the call.
 - `--dom <css>` prints the `innerText` of each match, or the `outerHTML` with `--html`. No match exits 1.
 - `--console <file>` gets one line per console call (`log: ...`, `error: ...`), browser log entry, and uncaught exception (`exception: ...`).
 - `--eval <js>` prints the value. A thrown error exits 1.

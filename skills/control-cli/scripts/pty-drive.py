@@ -9,7 +9,7 @@ Steps run in order:
   --send TEXT        write TEXT; backslash escapes work, so "\\r" is Enter
                      and "\\x03" is Ctrl-C
 
-Matching strips terminal escape sequences first. At the end it prints the
+Matching strips terminal escape sequences and turns \\r\\n into \\n first. At the end it prints the
 transcript and exits 0. It exits 1 if the command exited before a match and
 124 on a wait timeout, printing the transcript so far. It always kills the
 command's process group.
@@ -30,22 +30,23 @@ ESCAPES = re.compile(rb"\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\
 
 
 def parse(argv):
-    opts = {"size": "120x40", "transcript": None}
-    steps = []
+    size, transcript, steps = "120x40", None, []
     while argv and argv[0] != "--":
         flag = argv.pop(0)
         if not argv:
             sys.exit(__doc__)
         value = argv.pop(0)
-        if flag in ("--size", "--transcript"):
-            opts[flag[2:]] = value
+        if flag == "--size":
+            size = value
+        elif flag == "--transcript":
+            transcript = value
         elif flag in ("--timeout", "--wait", "--send"):
             steps.append((flag[2:], value))
         else:
             sys.exit("unknown option %s\n%s" % (flag, __doc__))
     if len(argv) < 2:
         sys.exit(__doc__)
-    return opts, steps, argv[1:]
+    return size, transcript, steps, argv[1:]
 
 
 class Session:
@@ -80,7 +81,8 @@ class Session:
         pattern = re.compile(regex.encode(), re.M)
         deadline = time.monotonic() + timeout
         while True:
-            found = pattern.search(ESCAPES.sub(b"", bytes(self.raw)), self.seen)
+            text = ESCAPES.sub(b"", bytes(self.raw)).replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+            found = pattern.search(text, self.seen)
             if found:
                 self.seen = found.end()
                 return
@@ -111,8 +113,8 @@ class Session:
 
 
 def main():
-    opts, steps, command = parse(sys.argv[1:])
-    s = Session(command, opts["size"], opts["transcript"])
+    size, transcript, steps, command = parse(sys.argv[1:])
+    s = Session(command, size, transcript)
     signal.signal(signal.SIGTERM, lambda *_: s.finish(143, "terminated"))
     timeout = 10.0
     for kind, value in steps:

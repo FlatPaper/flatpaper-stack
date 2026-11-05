@@ -60,7 +60,7 @@ It runs the whole session in one call: the steps are flags, in order. It needs o
   --transcript "$OUT/session.txt" -- <command-under-test> <args>
 ```
 
-- `--wait <regex>` matches only the output after the previous match, with terminal escape sequences stripped.
+- `--wait <regex>` matches only the output after the previous match. Terminal escape sequences are stripped and line endings become `\n` first, so `^42$` matches a line as it does in `drive.sh`.
 - `--send <text>` takes backslash escapes, so `\r` is Enter and `\x03` is Ctrl-C.
 - `--timeout <seconds>` applies to the waits after it.
 - It prints the transcript and exits 0 at the end, 1 if the command exits before a match, and 124 on a timeout. It kills the command's process group on every exit.
