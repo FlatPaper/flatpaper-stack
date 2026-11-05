@@ -9,8 +9,10 @@ tmp=$(mktemp -d 2>/dev/null || mktemp -d -t fptest)
 trap 'rm -rf "$tmp"' EXIT
 fail=0
 pass=0
+skipped=0
 ok() { pass=$((pass + 1)); }
 bad() { printf 'FAIL %s\n' "$1"; fail=1; }
+inconclusive() { printf 'INCONCLUSIVE %s: %s\n' "$1" "$2"; skipped=$((skipped + 1)); }
 
 # check-plan.sh. The base plan is the playbook skeleton with every placeholder
 # filled, so it must pass. Each case appends to it and expects a verdict.
@@ -179,5 +181,116 @@ mkdir -p "$tmp/seat/nocodex"
 ln -s "$(command -v node)" "$(command -v bash)" "$tmp/seat/nocodex/"
 seat_case ok 3 '^codex seat fallback: missing: codex is not on PATH\.' "$tmp/seat/nocodex"
 
+# The drivers run under a watchdog, so a driver that never returns fails its
+# case instead of hanging the suite. capped sets rc (143 when killed) and
+# took (seconds), and leaves the output in $tmp/out.
+capped() { # limit seconds, command...
+	local limit=$1 pid start
+	shift
+	start=$SECONDS
+	"$@" > "$tmp/out" 2>&1 &
+	pid=$!
+	while kill -0 "$pid" 2> /dev/null; do
+		[ $((SECONDS - start)) -ge "$limit" ] && kill "$pid"
+		sleep 0.1
+	done
+	wait "$pid"
+	rc=$?
+	took=$((SECONDS - start))
+}
+expect() { # case name, want rc, extended regex the output must match
+	if [ "$rc" = "$2" ] && grep -qE -- "$3" "$tmp/out"; then ok; else bad "$1: want exit $2 and /$3/, got $rc:"; sed 's/^/  /' "$tmp/out"; fi
+}
+
+# control-ui cdp.mjs. A fixture page logs, throws, and adds #late after 300ms.
+# The #nodot variant drops one 1x1 black pixel, so its diff is exactly 1.
+cdp="$root/skills/control-ui/scripts/cdp.mjs"
+ui="$tmp/ui"
+mkdir -p "$ui/profiles"
+cat > "$ui/f.html" <<'EOF'
+<!doctype html><body style="margin:0;background:#fff">
+<h1 id="title">Fixture heading</h1>
+<div id="dot" style="position:absolute;left:10px;top:200px;width:1px;height:1px;background:#000"></div>
+<script>
+console.log("fixture-ready", 42);
+if (location.hash === "#nodot") document.getElementById("dot").remove();
+setTimeout(() => { const p = document.createElement("p"); p.id = "late"; p.textContent = "late text"; document.body.append(p); }, 300);
+</script>
+<script>throw new Error("boom-uncaught")</script>
+EOF
+cdp_run() { TMPDIR="$ui/profiles" capped 30 node "$cdp" "$@"; }
+if ! node -e 'process.exit(typeof WebSocket === "function" ? 0 : 1)' 2> /dev/null; then
+	inconclusive "control-ui" "needs Node 22+ for the global WebSocket"
+elif cdp_run about:blank && [ "$rc" = 2 ] && grep -q 'no Chrome or Chromium found' "$tmp/out"; then
+	inconclusive "control-ui" "no Chrome or Chromium found"
+else
+	cdp_run "$ui/f.html" --wait-for '#late' --dom '#late' --screenshot "$ui/a.png" --console "$ui/console.txt"
+	expect "cdp --wait-for then --dom" 0 '^late text$'
+	[ "$(cat "$tmp/out")" = "late text" ] && ok || bad "cdp --dom: want only 'late text'"
+	# PNG signature, then IHDR width 1280 and height 800, the default viewport.
+	[ "$(od -An -tx1 -N24 "$ui/a.png" 2> /dev/null | tr -d ' \n')" = 89504e470d0a1a0a0000000d494844520000050000000320 ] &&
+		ok || bad "cdp --screenshot: want a 1280x800 PNG"
+	grep -qx 'log: fixture-ready 42' "$ui/console.txt" 2> /dev/null && ok || bad "cdp --console: want the logged line"
+	grep -q '^exception: Error: boom-uncaught' "$ui/console.txt" 2> /dev/null && ok || bad "cdp --console: want the uncaught exception"
+	cdp_run "$ui/f.html" --eval 'document.getElementById("title").textContent.length'
+	expect "cdp --eval" 0 '^15$'
+	cdp_run "$ui/f.html" --wait-for '#missing' --timeout 1500
+	expect "cdp --wait-for a missing element" 124 'waiting for #missing'
+	cdp_run "file://$ui/f.html#nodot" --wait-for '#late' --screenshot "$ui/b.png"
+	cdp_run "$ui/f.html" --viewport 640x480 --screenshot "$ui/small.png"
+	cdp_run diff "$ui/a.png" "$ui/a.png"
+	expect "cdp diff of one image" 0 '^0 of 1024000 pixels differ$'
+	cdp_run diff "$ui/a.png" "$ui/b.png" --out "$ui/d.png"
+	expect "cdp diff with one changed pixel" 1 '^1 of 1024000 pixels differ$'
+	[ "$(od -An -tx1 -N8 "$ui/d.png" 2> /dev/null | tr -d ' \n')" = 89504e470d0a1a0a ] && ok || bad "cdp diff --out: want a PNG"
+	cdp_run diff "$ui/a.png" "$ui/small.png"
+	expect "cdp diff of different sizes" 1 '^size differs: 1280x800 vs 640x480$'
+	pgrep -f "$ui/profiles" > /dev/null && bad "cdp: Chrome still running after exit" || ok
+	[ -z "$(ls -A "$ui/profiles")" ] && ok || bad "cdp: temp profile left behind: $(ls "$ui/profiles")"
+fi
+
+# control-cli drive.sh and pty-drive.py. Each drives python3's REPL, then a
+# command that never prints the ready text, which must time out with 124
+# after about 3 seconds and leave no process behind.
+cli="$root/skills/control-cli/scripts"
+hang="sleep 60$$"
+hang_case() { # name
+	if [ "$rc" = 124 ] && [ "$took" -ge 2 ] && [ "$took" -le 6 ]; then ok; else bad "$1: want exit 124 after about 3s, got $rc after ${took}s:"; sed 's/^/  /' "$tmp/out"; fi
+	pgrep -fx "$hang" > /dev/null && bad "$1: '$hang' still running" || ok
+}
+if ! command -v python3 > /dev/null; then
+	inconclusive "control-cli" "python3 not found"
+elif ! command -v tmux > /dev/null; then
+	inconclusive "control-cli drive.sh" "tmux not found"
+else
+	s="fptest-$$"
+	"$cli/drive.sh" start "$s" -- python3 -i -q
+	capped 15 "$cli/drive.sh" wait "$s" '>>> '
+	expect "drive.sh wait for the prompt" 0 '>>> '
+	"$cli/drive.sh" type "$s" 'print(6*7)'
+	"$cli/drive.sh" send "$s" Enter
+	capped 15 "$cli/drive.sh" wait "$s" '^42$'
+	expect "drive.sh send and wait for output" 0 '^42$'
+	"$cli/drive.sh" kill "$s"
+	"$cli/drive.sh" capture "$s" > /dev/null 2>&1 && bad "drive.sh kill: session still exists" || ok
+
+	"$cli/drive.sh" start "$s-dies" -- sh -c 'echo bye; exit 3'
+	capped 15 "$cli/drive.sh" wait "$s-dies" READY
+	expect "drive.sh command that exits first" 1 '^bye$'
+	"$cli/drive.sh" kill "$s-dies"
+
+	"$cli/drive.sh" start "$s-hang" -- $hang
+	capped 10 "$cli/drive.sh" wait "$s-hang" READY --timeout 3
+	"$cli/drive.sh" kill "$s-hang"
+	hang_case "drive.sh hang"
+fi
+if command -v python3 > /dev/null; then
+	capped 15 "$cli/pty-drive.py" --timeout 5 --wait '>>> ' --send 'print(6*7)\r' --wait '^42\r?$' --send 'exit()\r' -- python3 -i -q
+	expect "pty-drive.py send and wait for output" 0 '42'
+	capped 10 "$cli/pty-drive.py" --timeout 3 --wait READY -- $hang
+	hang_case "pty-drive.py hang"
+fi
+
+[ "$skipped" -eq 0 ] || echo "test-scripts: $skipped inconclusive, not counted as passes"
 [ "$fail" -eq 0 ] && echo "test-scripts: ok ($pass cases)"
 exit "$fail"
