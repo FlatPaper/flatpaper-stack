@@ -161,9 +161,11 @@ else fail("socket closed");
 EOF
 echo "prompt" > "$tmp/seat/prompt.txt"
 seat_case() {
-	local model=$1 want_exit=$2 want_line=$3 path=${4:-$tmp/seat/bin:$PATH}
+	local model=$1 want_exit=$2 want_line=$3 path=${4:-$tmp/seat/bin:$PATH} timeout=10
+	# Only the slow case tests the timeout. The others get room for a loaded CI runner.
+	[ "$model" = slow ] && timeout=1
 	out=$(PATH="$path" CODEX_COMPANION="$tmp/seat/companion.cjs" "$scripts/codex-seat.sh" \
-		--model "$model" --effort high --fallback "the opus seat" --timeout 1 --cwd "$tmp/seat/repo" "$tmp/seat/prompt.txt" 2>&1)
+		--model "$model" --effort high --fallback "the opus seat" --timeout "$timeout" --cwd "$tmp/seat/repo" "$tmp/seat/prompt.txt" 2>&1)
 	got=$?
 	if [ "$got" = "$want_exit" ] && printf '%s' "$out" | grep -qE "$want_line"; then ok; else bad "codex-seat $model: want exit $want_exit and /$want_line/, got $got: $out"; fi
 }
