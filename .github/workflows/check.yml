@@ -16,5 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - if: runner.os == 'macOS'
+        run: brew install tmux
       - run: scripts/check-skills.sh
       - run: scripts/test-scripts.sh
