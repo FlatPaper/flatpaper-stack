@@ -162,21 +162,23 @@ EOF
 echo "prompt" > "$tmp/seat/prompt.txt"
 seat_case() { # model, want exit, want output pattern, [PATH]
 	out=$(PATH="${4:-$tmp/seat/bin:$PATH}" CODEX_COMPANION="$tmp/seat/companion.cjs" "$scripts/codex-seat.sh" \
-		--model "$1" --effort high --fallback "the opus seat" --timeout 2 --cwd "$tmp/seat/repo" "$tmp/seat/prompt.txt" 2>&1)
+		--model "$1" --effort high --fallback "the opus seat" --timeout 1 --cwd "$tmp/seat/repo" "$tmp/seat/prompt.txt" 2>&1)
 	got=$?
 	if [ "$got" = "$2" ] && printf '%s' "$out" | grep -qE "$3"; then ok; else bad "codex-seat $1: want exit $2 and /$3/, got $got: $out"; fi
 }
 seat_case ok 0 '^finding one$'
 seat_case reject 3 '^codex seat fallback: model-rejected: .*Running the opus seat instead\.$'
 seat_case throttle 3 '^codex seat fallback: throttled: '
-seat_case slow 3 '^codex seat fallback: timeout: no answer within 2s\.'
+seat_case slow 3 '^codex seat fallback: timeout: no answer within 1s\.'
 seat_case write 3 '^codex seat fallback: tree-changed: '
 rm -f "$tmp/seat/repo/stray.txt"
 seat_case blank 3 '^codex seat fallback: empty: '
 seat_case other 3 '^codex seat fallback: error: socket closed\.'
-nocodex=$(dirname "$(command -v node)"):/usr/bin:/bin
-command -v codex | grep -q "^$(dirname "$(command -v node)")/" && nocodex=/usr/bin:/bin
-PATH=$nocodex command -v codex >/dev/null || seat_case ok 3 '^codex seat fallback: missing: codex is not on PATH\.' "$nocodex"
+out=$(CODEX_COMPANION="$tmp/seat/companion.cjs" "$scripts/codex-seat.sh" --model ok --effort high --fallback x --write "$tmp/seat/prompt.txt" 2>&1)
+[ $? -eq 2 ] && printf '%s' "$out" | grep -q 'unknown option --write' && ok || bad "codex-seat --write: want exit 2 and 'unknown option --write', got: $out"
+mkdir -p "$tmp/seat/nocodex"
+ln -s "$(command -v node)" "$(command -v bash)" "$tmp/seat/nocodex/"
+seat_case ok 3 '^codex seat fallback: missing: codex is not on PATH\.' "$tmp/seat/nocodex"
 
 [ "$fail" -eq 0 ] && echo "test-scripts: ok ($pass cases)"
 exit "$fail"

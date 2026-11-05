@@ -25,6 +25,7 @@ while [ $# -gt 0 ]; do
 		--fallback) fallback=$2; shift 2 ;;
 		--timeout) timeout=$2; shift 2 ;;
 		--cwd) cwd=$2; shift 2 ;;
+		-*) echo "codex-seat.sh: unknown option $1" >&2; exit 2 ;;
 		*) prompt=$1; shift ;;
 	esac
 done
@@ -43,8 +44,8 @@ command -v codex >/dev/null || fall missing "codex is not on PATH"
 tmp=$(mktemp -d 2>/dev/null || mktemp -d -t codexseat)
 trap 'rm -rf "$tmp"' EXIT
 
-tree() { git -C "$cwd" --no-optional-locks status --porcelain 2>/dev/null; }
-tree > "$tmp/before"
+tree_state() { git -C "$cwd" --no-optional-locks status --porcelain 2>/dev/null; }
+before=$(tree_state)
 
 # Run the companion in its own process group so a timeout also stops the
 # app-server it starts.
@@ -52,7 +53,12 @@ perl -e '
 	my $t = shift;
 	my $pid = fork // die;
 	if (!$pid) { setpgrp(0, 0); exec @ARGV or exit 127 }
-	$SIG{ALRM} = sub { kill "TERM", -$pid; sleep 2; kill "KILL", -$pid; exit 124 };
+	$SIG{ALRM} = sub {
+		kill "TERM", -$pid;
+		for (1 .. 20) { waitpid($pid, 1); last unless kill 0, -$pid; select undef, undef, undef, 0.1 }
+		kill "KILL", -$pid;
+		exit 124;
+	};
 	alarm $t;
 	waitpid($pid, 0);
 	exit($? & 127 ? 128 + ($? & 127) : $? >> 8);
@@ -60,14 +66,14 @@ perl -e '
 	--cwd "$cwd" --prompt-file "$prompt" > "$tmp/out" 2> "$tmp/err"
 rc=$?
 
-tree > "$tmp/after"
-cmp -s "$tmp/before" "$tmp/after" || fall tree-changed "git status in $cwd changed during a read-only run"
+[ "$(tree_state)" = "$before" ] || fall tree-changed "git status in $cwd changed during a read-only run"
 [ "$rc" -eq 124 ] && fall timeout "no answer within ${timeout}s"
 
 if [ "$rc" -eq 0 ] && grep -q '[^[:space:]]' "$tmp/out"; then
 	cat "$tmp/out"
 	exit 0
 fi
+[ "$rc" -eq 0 ] && fall empty "Codex returned no text"
 
 detail=$(sed -n 's/^\[codex\] Codex error: //p' "$tmp/err" | head -1)
 [ -n "$detail" ] || detail=$(cat "$tmp/out" "$tmp/err" | grep -v '^\[codex\]' | grep -m1 '[^[:space:]]')
@@ -80,5 +86,4 @@ case "$detail" in
 	*"model"*"not supported"*|*"unsupported model"*|*"model_not_found"*) fall model-rejected "$detail" ;;
 	*"rate limit"*|*"usage limit"*|*429*|*"too many requests"*|*quota*) fall throttled "$detail" ;;
 esac
-[ "$rc" -eq 0 ] && fall empty "Codex returned no text"
 fall error "$detail"
