@@ -6,6 +6,8 @@
 2. Reconstruct the state: the branch and worktree, what landed, what was decided, what is open. The trail is authoritative input. Don't re-derive it.
 3. Diff done against planned and name the resume point. Don't redo completed work.
 4. Verify the inherited claims the next step builds on, on the real artifact. Re-read live state (branch, PR, CI) and rerun the cheapest check behind each claim. A prior self-report is not proof. A claim that fails is a finding to log, not a reason to restart.
-5. Route the remaining work to its playbook. Pickup ends here and the routed playbook owns the rest.
+5. Route the remaining work to its playbook and pick the verdict: continue the execution, ship a finished recommendation, ratify or override a prior conclusion, or write a postmortem of a failed run. Pickup ends here and the routed playbook owns the rest.
 
-**Reply:** where the prior session stopped, what you inherited and what you rechecked, any inherited claim that failed, the resume point, and the playbook you routed to.
+**Reply:** where the prior session stopped, what you inherited and what you rechecked, any inherited claim that failed, the resume point, the verdict, and the playbook you routed to.
+
+<!-- ported from cursor/plugins@2776ddd2355d6d6c8747d3964600f28daf62f049 pstack/skills/poteto-mode/playbooks/session-pickup.md (MIT) -->
