@@ -506,7 +506,7 @@ raise a draft PR.</pre>
       <tr id="cp-shipping"><td>Land a verified stack, bottom PR first</td><td><code>/flatpaper-stack:flatpaper-mode land the stack from PR 120 to PR 124.</code></td></tr>
     </tbody>
   </table></div>
-  <p>Babysit has four modes. <b>babysit this</b> loops until the PR is merge-ready or needs a person. <b>background</b> runs the same loop while the session keeps building. <b>is it green?</b> does one status pass. <b>threads only</b> answers review threads and never retriggers CI. On a stack, Babysit works the lowest unmerged PR first. Babysit never merges. Say <b>land it</b> to run Shipping, which merges only the verified PRs from the bottom of the stack up. It restates the run and waits for your yes before the first merge, unless you named the PRs. "Ship" alone means commit or open a PR.</p>
+  <p>Babysit has four modes. <b>babysit this</b> loops until the PR is merge-ready or needs a person. <b>background</b> runs the same loop while the session keeps building. <b>is it green?</b> does one status pass. <b>threads only</b> answers review threads and never retriggers CI. On a stack, Babysit works the lowest unmerged PR first. Babysit never merges. Say <b>land it</b> to run Shipping, which merges only the verified PRs from the bottom of the stack up. It restates the run and waits for your yes before the first merge, unless your request named each PR in the run and asked to merge them into trunk. "Ship" alone means commit or open a PR.</p>
 
   <h3>Ship a story that spans several PRs</h3>
   <p>When a story needs three or more PRs, flatpaper-mode switches to Multi-phase plan on its own and says so. It never starts the build without your go. Read the plan, then pick who lands the PRs. Say "just build it" to skip the plan.</p>
