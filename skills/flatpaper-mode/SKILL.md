@@ -43,7 +43,8 @@ Run these once, after the playbook's last step and before the reply. Pause safel
 - **Autopilot stack.** Build and verify a queue of PRs unattended, then hand them to the user to land. Nothing merges ("autopilot", "build the stack, I'll land it", "stack them, don't ship"). `playbooks/autopilot-stack.md`.
 - **Orchestrate.** A standing project handed to one coordinator chat: multi-day, many stacked PRs, dozens of subagents, few human turns. Owners merge their own PRs after a verifier on another model passes them ("orchestrate", "run this whole project", "own this migration until it lands"). Work one agent could finish inside the session's budget is not a program. `playbooks/orchestrate.md`.
 - **Architecture page.** Create or update the repo's architecture page ("map this repo", "update the diagrams"), or a step in another playbook calls for it. `playbooks/architecture-page.md`.
-- **Perf.** Make something faster or cheaper against a measured number ("speed up", "make it faster", "cut the cost"). `playbooks/perf.md`.
+- **Perf.** Make something faster or cheaper against a measured number, with one fix or a few ("speed up", "make it faster", "cut the cost"). `playbooks/perf.md`.
+- **Hillclimb.** Climb one metric toward a target over many measured attempts, keeping or reverting each one. The metric can be an eval score, a bundle size, a pass rate, or a latency ("hillclimb", "push this metric up", "iterate until X%"). `playbooks/hillclimb.md`.
 - **Babysit.** Drive an open PR to merge-ready: conflicts, review comments, CI ("babysit", "get it green", "address the review comments", "check on the PR"). `playbooks/babysit.md`.
 - **Session pickup.** Continue work another session started ("pick up", "take over this branch", "continue from the log"). `playbooks/session-pickup.md`.
 - **Pause safely.** Stop mid-task so the work can resume later ("pause", "stop for now", "pick this up tomorrow"). `playbooks/pause-safely.md`.
