@@ -18,7 +18,8 @@ Steps run in this order: open, eval, wait-for, dom, screenshot. Without
 and always kills it. With --port it attaches to a running browser, picks the
 page that matches --match (or opens <url> in a new tab), and leaves the
 browser running. --timeout (default 10000 ms) bounds each step and each CDP
-call, not the whole run.
+call, not the whole run. The Chrome start has its own 30 s deadline, retried
+once (up to 60 s), that --timeout does not shorten; it exits 2.
 
 Exit codes: 0 ok, 1 a step failed or diff found differences, 2 usage error,
 launch error, or no browser on --port, 124 a step timed out, 129, 130, or 143
@@ -122,7 +123,12 @@ async function launchChrome() {
   } catch (err) {
     if (!err.slowStart) throw err;
     console.error(`cdp: ${err.message}; retrying once`);
+  }
+  try {
     return await startChrome(binary);
+  } catch (err) {
+    if (!err.slowStart) throw err;
+    throw new Exit(2, `Chrome gave no debugging port within ${START_MS / 1000} s, after one retry${err.stderrTail}`);
   }
 }
 
@@ -169,9 +175,10 @@ async function startChrome(binary) {
     }
     if (Date.now() > deadline) {
       await killChrome(chrome);
-      const err = new Exit(2, `Chrome gave no debugging port within ${START_MS / 1000} s`
-        + (lastStderr() ? ` (last stderr: ${lastStderr()})` : ""));
+      const tail = lastStderr() ? ` (last stderr: ${lastStderr()})` : "";
+      const err = new Exit(2, `Chrome gave no debugging port within ${START_MS / 1000} s${tail}`);
       err.slowStart = true;
+      err.stderrTail = tail;
       throw err;
     }
     await sleep(50);

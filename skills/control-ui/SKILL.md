@@ -47,7 +47,7 @@ node "$cdp" diff "$OUT/before.png" "$OUT/after.png" --out "$OUT/diff.png"
 - The steps run in this order: open, `--eval`, `--wait-for`, `--dom`, `--screenshot`. `--console` is written last, even when a step fails.
 - `--eval <js>` prints the value as text or JSON. It awaits a returned Promise, and it allows top-level `await`. A thrown error or a rejected Promise exits 1.
 - `--wait-for <css>` polls until the element exists. After `--timeout` it exits 124 and names the selector.
-- `--timeout <ms>` (default 10000) bounds each step and each CDP call, not the whole run. The page load, the browser connection, and the `--port` lookup each get it too. Every timeout exits 124 and names what it waited for.
+- `--timeout <ms>` (default 10000) bounds each step and each CDP call, not the whole run. The page load, the browser connection, and the `--port` lookup each get it too. Every timeout exits 124 and names what it waited for. The Chrome start has its own 30 s deadline, retried once (up to 60 s), that `--timeout` does not shorten. It exits 2.
 - `--dom <css>` prints the `innerText` of each match, or the `outerHTML` with `--html`. No match exits 1.
 - `--console <file>` gets one line per console call, labeled with the method's type (`log:`, `info:`, `warning:`, `error:`, `debug:`). Browser log entries get their level (`verbose:`, `info:`, `warning:`, `error:`), so `error:` covers both `console.error` and entries such as a favicon 404. Uncaught exceptions get `exception:`.
 - `--viewport <W>x<H>` sets the page size at scale 1. A launched browser defaults to 1280x800. `--full` captures the whole page.

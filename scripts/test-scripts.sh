@@ -230,7 +230,8 @@ foreign_chrome=
 note_foreign_chrome() { pgrep -fl -- '--headless' 2> /dev/null | grep -v -- "$ui/profiles" | grep -qi chrom && foreign_chrome=1; }
 cdp_run() {
 	note_foreign_chrome
-	TMPDIR="$ui/profiles" capped 30 node "$cdp" "$@"
+	# Above the 60 s worst Chrome start (30 s and one retry) plus the steps.
+	TMPDIR="$ui/profiles" capped 90 node "$cdp" "$@"
 	note_foreign_chrome
 }
 if ! node -e 'process.exit(typeof WebSocket === "function" ? 0 : 1)' 2> /dev/null; then
@@ -271,7 +272,7 @@ elif [ -n "${rc:-}" ]; then
 		printf '#!/bin/sh\n[ -e "%s" ] && exec "%s" "$@"\ntouch "%s"\nexec %s\n' \
 			"$ui/started-once" "$real_chrome" "$ui/started-once" "$slow_sleep" > "$ui/bin/fp-slow-chrome"
 		chmod +x "$ui/bin/fp-slow-chrome"
-		CHROME="$ui/bin/fp-slow-chrome" TMPDIR="$ui/profiles" capped 80 node "$cdp" about:blank --eval '6 * 7'
+		CHROME="$ui/bin/fp-slow-chrome" cdp_run about:blank --eval '6 * 7'
 		expect "cdp retries a start that gives no port" 0 '^42$'
 		grep -q 'no debugging port within 30 s; retrying once$' "$tmp/out" && ok || dump "cdp retry: want the retry notice:"
 		pgrep -fx "$slow_sleep" > /dev/null && bad "cdp retry: the hung first start is still running" || ok
