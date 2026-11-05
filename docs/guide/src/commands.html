@@ -117,6 +117,7 @@ raise a draft PR.</pre>
     <tbody>
       <tr><td>Stop a mistake you've corrected twice</td><td><code>/flatpaper-stack:correct agents keep importing from internal/ directly</code></td></tr>
       <tr><td>Turn a long session into lessons</td><td><code>/flatpaper-stack:reflect</code></td></tr>
+      <tr id="cp-authoring-a-skill"><td>Write or edit a skill or a playbook</td><td><code>/flatpaper-stack:flatpaper-mode write a skill that checks our migration files. lint it with check-skills.</code></td></tr>
       <tr id="cp-eval"><td>Check whether a skill or prompt change helps</td><td><code>/flatpaper-stack:flatpaper-mode eval this skill. is the new tidy wording better than the old one at catching dead code?</code></td></tr>
       <tr><td>Let the agent drive your app to prove its work</td><td><code>/flatpaper-stack:create-verification-skill</code></td></tr>
       <tr><td>Recheck that verification skill after the app changed</td><td><code>/flatpaper-stack:maintain-verification-skill</code></td></tr>
@@ -389,7 +390,7 @@ new task: review the open PR.</pre>
       <tr><td class="nw">docs/guide/build.sh</td><td>After editing this guide</td><td><code>docs/guide/build.sh</code></td></tr>
       <tr><td class="nw">arch-drift.sh</td><td>Runs at session start; run by hand to recheck</td><td><code>scripts/arch-drift.sh</code></td></tr>
       <tr><td class="nw">check-plan.sh</td><td>After writing a multi-phase plan</td><td><code>skills/flatpaper-mode/scripts/check-plan.sh docs/plans/&lt;slug&gt;.md</code></td></tr>
-      <tr><td class="nw">worktree-audit.sh</td><td>Before removing worktrees. Holds uncommitted work, open PRs, ignored files such as <code>.env</code>, and commits only the worktree's reflog keeps</td><td><code>skills/flatpaper-mode/scripts/worktree-audit.sh [--self &lt;session-id&gt;] [repo]</code></td></tr>
+      <tr><td class="nw">worktree-audit.sh</td><td>Before removing worktrees. Holds uncommitted work, open PRs, ignored files such as <code>.env</code>, and commits only the worktree's reflog keeps</td><td><code>skills/flatpaper-mode/scripts/worktree-audit.sh [-b &lt;base-ref&gt;] [--self &lt;session-id&gt;] [repo]</code></td></tr>
       <tr><td class="nw">codex-seat.sh</td><td>Run by <code>interrogate</code>, <code>arena</code>, <code>architect</code>, and <code>swarm</code> for their Codex seat. Read-only. Prints one <code>codex seat fallback:</code> line and exits 3 when Codex is missing, throttled, times out, or rejects the model</td><td><code>skills/flatpaper-mode/scripts/codex-seat.sh --model gpt-6.1-sol --effort high --fallback "&lt;what runs instead&gt;" --cwd &lt;dir&gt; &lt;prompt-file&gt;</code></td></tr>
       <tr><td class="nw">pr-gate.sh</td><td>Runs as a hook on every <code>gh pr create</code> after flatpaper-mode starts. Lets through any command that does not run <code>gh pr create</code></td><td><code>skills/flatpaper-mode/scripts/pr-gate.sh</code> (reads hook JSON on stdin)</td></tr>
       <tr><td class="nw">cdp.mjs</td><td>Driving a UI by hand, as the <code>control-ui</code> skill does. Exits 124 on a timeout and 2 on a usage or launch error. Run <code>--help</code> for every flag</td><td><code>node skills/control-ui/scripts/cdp.mjs &lt;url&gt; --wait-for &lt;css&gt; --screenshot &lt;png&gt;</code></td></tr>
