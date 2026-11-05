@@ -73,7 +73,10 @@ function parseArgs(argv) {
 }
 
 function findChrome() {
-  if (process.env.CHROME) return process.env.CHROME;
+  if (process.env.CHROME) {
+    if (!existsSync(process.env.CHROME)) throw new Exit(2, `CHROME=${process.env.CHROME} does not exist`);
+    return process.env.CHROME;
+  }
   const candidates = [
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     "/Applications/Chromium.app/Contents/MacOS/Chromium",
@@ -106,10 +109,11 @@ for (const [signal, code] of [["SIGINT", 130], ["SIGTERM", 143], ["SIGHUP", 129]
 }
 
 async function launchChrome() {
+  const binary = findChrome();
   const dir = mkdtempSync(join(tmpdir(), "cdp-"));
   const profile = join(dir, "profile");
   mkdirSync(profile);
-  const proc = spawn(findChrome(), [
+  const proc = spawn(binary, [
     "--headless=new", `--user-data-dir=${profile}`, "--remote-debugging-port=0",
     "--no-first-run", "--no-default-browser-check", "--disable-gpu", "--hide-scrollbars",
     "--mute-audio", "about:blank",
@@ -120,8 +124,15 @@ async function launchChrome() {
     env: { ...process.env, TMPDIR: dir, MAC_CHROMIUM_TMPDIR: dir },
   });
   let stderr = "";
+  let spawnError;
   proc.stderr.on("data", (d) => { stderr += d; });
-  const exited = new Promise((r) => proc.once("exit", r));
+  const exited = new Promise((r) => {
+    proc.once("exit", r);
+    proc.once("error", (err) => {
+      spawnError = err;
+      r();
+    });
+  });
   const chrome = { proc, dir, exited };
   running.add(chrome);
   const portFile = join(profile, "DevToolsActivePort");
@@ -132,9 +143,13 @@ async function launchChrome() {
       chrome.ws = `ws://127.0.0.1:${lines[0]}${lines[1]}`;
       return chrome;
     }
-    if (proc.exitCode !== null || Date.now() > deadline) {
+    if (spawnError || proc.exitCode !== null || Date.now() > deadline) {
+      const exitedEarly = proc.exitCode !== null;
       await killChrome(chrome);
-      throw new Exit(2, `Chrome did not start: ${stderr.trim().split("\n").slice(-3).join(" | ")}`);
+      const why = spawnError ? `${binary}: ${spawnError.message}`
+        : stderr.trim().split("\n").slice(-3).join(" | ")
+          || (exitedEarly ? `${binary} exited with status ${proc.exitCode}` : `no debugging port within 15 s`);
+      throw new Exit(2, `Chrome did not start: ${why}`);
     }
     await sleep(50);
   }
