@@ -22,6 +22,14 @@ if [ $? = 1 ] && [ "$(grep -c '^FAIL' "$tmp/out")" = 1 ] && grep -q '^FAIL banne
 	bad "check-skills: want exit 1 and one FAIL, the banned term on the planted line, with provenance lines exempt"; sed 's/^/  /' "$tmp/out"
 fi
 
+mkdir -p "$tmp/lint-up"
+cp -R "$root"/* "$tmp/lint-up/"
+printf '%s\n' '<!-- ported from cursor/plugins@0000000 pstack/skills/poteto-mode/playbooks/x.md (MIT) -->' 'Adapted from pstack.' >> "$tmp/lint-up/skills/tidy/SKILL.md"
+"$root/scripts/check-skills.sh" "$tmp/lint-up" > "$tmp/out" 2>&1
+if [ $? = 1 ] && [ "$(grep -c '^FAIL' "$tmp/out")" = 1 ] && grep -q '^FAIL upstream reference: skills/tidy/SKILL.md:[0-9]*:Adapted from pstack' "$tmp/out"; then ok; else
+	bad "check-skills: want exit 1 and one FAIL, the upstream reference on the ordinary line, with the provenance line exempt"; sed 's/^/  /' "$tmp/out"
+fi
+
 # check-plan.sh. The base plan is the playbook skeleton with every placeholder
 # filled, so it must pass. Each case appends to it and expects a verdict.
 awk '/^````markdown$/{f=1;next} /^````$/{f=0} f' "$root/skills/flatpaper-mode/playbooks/multi-phase-plan.md" |
