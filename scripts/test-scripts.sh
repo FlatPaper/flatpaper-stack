@@ -9,8 +9,10 @@ tmp=$(mktemp -d 2>/dev/null || mktemp -d -t fptest)
 trap 'rm -rf "$tmp"' EXIT
 fail=0
 pass=0
+skipped=0
 ok() { pass=$((pass + 1)); }
 bad() { printf 'FAIL %s\n' "$1"; fail=1; }
+inconclusive() { printf 'INCONCLUSIVE %s: %s\n' "$1" "$2"; skipped=$((skipped + 1)); }
 
 # check-plan.sh. The base plan is the playbook skeleton with every placeholder
 # filled, so it must pass. Each case appends to it and expects a verdict.
@@ -159,9 +161,11 @@ else fail("socket closed");
 EOF
 echo "prompt" > "$tmp/seat/prompt.txt"
 seat_case() {
-	local model=$1 want_exit=$2 want_line=$3 path=${4:-$tmp/seat/bin:$PATH}
+	local model=$1 want_exit=$2 want_line=$3 path=${4:-$tmp/seat/bin:$PATH} timeout=10
+	# Only the slow case tests the timeout. The others get room for a loaded CI runner.
+	[ "$model" = slow ] && timeout=1
 	out=$(PATH="$path" CODEX_COMPANION="$tmp/seat/companion.cjs" "$scripts/codex-seat.sh" \
-		--model "$model" --effort high --fallback "the opus seat" --timeout 1 --cwd "$tmp/seat/repo" "$tmp/seat/prompt.txt" 2>&1)
+		--model "$model" --effort high --fallback "the opus seat" --timeout "$timeout" --cwd "$tmp/seat/repo" "$tmp/seat/prompt.txt" 2>&1)
 	got=$?
 	if [ "$got" = "$want_exit" ] && printf '%s' "$out" | grep -qE "$want_line"; then ok; else bad "codex-seat $model: want exit $want_exit and /$want_line/, got $got: $out"; fi
 }
@@ -179,5 +183,222 @@ mkdir -p "$tmp/seat/nocodex"
 ln -s "$(command -v node)" "$(command -v bash)" "$tmp/seat/nocodex/"
 seat_case ok 3 '^codex seat fallback: missing: codex is not on PATH\.' "$tmp/seat/nocodex"
 
+capped() {
+	local limit=$1 pid start
+	shift
+	start=$SECONDS
+	"$@" > "$tmp/out" 2>&1 &
+	pid=$!
+	while kill -0 "$pid" 2> /dev/null; do
+		[ $((SECONDS - start)) -ge "$limit" ] && kill "$pid"
+		sleep 0.1
+	done
+	wait "$pid"
+	rc=$?
+	took=$((SECONDS - start))
+}
+dump() { bad "$1"; sed 's/^/  /' "$tmp/out"; }
+expect() {
+	local name=$1 want_rc=$2 regex=$3
+	if [ "$rc" = "$want_rc" ] && grep -qE -- "$regex" "$tmp/out"; then ok; else dump "$name: want exit $want_rc and /$regex/, got $rc:"; fi
+}
+png_head() { od -An -tx1 -N"$2" "$1" 2> /dev/null | tr -d ' \n'; }
+
+cdp="$root/skills/control-ui/scripts/cdp.mjs"
+ui="$tmp/ui"
+mkdir -p "$ui/profiles"
+cat > "$ui/f.html" <<'EOF'
+<!doctype html><body style="margin:0;background:#fff">
+<h1 id="title">Fixture heading</h1>
+<div id="dot" style="position:absolute;left:10px;top:200px;width:1px;height:1px;background:#000"></div>
+<script>
+console.log("fixture-ready", 42);
+if (location.hash === "#nodot") document.getElementById("dot").remove();
+setTimeout(() => { const p = document.createElement("p"); p.id = "late"; p.textContent = "late text"; document.body.append(p); }, 300);
+</script>
+<script>throw new Error("boom-uncaught")</script>
+EOF
+cat > "$ui/click.html" <<'EOF'
+<!doctype html><body>
+<button id="save" onclick="setTimeout(() => { const p = document.createElement('p'); p.id = 'saved'; p.textContent = 'saved'; document.body.append(p); }, 200)">Save</button>
+EOF
+real_tmp=$(getconf DARWIN_USER_TEMP_DIR 2> /dev/null) || real_tmp=${TMPDIR:-/tmp}
+chrome_leftovers() { ls -A "$real_tmp" 2> /dev/null | grep -E '^\.?(com\.google\.Chrome|org\.chromium\.Chromium)\.' | sort; }
+chrome_leftovers > "$tmp/chrome-before"
+rc=
+foreign_chrome=
+note_foreign_chrome() { pgrep -fl -- '--headless' 2> /dev/null | grep -v -- "$ui/profiles" | grep -qi chrom && foreign_chrome=1; }
+cdp_run() {
+	note_foreign_chrome
+	# Above the 60 s worst Chrome start (30 s and one retry) plus the steps.
+	TMPDIR="$ui/profiles" capped 90 node "$cdp" "$@"
+	note_foreign_chrome
+}
+if ! node -e 'process.exit(typeof WebSocket === "function" ? 0 : 1)' 2> /dev/null; then
+	inconclusive "control-ui" "needs Node 22+ for the global WebSocket"
+else
+	cdp_run "$ui/f.html" --wait-for '#late' --eval 'document.getElementById("title").textContent.length' \
+		--dom '#late' --screenshot "$ui/a.png" --console "$ui/console.txt"
+fi
+if [ "${rc:-}" = 2 ] && grep -q 'no Chrome or Chromium found' "$tmp/out"; then
+	inconclusive "control-ui" "no Chrome or Chromium found"
+elif [ -n "${rc:-}" ]; then
+	[ "$rc" = 0 ] && [ "$(grep -v '^cdp: ' "$tmp/out")" = "$(printf '15\nlate text')" ] && ok ||
+		dump "cdp --wait-for, --eval, --dom: want exit 0 and '15', 'late text', got $rc:"
+	# PNG signature, then IHDR width 1280 and height 800, the default viewport.
+	[ "$(png_head "$ui/a.png" 24)" = 89504e470d0a1a0a0000000d494844520000050000000320 ] && ok || bad "cdp --screenshot: want a 1280x800 PNG"
+	grep -qx 'log: fixture-ready 42' "$ui/console.txt" 2> /dev/null && ok || bad "cdp --console: want the logged line"
+	grep -q '^exception: Error: boom-uncaught' "$ui/console.txt" 2> /dev/null && ok || bad "cdp --console: want the uncaught exception"
+	cdp_run --help
+	expect "cdp --help" 0 '^Exit codes: '
+	CHROME=/nonexistent cdp_run about:blank
+	expect "cdp CHROME that does not exist" 2 '^cdp: CHROME=/nonexistent does not exist$'
+	CHROME="$ui/f.html" cdp_run about:blank
+	expect "cdp CHROME that cannot run" 2 '^cdp: Chrome did not start: .*EACCES'
+	CHROME=fp-no-such-chrome cdp_run about:blank
+	expect "cdp CHROME name not on PATH" 2 '^cdp: CHROME=fp-no-such-chrome is not on PATH$'
+	real_chrome=
+	for c in "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" "/Applications/Chromium.app/Contents/MacOS/Chromium" \
+		$(command -v google-chrome google-chrome-stable chromium chromium-browser chrome 2> /dev/null); do
+		[ -x "$c" ] && { real_chrome=$c; break; }
+	done
+	if [ -n "$real_chrome" ]; then
+		mkdir -p "$ui/bin"
+		printf '#!/bin/sh\nexec "%s" "$@"\n' "$real_chrome" > "$ui/bin/fp-chrome"
+		chmod +x "$ui/bin/fp-chrome"
+		PATH="$ui/bin:$PATH" CHROME=fp-chrome cdp_run about:blank --eval '6 * 7'
+		expect "cdp CHROME as a bare name on PATH" 0 '^42$'
+		slow_sleep="sleep 9$$"
+		printf '#!/bin/sh\n[ -e "%s" ] && exec "%s" "$@"\ntouch "%s"\nexec %s\n' \
+			"$ui/started-once" "$real_chrome" "$ui/started-once" "$slow_sleep" > "$ui/bin/fp-slow-chrome"
+		chmod +x "$ui/bin/fp-slow-chrome"
+		CHROME="$ui/bin/fp-slow-chrome" cdp_run about:blank --eval '6 * 7'
+		expect "cdp retries a start that gives no port" 0 '^42$'
+		grep -q 'no debugging port within 30 s; retrying once$' "$tmp/out" && ok || dump "cdp retry: want the retry notice:"
+		pgrep -fx "$slow_sleep" > /dev/null && bad "cdp retry: the hung first start is still running" || ok
+	fi
+	cdp_run "$ui/click.html" --eval 'document.getElementById("save").click()' --wait-for '#saved' --dom '#saved'
+	expect "cdp --eval clicks, then --wait-for sees the result" 0 '^saved$'
+	cdp_run "$ui/click.html" --eval 'await null; new Promise((r) => setTimeout(() => r("promised"), 50))'
+	expect "cdp --eval with top-level await, returning a Promise" 0 '^promised$'
+	if command -v python3 > /dev/null; then
+		python3 -c 'import socket, time; s = socket.socket(); s.bind(("127.0.0.1", 0)); s.listen(5); print(s.getsockname()[1], flush=True); time.sleep(30)' > "$ui/port" &
+		listener=$!
+		for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do [ -s "$ui/port" ] && break; sleep 0.1; done
+		cdp_run --port "$(cat "$ui/port")" --timeout 1000
+		expect "cdp --port to a server that never answers" 124 'waiting for http://127\.0\.0\.1:'
+		{ kill "$listener" && wait "$listener"; } 2> /dev/null
+	fi
+	cdp_run "$ui/f.html" --wait-for '#missing' --timeout 3000
+	expect "cdp --wait-for a missing element" 124 'waiting for #missing'
+	cdp_run "$ui/f.html" --eval 'while (true) {}' --timeout 3000
+	expect "cdp call into a hung page" 124 'waiting for Runtime.evaluate'
+	cdp_run "file://$ui/f.html#nodot" --wait-for '#late' --screenshot "$ui/b.png"
+	cdp_run "$ui/f.html" --viewport 640x480 --screenshot "$ui/small.png"
+	cdp_run diff "$ui/a.png" "$ui/a.png"
+	expect "cdp diff of one image" 0 '^0 of 1024000 pixels differ$'
+	cdp_run diff "$ui/a.png" "$ui/b.png" --out "$ui/d.png"
+	expect "cdp diff with one changed pixel" 1 '^1 of 1024000 pixels differ$'
+	[ "$(png_head "$ui/d.png" 8)" = 89504e470d0a1a0a ] && ok || bad "cdp diff --out: want a PNG"
+	cdp_run diff "$ui/a.png" "$ui/small.png"
+	expect "cdp diff of different sizes" 1 '^size differs: 1280x800 vs 640x480$'
+	TMPDIR="$ui/profiles" capped 2 node "$cdp" "$ui/f.html" --wait-for '#missing' --timeout 20000
+	[ "$rc" = 143 ] && ok || dump "cdp killed mid-wait: want exit 143, got $rc:"
+	pgrep -f "$ui/profiles" > /dev/null && bad "cdp: Chrome still running after exit" || ok
+	[ -z "$(ls -A "$ui/profiles")" ] && ok || bad "cdp: temp profile left behind: $(ls "$ui/profiles")"
+	new=$(chrome_leftovers | comm -13 "$tmp/chrome-before" -)
+	if [ -z "$new" ]; then
+		ok
+	elif [ -n "$foreign_chrome" ]; then
+		inconclusive "cdp temp files" "a headless Chrome the suite did not start ran meanwhile, and $real_tmp gained: $new"
+	else
+		bad "cdp: Chrome left files in $real_tmp: $new"
+	fi
+fi
+
+drive="$root/skills/control-cli/scripts/drive.sh"
+pty="$root/skills/control-cli/scripts/pty-drive.py"
+hang="sleep 60$$"
+hang_case() {
+	if [ "$rc" = 124 ] && [ "$took" -ge 2 ] && [ "$took" -le 6 ]; then ok; else dump "$1: want exit 124 after about 3s, got $rc after ${took}s:"; fi
+	pgrep -fx "$hang" > /dev/null && bad "$1: '$hang' still running" || ok
+}
+if ! command -v python3 > /dev/null; then
+	inconclusive "control-cli" "python3 not found"
+else
+	if ! command -v tmux > /dev/null; then
+		inconclusive "control-cli drive.sh" "tmux not found"
+	else
+		s="fptest-$$"
+		"$drive" start "$s" -- python3 -i -q
+		capped 15 "$drive" wait "$s" '>>> '
+		expect "drive.sh wait for the prompt" 0 '>>> '
+		"$drive" type "$s" 'print(6*7)'
+		"$drive" send "$s" Enter
+		capped 15 "$drive" wait "$s" '^42$'
+		expect "drive.sh send and wait for output" 0 '^42$'
+		"$drive" kill "$s"
+		"$drive" capture "$s" > /dev/null 2>&1 && bad "drive.sh kill: session still exists" || ok
+
+		"$drive" start "$s-echo" -- sh -c 'while IFS= read -r l; do printf "got[%s]\n" "$l"; done'
+		for text in 'A;' 'B;C' 'E\;'; do
+			"$drive" type "$s-echo" "$text"
+			"$drive" send "$s-echo" Enter
+		done
+		capped 15 "$drive" wait "$s-echo" '^got\[E\\;\]$'
+		for want in 'got[A;]' 'got[B;C]' 'got[E\;]'; do
+			grep -qxF "$want" "$tmp/out" && ok || dump "drive.sh type: want the line $want:"
+		done
+		"$drive" kill "$s-echo"
+
+		"$drive" start "$s-dies" -- sh -c 'echo bye; exit 3'
+		capped 15 "$drive" wait "$s-dies" READY
+		expect "drive.sh command that exits first" 1 '^bye$'
+		[ "$("$drive" status "$s-dies")" = 3 ] && ok || bad "drive.sh status: want 3, got $("$drive" status "$s-dies")"
+		"$drive" capture "$s-dies" | grep -qx bye && ok || bad "drive.sh capture after exit: want the scrollback line 'bye'"
+		"$drive" kill "$s-dies"
+
+		"$drive" start "$s-hang" -- $hang
+		[ "$("$drive" status "$s-hang")" = running ] && ok || bad "drive.sh status: want running"
+		for bad_timeout in 1.5 abc; do
+			capped 5 "$drive" wait "$s-hang" READY --timeout "$bad_timeout"
+			expect "drive.sh --timeout $bad_timeout" 2 '^  drive\.sh wait '
+		done
+		for probe in 1 2; do
+			t0=$(python3 -c 'import time; print(time.time())')
+			capped 10 "$drive" wait "$s-hang" READY --timeout 2
+			elapsed=$(python3 -c "import time; print('%.2f' % (time.time() - $t0))")
+			[ "$rc" = 124 ] && awk -v e="$elapsed" 'BEGIN { exit !(e >= 2.0) }' && ok ||
+				dump "drive.sh --timeout 2, probe $probe: want exit 124 after at least 2.0s, got $rc after ${elapsed}s:"
+		done
+		capped 10 "$drive" wait "$s-hang" READY --timeout 3
+		"$drive" kill "$s-hang"
+		hang_case "drive.sh hang"
+	fi
+	capped 15 "$pty" --timeout 5 --wait '>>> ' --send 'print(6*7)\r' --wait '^42$' --send 'exit()\r' -- python3 -i -q
+	expect "pty-drive.py send and wait for output" 0 '42'
+	capped 10 "$pty" --timeout 3 --wait READY -- $hang
+	hang_case "pty-drive.py hang"
+	capped 5 "$pty" --size abc -- true
+	expect "pty-drive.py --size abc" 2 'size must look like'
+	capped 5 "$pty" --timeout x --wait READY -- true
+	expect "pty-drive.py --timeout x" 2 'timeout must be a positive number'
+	capped 10 "$pty" --timeout 5 --wait bye -- sh -c 'echo bye; exit 3'
+	expect "pty-drive.py reports the exit status" 0 '^pty-drive: command exited with status 3$'
+	capped 5 "$pty" --send '\x' -- true
+	expect "pty-drive.py --send with a bad escape" 2 'bad escape in --send'
+	capped 10 "$pty" --timeout 5 --wait bye --wait-exit -- sh -c 'echo bye; sleep 0.3; echo after; exit 3'
+	expect "pty-drive.py --wait-exit on status 3" 3 '^pty-drive: command exited with status 3$'
+	tr -d '\r' < "$tmp/out" | grep -qx after && ok || dump "pty-drive.py --wait-exit: want the output printed before the exit:"
+	capped 10 "$pty" --timeout 5 --wait-exit -- sh -c 'echo fine'
+	expect "pty-drive.py --wait-exit on status 0" 0 '^pty-drive: command exited with status 0$'
+	capped 10 "$pty" --timeout 5 --wait-exit -- sh -c 'kill -TERM $$'
+	expect "pty-drive.py --wait-exit on a signal" 3 '^pty-drive: command exited with signal 15$'
+	capped 10 "$pty" --timeout 5 --wait-exit --send 'x\r' -- sh -c 'echo done'
+	expect "pty-drive.py --send after the command exited" 1 'command exited before --send'
+	tr -d '\r' < "$tmp/out" | grep -qx done && ok || dump "pty-drive.py --send after exit: want the transcript printed:"
+fi
+
+[ "$skipped" -eq 0 ] || echo "test-scripts: $skipped inconclusive, not counted as passes"
 [ "$fail" -eq 0 ] && echo "test-scripts: ok ($pass cases)"
 exit "$fail"
