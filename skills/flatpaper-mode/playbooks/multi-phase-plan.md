@@ -45,7 +45,7 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
   - [ ] <PR id> and <PR id> are independent and first. Both branch from `main`.
   - [ ] <PR id> after <PR id>.
 - [ ] Hold the file boundaries. <PR id> touches only `<glob>`.
-- [ ] Hold the review gate. <PR ids> change an interaction. They wait for the user's review with screenshots and a video before merge. They stop at merge-ready for the user under every execution path, Autopilot-full included.
+- [ ] Hold the review gate. <PR ids> change an interaction. They wait for the user's review with screenshots and a video before merge. They stop at merge-ready for the user under every execution path, Autopilot-full and Orchestrate included.
 
 ### PR mechanics, for every PR
 
@@ -53,7 +53,7 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 - [ ] Commit, branch, and open the PR per the repo's rules, as in the flatpaper-mode Finish steps.
 - [ ] Run the repo's lint and typecheck before the PR-facing push. Push with hooks on.
 - [ ] Triage every review comment per flatpaper-mode's review triage reference (`references/review-triage.md` in that skill).
-- [ ] Rebase onto the PR's base (trunk, or the parent PR's branch in a stack) before the code-ready report. Keep that merge base in fix rounds. Rebase again only for merge prep, a conflict that `git merge-tree --write-tree origin/<base> HEAD` reports, a CI failure that comes from a change on the base, or a change to the same files that lands on the base. Drive CI and comments with the Babysit playbook.
+- [ ] Under Autopilot stack, Autopilot-full, or Orchestrate, the owner rebases its own branch onto the PR's base (trunk, or the parent PR's branch in a stack) before the code-ready report. It pushes with a lease pinned to its last push. Keep that merge base in fix rounds. The owner rebases again only for merge prep, a conflict that `git merge-tree --write-tree origin/<base> HEAD` reports, a CI failure that comes from a change on the base, or a change to the same files that lands on the base. On the per-task path, never rebase or force-push a pushed branch. Report which branch needs a rebase onto which base, and stop, as in Opening a PR. Drive CI and comments with the Babysit playbook.
 
 ### Verdict and merge, for every PR
 
@@ -114,8 +114,8 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 
 - [ ] Clean review verdict at the exact head SHA.
 - [ ] Review comments triaged.
-- [ ] Rebased onto the PR's base after the verdict, patch unchanged.
-- [ ] <Who merges. Under Autopilot stack the user lands the stack bottom-up, because it never merges. Under Autopilot-full the owner merges after merge prep, on the verdict at its current head. A review-gated PR stops at merge-ready for the user under every path. Under Orchestrate the owner merges on its verifier's pass at the head. Otherwise the user or the PR's own task squash-merges it.>
+- [ ] On the PR's base after the verdict, patch unchanged. Only an owner rebases to get there. On the per-task path, a needed rebase is reported, not done.
+- [ ] <Who merges. Under Autopilot stack the user lands the stack bottom-up, because it never merges. Under Autopilot-full the owner merges after merge prep, on the verdict at its current head. A review-gated PR stops at merge-ready for the user under every path. Under Orchestrate the owner merges on its verifier's pass at the head. Otherwise the user merges it, or lands the stack through the Shipping playbook on an explicit land request.>
 
 ## Close the program
 

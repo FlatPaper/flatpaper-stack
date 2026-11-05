@@ -101,7 +101,7 @@ Close calls:
 Not in flatpaper:
 
 - flatpaper has no skill for restating an ask. Ask flatpaper-mode to restate the issue in plain words first. For one long goal, use the Autonomous run playbook. For a queue of PRs, use the Multi-phase plan playbook, then the Autopilot stack playbook to build it. For a multi-day program, use the Orchestrate playbook.
-- Orchestrate and Autopilot-full merge unattended, and only after your go. Orchestrate owners merge on a verifier's pass at each PR's head. Autopilot-full owners merge on the swarm's verdict at each PR's head, and a review-gated PR still waits for you. Autopilot stack stops at verified PRs, and you land them, by hand or by asking for Shipping.
+- Orchestrate and Autopilot-full merge unattended, and only after your go. Orchestrate owners merge on a verifier's pass at each PR's head. Autopilot-full owners merge on the swarm's verdict at each PR's head. Under both, a PR the plan marks review-gated waits for you, and its owner never merges it. Autopilot stack stops at verified PRs, and you land them, by hand or by asking for Shipping.
 - `/loop`, `/code-review`, and `/simplify` are Claude Code built-ins. The Autonomous run playbook uses `/loop`. `/flatpaper-stack:tidy` is flatpaper's version of `/simplify`, and the one the Opening a PR playbook runs.
 - Plan mode is a Claude Code feature and works alongside flatpaper.
 
