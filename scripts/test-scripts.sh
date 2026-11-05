@@ -181,10 +181,7 @@ mkdir -p "$tmp/seat/nocodex"
 ln -s "$(command -v node)" "$(command -v bash)" "$tmp/seat/nocodex/"
 seat_case ok 3 '^codex seat fallback: missing: codex is not on PATH\.' "$tmp/seat/nocodex"
 
-# The drivers run under a watchdog, so a driver that never returns fails its
-# case instead of hanging the suite. capped sets rc (143 when killed) and
-# took (seconds), and leaves the output in $tmp/out.
-capped() { # limit seconds, command...
+capped() {
 	local limit=$1 pid start
 	shift
 	start=$SECONDS
@@ -199,13 +196,12 @@ capped() { # limit seconds, command...
 	took=$((SECONDS - start))
 }
 dump() { bad "$1"; sed 's/^/  /' "$tmp/out"; }
-expect() { # case name, want rc, extended regex the output must match
-	if [ "$rc" = "$2" ] && grep -qE -- "$3" "$tmp/out"; then ok; else dump "$1: want exit $2 and /$3/, got $rc:"; fi
+expect() {
+	local name=$1 want_rc=$2 regex=$3
+	if [ "$rc" = "$want_rc" ] && grep -qE -- "$regex" "$tmp/out"; then ok; else dump "$name: want exit $want_rc and /$regex/, got $rc:"; fi
 }
 png_head() { od -An -tx1 -N"$2" "$1" 2> /dev/null | tr -d ' \n'; }
 
-# control-ui cdp.mjs. A fixture page logs, throws, and adds #late after 300ms.
-# The #nodot variant drops one 1x1 black pixel, so its diff is exactly 1.
 cdp="$root/skills/control-ui/scripts/cdp.mjs"
 ui="$tmp/ui"
 mkdir -p "$ui/profiles"
@@ -254,13 +250,10 @@ elif [ -n "${rc:-}" ]; then
 	[ -z "$(ls -A "$ui/profiles")" ] && ok || bad "cdp: temp profile left behind: $(ls "$ui/profiles")"
 fi
 
-# control-cli drive.sh and pty-drive.py. Each drives python3's REPL, then a
-# command that never prints the ready text, which must time out with 124
-# after about 3 seconds and leave no process behind.
 drive="$root/skills/control-cli/scripts/drive.sh"
 pty="$root/skills/control-cli/scripts/pty-drive.py"
 hang="sleep 60$$"
-hang_case() { # name
+hang_case() {
 	if [ "$rc" = 124 ] && [ "$took" -ge 2 ] && [ "$took" -le 6 ]; then ok; else dump "$1: want exit 124 after about 3s, got $rc after ${took}s:"; fi
 	pgrep -fx "$hang" > /dev/null && bad "$1: '$hang' still running" || ok
 }

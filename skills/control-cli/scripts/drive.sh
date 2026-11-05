@@ -15,8 +15,8 @@ set -uo pipefail
 
 usage() { sed -n '2,/^[^#]/s/^# \{0,1\}//p' "$0" >&2; exit 2; }
 t() { tmux -L control-cli "$@"; }
-# Print the pane without its trailing blank lines.
-capture() { t capture-pane -p -J -t "$session" "$@" | awk 'NF { while (n) { print ""; n-- } print; next } { n++ }'; }
+drop_trailing_blank_lines() { awk 'NF { while (n) { print ""; n-- } print; next } { n++ }'; }
+capture() { t capture-pane -p -J -t "$session" "$@" | drop_trailing_blank_lines; }
 
 [ $# -ge 2 ] || usage
 cmd=$1 session=$2

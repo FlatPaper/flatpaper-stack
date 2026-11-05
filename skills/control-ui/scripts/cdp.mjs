@@ -135,8 +135,6 @@ async function killChrome(chrome) {
   }
 }
 
-// Every call and event wait has the same deadline, so a hung page or a dead
-// browser ends in exit 124 or 1, never a stall.
 class Cdp {
   static async connect(url, timeout) {
     const ws = new WebSocket(url);
@@ -230,8 +228,6 @@ async function pickPage(cdp, match) {
   throw new Exit(1, `no page matches ${match || "(any)"}; pages:\n${list}`);
 }
 
-// Open a page session, run fn on it, and always clean up: close a tab this
-// opened in an attached browser, or kill a browser this launched.
 async function withPage(opts, fn) {
   let chrome;
   let cdp;
