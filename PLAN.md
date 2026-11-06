@@ -17,7 +17,7 @@ Do not start the next brick until you can explain the current one in your own wo
 Single rules, about 1 KB each. They depend on nothing. Everything above reads them.
 
 - [x] 1.1 `principle-prove-it-works`
-- [ ] 1.2 `subtract-before-you-add`, `laziness-protocol`
+- [x] 1.2 `principle-subtract-before-you-add`, `principle-laziness-protocol`
 - [ ] 1.3 `build-the-lever`, `encode-lessons-in-structure`
 - [ ] 1.4 `fix-root-causes`, `attack-the-premise`
 - [ ] 1.5 `redesign-from-first-principles`, `foundational-thinking`
