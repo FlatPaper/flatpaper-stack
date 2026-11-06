@@ -20,7 +20,7 @@ Single rules, about 1 KB each. They depend on nothing. Everything above reads th
 - [x] 1.2 `principle-subtract-before-you-add`, `principle-laziness-protocol`
 - [x] 1.3 `principle-build-the-lever`, `principle-encode-lessons-in-structure`
 - [x] 1.4 `principle-fix-root-causes`, `principle-attack-the-premise`
-- [ ] 1.5 `redesign-from-first-principles`, `foundational-thinking`
+- [x] 1.5 `principle-redesign-from-first-principles`, `principle-foundational-thinking`
 - [ ] 1.6 `model-the-domain`, `boundary-discipline`
 - [ ] 1.7 `type-system-discipline`, `test-behavior-not-implementation`
 - [ ] 1.8 `make-operations-idempotent`, `separate-before-serializing-shared-state`
