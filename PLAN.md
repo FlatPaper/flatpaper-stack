@@ -18,7 +18,7 @@ Single rules, about 1 KB each. They depend on nothing. Everything above reads th
 
 - [x] 1.1 `principle-prove-it-works`
 - [x] 1.2 `principle-subtract-before-you-add`, `principle-laziness-protocol`
-- [ ] 1.3 `build-the-lever`, `encode-lessons-in-structure`
+- [x] 1.3 `principle-build-the-lever`, `principle-encode-lessons-in-structure`
 - [ ] 1.4 `fix-root-causes`, `attack-the-premise`
 - [ ] 1.5 `redesign-from-first-principles`, `foundational-thinking`
 - [ ] 1.6 `model-the-domain`, `boundary-discipline`
