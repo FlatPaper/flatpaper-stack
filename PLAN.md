@@ -5,7 +5,7 @@ Source: [cursor/plugins/pstack](https://github.com/cursor/plugins/tree/2776ddd/p
 ## How each brick goes in
 
 1. **Read.** Claude explains the brick in a few lines: what it is, and what it changes.
-2. **Import.** Copy the file unchanged. Add one line under the frontmatter: `ported from cursor/plugins@2776ddd <path> (MIT)`.
+2. **Import.** Copy `pstack/skills/<name>/` byte for byte into `skills/<name>/`, keeping the upstream folder name. No provenance line in the file: this plan names the source commit, and `LICENSE` carries the credit.
 3. **Adapt.** Change only what breaks in Claude Code (Cursor-only tools or names). Show every change.
 4. **Try.** Use it once on something real.
 5. **Commit.** One brick per commit. Tick the box.
@@ -16,7 +16,7 @@ Do not start the next brick until you can explain the current one in your own wo
 
 Single rules, about 1 KB each. They depend on nothing. Everything above reads them.
 
-- [ ] 1.1 `prove-it-works`
+- [x] 1.1 `principle-prove-it-works`
 - [ ] 1.2 `subtract-before-you-add`, `laziness-protocol`
 - [ ] 1.3 `build-the-lever`, `encode-lessons-in-structure`
 - [ ] 1.4 `fix-root-causes`, `attack-the-premise`
