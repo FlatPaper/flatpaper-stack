@@ -46,7 +46,7 @@ One job each, under 5 KB, no real dependencies.
 ## Layer 4: Writing and cleanup
 
 - [x] 4.1 `technical-writing`
-- [ ] 4.2 `no-comments` + `comment-sicko` agent
+- [x] 4.2 `no-comments` + `comment-sicko` agent
 
 ## Layer 5: Ways of working
 
