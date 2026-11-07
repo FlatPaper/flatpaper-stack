@@ -89,6 +89,14 @@ One job each, under 5 KB, no real dependencies.
 - [ ] 9.2 `reflect`, `figure-it-out`
 - [ ] 9.3 `poteto-help`
 
+## Layer 10: End-to-end check
+
+Run after the last brick. Run it again after any big change. Start a new session so every skill loads.
+
+- [ ] 10.1 Static check. `claude plugin validate .` passes. No "Revisit" lines remain. A scan finds no Cursor-only names, no slash command without the `flatpaper-stack:` prefix, and no mention of a skill that is not imported.
+- [ ] 10.2 Chains. Run each skill that uses another one. In the transcript, confirm that it read the other skill's file and made no blocked Skill call. Chains so far: `teach` -> `how`, `why`. `no-comments` -> `comment-sicko` -> `how`, `why`. `technical-writing` -> `unslop`.
+- [ ] 10.3 Smoke test. Run every skill once on a real target. Record each result in a table: the skill, pass or fail, and one line on what it did.
+
 ## Not planned
 
 Cursor-only, or not needed yet: `setup-pstack`, `automate-me`, `make-bot-ui`, `ketchup-video`, `typescript-best-practices`, `automations/benny`. Revisit any of them later.
