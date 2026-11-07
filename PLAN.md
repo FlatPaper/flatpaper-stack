@@ -34,7 +34,7 @@ Single rules, about 1 KB each. They depend on nothing. Everything above reads th
 One job each, under 5 KB, no real dependencies.
 
 - [x] 2.1 `unslop`: cuts AI-sounding prose
-- [ ] 2.2 `sharpen`: rewrites a prompt to go deeper
+- [x] 2.2 `sharpen`: rewrites a prompt to go deeper
 - [ ] 2.3 `correct`, `in-your-own-words`, `bro`
 
 ## Layer 3: Understanding code
