@@ -52,8 +52,7 @@ One job each, under 5 KB, no real dependencies.
 
 - [x] 5.1 `show-me-your-work`: decision log
 - [x] 5.2 `tdd`
-- [ ] 5.3 `swarm`: parallel workers
-  - Revisit: `technical-writing` line 94 says "swarm logs". This is a plain mention, so a change is probably not needed.
+- [x] 5.3 `swarm`: parallel workers
 - [ ] 5.4 `arena`: parallel attempts, pick the best
 
 ## Layer 6: Design and review
@@ -70,7 +69,7 @@ One job each, under 5 KB, no real dependencies.
 `poteto-mode` is 107 KB. It goes in small.
 
 - [ ] 7.1 `poteto-agent` and `poteto-mode` core with one playbook: Investigation
-  - Revisit: `how` line 11, `why` line 11, `no-comments` step 1, and `show-me-your-work` (Cross-model review section) say "per the Subagents section of the **poteto-mode** skill". `poteto-mode` is user-only upstream, so point each one at the file path. Check that a Subagents section survives the port.
+  - Revisit: `how` line 11, `why` line 11, `no-comments` step 1, `show-me-your-work` (Cross-model review section), and `swarm` (Phase A step 3) say "per the Subagents section of the **poteto-mode** skill". `poteto-mode` is user-only upstream, so point each one at the file path. Check that a Subagents section survives the port.
 - [ ] 7.2 Bug fix
 - [ ] 7.3 Feature
 - [ ] 7.4 Opening a PR
