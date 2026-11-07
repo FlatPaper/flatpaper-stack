@@ -27,7 +27,7 @@ Single rules, about 1 KB each. They depend on nothing. Everything above reads th
 - [x] 1.9 `principle-guard-the-context-window`, `principle-minimize-reader-load`
 - [x] 1.10 `principle-outcome-oriented-execution`, `principle-never-block-on-the-human`
 - [x] 1.11 `principle-sequence-verifiable-units`, `principle-migrate-callers-then-delete-legacy-apis`
-- [ ] 1.12 `experience-first`, `exhaust-the-design-space`, `explain-the-number`
+- [x] 1.12 `principle-experience-first`, `principle-exhaust-the-design-space`, `principle-explain-the-number`
 
 ## Layer 2: Small tools
 
