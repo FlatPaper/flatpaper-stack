@@ -51,7 +51,7 @@ One job each, under 5 KB, no real dependencies.
 ## Layer 5: Ways of working
 
 - [x] 5.1 `show-me-your-work`: decision log
-- [ ] 5.2 `tdd`
+- [x] 5.2 `tdd`
 - [ ] 5.3 `swarm`: parallel workers
   - Revisit: `technical-writing` line 94 says "swarm logs". This is a plain mention, so a change is probably not needed.
 - [ ] 5.4 `arena`: parallel attempts, pick the best
