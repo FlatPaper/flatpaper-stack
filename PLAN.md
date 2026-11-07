@@ -25,7 +25,7 @@ Single rules, about 1 KB each. They depend on nothing. Everything above reads th
 - [x] 1.7 `principle-type-system-discipline`, `principle-test-behavior-not-implementation`
 - [x] 1.8 `principle-make-operations-idempotent`, `principle-separate-before-serializing-shared-state`
 - [x] 1.9 `principle-guard-the-context-window`, `principle-minimize-reader-load`
-- [ ] 1.10 `outcome-oriented-execution`, `never-block-on-the-human`
+- [x] 1.10 `principle-outcome-oriented-execution`, `principle-never-block-on-the-human`
 - [ ] 1.11 `sequence-verifiable-units`, `migrate-callers-then-delete-legacy-apis`
 - [ ] 1.12 `experience-first`, `exhaust-the-design-space`, `explain-the-number`
 
