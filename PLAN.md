@@ -57,9 +57,9 @@ One job each, under 5 KB, no real dependencies.
 
 ## Layer 6: Design and review
 
-- [ ] 6.1 `architect`
-  - Revisit: `no-comments` step 3 says "run `/architect`". `architect` is user-only upstream, so change the step to read `../architect/SKILL.md` and follow it.
+- [x] 6.1 `architect`
 - [ ] 6.2 `interrogate`
+  - Revisit: `architect` Phase C says "run the **interrogate** skill". If `interrogate` is user-only, change it to read `../interrogate/SKILL.md` and follow it.
 - [ ] 6.3 `blast-radius`
 - [ ] 6.4 `benchmark-checklist`
   - Revisit: `principle-explain-the-number` line 14 already links `../benchmark-checklist/SKILL.md`. Check that the link resolves. If the skill is user-only, change "run" to "read and follow".
