@@ -6,7 +6,7 @@ Source: [cursor/plugins/pstack](https://github.com/cursor/plugins/tree/2776ddd/p
 
 1. **Read.** Claude explains the brick in a few lines: what it is, and what it changes.
 2. **Import.** Copy `pstack/skills/<name>/` byte for byte into `skills/<name>/`, keeping the upstream folder name. No provenance line in the file: this plan names the source commit, and `LICENSE` carries the credit.
-3. **Adapt.** Change only what breaks in Claude Code (Cursor-only tools or names). Show every change.
+3. **Adapt.** Change only what breaks in Claude Code (Cursor-only tools or names). Show every change. If the brick mentions a skill that is not imported yet, leave the mention and add a "Revisit" line under that skill's brick below. If the brick is named in a "Revisit" line, fix those mentions now and delete the line.
 4. **Try.** Use it once on something real.
 5. **Commit.** One brick per commit. Tick the box.
 
@@ -51,22 +51,27 @@ One job each, under 5 KB, no real dependencies.
 ## Layer 5: Ways of working
 
 - [ ] 5.1 `show-me-your-work`: decision log
+  - Revisit: `principle-prove-it-works` line 22 names the skill in bold. Add the `../show-me-your-work/SKILL.md` path if it is user-only.
 - [ ] 5.2 `tdd`
 - [ ] 5.3 `swarm`: parallel workers
+  - Revisit: `technical-writing` line 94 says "swarm logs". This is a plain mention, so a change is probably not needed.
 - [ ] 5.4 `arena`: parallel attempts, pick the best
 
 ## Layer 6: Design and review
 
 - [ ] 6.1 `architect`
+  - Revisit: `no-comments` step 3 says "run `/architect`". `architect` is user-only upstream, so change the step to read `../architect/SKILL.md` and follow it.
 - [ ] 6.2 `interrogate`
 - [ ] 6.3 `blast-radius`
 - [ ] 6.4 `benchmark-checklist`
+  - Revisit: `principle-explain-the-number` line 14 already links `../benchmark-checklist/SKILL.md`. Check that the link resolves. If the skill is user-only, change "run" to "read and follow".
 
 ## Layer 7: The router
 
 `poteto-mode` is 107 KB. It goes in small.
 
 - [ ] 7.1 `poteto-agent` and `poteto-mode` core with one playbook: Investigation
+  - Revisit: `how` line 11, `why` line 11, and `no-comments` step 1 say "per the Subagents section of the **poteto-mode** skill". `poteto-mode` is user-only upstream, so point each one at the file path. Check that a Subagents section survives the port.
 - [ ] 7.2 Bug fix
 - [ ] 7.3 Feature
 - [ ] 7.4 Opening a PR
@@ -87,3 +92,5 @@ One job each, under 5 KB, no real dependencies.
 ## Not planned
 
 Cursor-only, or not needed yet: `setup-pstack`, `automate-me`, `make-bot-ui`, `ketchup-video`, `typescript-best-practices`, `automations/benny`. Revisit any of them later.
+
+- Revisit: `principle-type-system-discipline` line 9 points to `typescript-best-practices`. If that skill stays unplanned, decide whether to keep the pointer.
