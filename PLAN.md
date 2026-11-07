@@ -35,7 +35,7 @@ One job each, under 5 KB, no real dependencies.
 
 - [x] 2.1 `unslop`: cuts AI-sounding prose
 - [x] 2.2 `sharpen`: rewrites a prompt to go deeper
-- [ ] 2.3 `correct`, `in-your-own-words`, `bro`
+- [x] 2.3 `correct`, `in-your-own-words`, `bro`
 
 ## Layer 3: Understanding code
 
