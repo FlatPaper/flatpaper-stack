@@ -26,7 +26,7 @@ Single rules, about 1 KB each. They depend on nothing. Everything above reads th
 - [x] 1.8 `principle-make-operations-idempotent`, `principle-separate-before-serializing-shared-state`
 - [x] 1.9 `principle-guard-the-context-window`, `principle-minimize-reader-load`
 - [x] 1.10 `principle-outcome-oriented-execution`, `principle-never-block-on-the-human`
-- [ ] 1.11 `sequence-verifiable-units`, `migrate-callers-then-delete-legacy-apis`
+- [x] 1.11 `principle-sequence-verifiable-units`, `principle-migrate-callers-then-delete-legacy-apis`
 - [ ] 1.12 `experience-first`, `exhaust-the-design-space`, `explain-the-number`
 
 ## Layer 2: Small tools
