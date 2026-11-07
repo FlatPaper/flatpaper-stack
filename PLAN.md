@@ -39,7 +39,7 @@ One job each, under 5 KB, no real dependencies.
 
 ## Layer 3: Understanding code
 
-- [ ] 3.1 `how`: explains how code works
+- [x] 3.1 `how`: explains how code works
 - [ ] 3.2 `why`: finds why code is the way it is (largest tool, 52 KB, take it slow)
 - [ ] 3.3 `teach`: combines `how` and `why`
 
