@@ -88,8 +88,9 @@ One job each, under 5 KB, no real dependencies.
   - [x] Autopilot-full
   - [x] Autopilot-stack
   - [x] Orchestrate
-  - Revisit: `flatpaper-mode` Playbooks list names 3 playbooks that are not imported. Until each lands, matching one opens a missing file. Drop the entries that stay unported.
-  - Revisit: `poteto-mode/scripts/` `check-plan` and `worktree-audit` come in with Multi-phase plan and Worktree cleanup. `watch-pr` and `bootstrap` landed with Babysit. `references/bugbot-triage.md` stays out (Bugbot is dropped).
+  - [x] Multi-phase plan (with `scripts/check-plan.mjs`)
+  - Revisit: `flatpaper-mode` Playbooks list names 2 playbooks that are not imported. Until each lands, matching one opens a missing file. Drop the entries that stay unported.
+  - Revisit: `poteto-mode/scripts/worktree-audit.sh` comes in with Worktree cleanup. `watch-pr` and `bootstrap` landed with Babysit, `check-plan` with Multi-phase plan. `references/bugbot-triage.md` stays out (Bugbot is dropped).
 
 ## Layer 8: Verification
 
@@ -117,5 +118,5 @@ Run after the last brick. Run it again after any big change. Start a new session
 
 Cursor-only, or not needed yet: `setup-pstack`, `automate-me`, `make-bot-ui`, `ketchup-video`, `typescript-best-practices`, `automations/benny`. Revisit any of them later.
 
-- Revisit: `flatpaper-mode` (Before commit trigger), Opening a PR, and Autopilot-full (step 2) name `deslop` from `cursor-team-kit`. It is not imported. Decide: port (from `cursor-team-kit` like 7.1b), swap, or drop.
+- Revisit: `flatpaper-mode` (Before commit trigger), Opening a PR, Autopilot-full (step 2), and Multi-phase plan (PR mechanics) name `deslop` from `cursor-team-kit`. It is not imported. Decide: port (from `cursor-team-kit` like 7.1b), swap, or drop.
 - Revisit: `principle-type-system-discipline` line 9 points to `typescript-best-practices`. If that skill stays unplanned, decide whether to keep the pointer.
