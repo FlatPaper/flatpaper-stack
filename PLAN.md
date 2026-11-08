@@ -84,10 +84,10 @@ One job each, under 5 KB, no real dependencies.
   - [x] Perf issue
   - [x] Hillclimb
   - [x] Babysit (with `scripts/watch-pr/`, `bootstrap.ts`, `package.json`, `bun.lock`; needs Bun)
-  - Revisit: `flatpaper-mode` Playbooks list names 7 playbooks that are not imported. Until each lands, matching one opens a missing file. Drop the entries that stay unported.
-  - Revisit: Opening a PR points at `playbooks/shipping.md` (Size and stacks) and the Autopilot-full and Autopilot-stack owners (Babysit section). Check each when it lands, or trim the mention if it stays unported.
-  - Revisit: Babysit points at `playbooks/shipping.md` (intro, step 9, last line) and `playbooks/autopilot-full.md` step 2 (step 4, the owner's rebase). Check each when it lands.
-  - Revisit: `flatpaper-mode` triggers point at the Shipping playbook.
+  - [x] Shipping
+  - Revisit: `flatpaper-mode` Playbooks list names 6 playbooks that are not imported. Until each lands, matching one opens a missing file. Drop the entries that stay unported.
+  - Revisit: Opening a PR points at the Autopilot-full and Autopilot-stack owners (Babysit section). Check each when it lands, or trim the mention if it stays unported.
+  - Revisit: Babysit points at `playbooks/autopilot-full.md` step 2 (step 4, the owner's rebase). Check it when it lands.
   - Revisit: `poteto-mode/scripts/` `check-plan` and `worktree-audit` come in with Multi-phase plan and Worktree cleanup. `watch-pr` and `bootstrap` landed with Babysit. `references/bugbot-triage.md` stays out (Bugbot is dropped).
 
 ## Layer 8: Verification
