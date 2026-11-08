@@ -101,6 +101,7 @@ One job each, under 5 KB, no real dependencies.
 ## Layer 9: Session helpers
 
 - [x] 9.1 `ketchup`, `recall`
+- [x] 9.1b `ketchup-video`: `ketchup` as a short subtitled slide video. Renders with `ffmpeg`. A terminal can't play video, so it shares the file path plus an Artifact page that plays it.
 - [ ] 9.2 `reflect`, `figure-it-out`
   - Revisit: `flatpaper-mode` names **figure-it-out** (Playbooks section) and `reflect` (Subagents section). The Refactoring playbook also routes large or cross-cutting work to **figure-it-out**, and Orchestrate (intro) contrasts itself with it. Check all four still fit once they land.
 - [ ] 9.3 `poteto-help`
@@ -115,7 +116,7 @@ Run after the last brick. Run it again after any big change. Start a new session
 
 ## Not planned
 
-Cursor-only, or not needed yet: `setup-pstack`, `automate-me`, `make-bot-ui`, `ketchup-video`, `typescript-best-practices`, `automations/benny`. Revisit any of them later.
+Cursor-only, or not needed yet: `setup-pstack`, `automate-me`, `make-bot-ui`, `typescript-best-practices`, `automations/benny`. Revisit any of them later.
 
 - Revisit: `flatpaper-mode` (Before commit trigger), Opening a PR, Autopilot-full (step 2), and Multi-phase plan (PR mechanics) name `deslop` from `cursor-team-kit`. It is not imported. Decide: port (from `cursor-team-kit` like 7.1b), swap, or drop.
 - Revisit: `recall` step 1 routes "turning habits into a durable skill" to `automate-me`. If that skill stays unplanned, decide whether to keep the pointer.
