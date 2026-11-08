@@ -85,9 +85,9 @@ One job each, under 5 KB, no real dependencies.
   - [x] Hillclimb
   - [x] Babysit (with `scripts/watch-pr/`, `bootstrap.ts`, `package.json`, `bun.lock`; needs Bun)
   - [x] Shipping
-  - Revisit: `flatpaper-mode` Playbooks list names 6 playbooks that are not imported. Until each lands, matching one opens a missing file. Drop the entries that stay unported.
+  - [x] Autopilot-full
+  - Revisit: `flatpaper-mode` Playbooks list names 5 playbooks that are not imported. Until each lands, matching one opens a missing file. Drop the entries that stay unported.
   - Revisit: Opening a PR points at the Autopilot-full and Autopilot-stack owners (Babysit section). Check each when it lands, or trim the mention if it stays unported.
-  - Revisit: Babysit points at `playbooks/autopilot-full.md` step 2 (step 4, the owner's rebase). Check it when it lands.
   - Revisit: `poteto-mode/scripts/` `check-plan` and `worktree-audit` come in with Multi-phase plan and Worktree cleanup. `watch-pr` and `bootstrap` landed with Babysit. `references/bugbot-triage.md` stays out (Bugbot is dropped).
 
 ## Layer 8: Verification
@@ -99,6 +99,7 @@ One job each, under 5 KB, no real dependencies.
 ## Layer 9: Session helpers
 
 - [ ] 9.1 `ketchup`, `recall`
+  - Revisit: the Autopilot-full playbook names **ketchup** (step 6 and Reply) for catching the operator up. Check it still fits once it lands.
 - [ ] 9.2 `reflect`, `figure-it-out`
   - Revisit: `flatpaper-mode` names **figure-it-out** (Playbooks section) and `reflect` (Subagents section). The Refactoring playbook also routes large or cross-cutting work to **figure-it-out**. Check all three still fit once they land.
 - [ ] 9.3 `poteto-help`
@@ -115,5 +116,5 @@ Run after the last brick. Run it again after any big change. Start a new session
 
 Cursor-only, or not needed yet: `setup-pstack`, `automate-me`, `make-bot-ui`, `ketchup-video`, `typescript-best-practices`, `automations/benny`. Revisit any of them later.
 
-- Revisit: `flatpaper-mode` (Before commit trigger) names `deslop` from `cursor-team-kit`. It is not imported. Decide: port (from `cursor-team-kit` like 7.1b), swap, or drop.
+- Revisit: `flatpaper-mode` (Before commit trigger), Opening a PR, and Autopilot-full (step 2) name `deslop` from `cursor-team-kit`. It is not imported. Decide: port (from `cursor-team-kit` like 7.1b), swap, or drop.
 - Revisit: `principle-type-system-discipline` line 9 points to `typescript-best-practices`. If that skill stays unplanned, decide whether to keep the pointer.
