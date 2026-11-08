@@ -77,8 +77,9 @@ One job each, under 5 KB, no real dependencies.
   - [x] Pause safely
   - [x] Session pickup
   - [x] Prototype
+  - [x] Runtime forensics
   - Revisit: `benchmark-checklist` (Other perf material section) names the **Perf issue** and **Hillclimb** playbooks. Point each at its file path when it lands, or drop the line if that playbook stays unported.
-  - Revisit: `flatpaper-mode` Playbooks list names 14 playbooks that are not imported. Until each lands, matching one opens a missing file. Drop the entries that stay unported.
+  - Revisit: `flatpaper-mode` Playbooks list names 13 playbooks that are not imported. Until each lands, matching one opens a missing file. Drop the entries that stay unported.
   - Revisit: Opening a PR points at `playbooks/shipping.md` (Size and stacks), `playbooks/babysit.md`, and the Autopilot-full and Autopilot-stack owners (Babysit section). Check each when it lands, or trim the mention if it stays unported.
   - Revisit: `flatpaper-mode` triggers point at the Babysit and Shipping playbooks. The Babysit trigger also says "not Cursor's built-in babysit skill" and "address the bugbot comments". Drop both Cursor phrases when Babysit lands.
   - Revisit: `poteto-mode/scripts/` (watch-pr, check-plan, worktree-audit, bootstrap) comes in with Babysit, Shipping, Multi-phase plan, and Worktree cleanup. `references/bugbot-triage.md` stays out (Bugbot is dropped).
