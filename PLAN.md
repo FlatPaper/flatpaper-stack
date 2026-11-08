@@ -87,7 +87,8 @@ One job each, under 5 KB, no real dependencies.
   - [x] Shipping
   - [x] Autopilot-full
   - [x] Autopilot-stack
-  - Revisit: `flatpaper-mode` Playbooks list names 4 playbooks that are not imported. Until each lands, matching one opens a missing file. Drop the entries that stay unported.
+  - [x] Orchestrate
+  - Revisit: `flatpaper-mode` Playbooks list names 3 playbooks that are not imported. Until each lands, matching one opens a missing file. Drop the entries that stay unported.
   - Revisit: `poteto-mode/scripts/` `check-plan` and `worktree-audit` come in with Multi-phase plan and Worktree cleanup. `watch-pr` and `bootstrap` landed with Babysit. `references/bugbot-triage.md` stays out (Bugbot is dropped).
 
 ## Layer 8: Verification
@@ -101,7 +102,7 @@ One job each, under 5 KB, no real dependencies.
 - [ ] 9.1 `ketchup`, `recall`
   - Revisit: the Autopilot-full playbook names **ketchup** (step 6 and Reply) for catching the operator up. Check it still fits once it lands.
 - [ ] 9.2 `reflect`, `figure-it-out`
-  - Revisit: `flatpaper-mode` names **figure-it-out** (Playbooks section) and `reflect` (Subagents section). The Refactoring playbook also routes large or cross-cutting work to **figure-it-out**. Check all three still fit once they land.
+  - Revisit: `flatpaper-mode` names **figure-it-out** (Playbooks section) and `reflect` (Subagents section). The Refactoring playbook also routes large or cross-cutting work to **figure-it-out**, and Orchestrate (intro) contrasts itself with it. Check all four still fit once they land.
 - [ ] 9.3 `poteto-help`
 
 ## Layer 10: End-to-end check
