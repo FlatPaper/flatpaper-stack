@@ -14,7 +14,7 @@ Every candidate gets the same prompt, so the prompt is the contract.
 
 1. State the artifact each candidate is producing.
 2. Derive the rubric, 3-6 concrete gradeable criteria for what success looks like on *this* task. It is the picker's tool in Phase D. Candidates only see the task.
-3. Pick the runners. Unless the user names models, run two: one `general-purpose` Agent subagent with `model` unset so it runs on the parent model, and one `codex:codex-rescue` agent, which hands the task to Codex, a non-Claude family. If Codex isn't available, run two Claude runners and say so. Spawn more runners when the arena covers multiple design directions. Use the same model N times when the work is generation-bound rather than judgment-sensitive. Pick each subagent's reasoning level for the job, per the Subagents section of `../flatpaper-mode/SKILL.md`.
+3. Pick the runners. Unless the user names models, use the `arena runners` role (default `parent, codex/default`) from the models file, per the Subagents section of `../flatpaper-mode/SKILL.md`. Run one runner per entry. A `parent` or `claude` entry is a `general-purpose` Agent subagent, and a `codex` entry is the `codex:codex-rescue` agent, which hands the task to Codex, a non-Claude family. If an entry's provider isn't available, run that seat on the parent model and say so. Spawn more runners when the arena covers multiple design directions. Use the same model N times when the work is generation-bound rather than judgment-sensitive. Pick each subagent's reasoning level for the job, per the Subagents section of `../flatpaper-mode/SKILL.md`.
 4. Give each candidate its own output location (a git worktree where possible, otherwise `/tmp/arena-<slug>/candidate-<n>/`), per the **separate-before-serializing-shared-state** principle skill (`../principle-separate-before-serializing-shared-state/SKILL.md`).
 
 ## Phase B: Fan out
@@ -25,7 +25,7 @@ If a candidate produces no output, proceed with N-1 and note the dropout.
 
 ## Phase C: Cross-judge
 
-After all Phase B candidates complete, spawn one judge subagent. The judge is never from the parent's family. For a Claude parent, the judge is the `codex:codex-rescue` agent, told to read and score only and never edit a file. If Codex isn't available, skip the judge, pick the base alone in Phase D, and say so. The judge sees the rubric and the candidates by path label, scores each criterion, and recommends a base with rationale. It runs in parallel with your reading in Phase D. Don't spawn it while candidates are still writing.
+After all Phase B candidates complete, spawn one judge subagent. The judge is never from the parent's family. Take the first available entry from another family in the `arena cross-judge pool` role (default `codex/default, claude/opus`), from the models file. A `parent` entry never judges. A `codex` judge is the `codex:codex-rescue` agent, told to read and score only and never edit a file. If no entry from another family is available, skip the judge, pick the base alone in Phase D, and say so. The judge sees the rubric and the candidates by path label, scores each criterion, and recommends a base with rationale. It runs in parallel with your reading in Phase D. Don't spawn it while candidates are still writing.
 
 ## Phase D: Pick a base
 

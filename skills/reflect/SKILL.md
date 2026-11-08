@@ -26,7 +26,7 @@ For each candidate, find the first line with `"type":"user"` (earlier lines are 
 
 One message, three Agent calls, `subagent_type: general-purpose`. Reviewers need every MCP tool to look up the tickets, chat threads, and observability traces the transcript references. They still shouldn't write anything.
 
-Leave `model` unset on every reviewer and the synthesizer, so they run on the parent model, unless the user names one. Pick each subagent's reasoning level for the job, per the Subagents section of `../flatpaper-mode/SKILL.md`.
+The Tooling reviewer uses the `reflect tooling` role, and the Judgment and Divergent reviewers and the synthesizer use the `reflect judgment, divergent, synthesizer` role, both default `parent`, from the models file, per the Subagents section of `../flatpaper-mode/SKILL.md`. They need MCP tools, so a `codex` or `gemini` value falls back to the default. Pick each subagent's reasoning level for the job, per that same section.
 
 | Lens | Prompt template |
 |---|---|
@@ -38,7 +38,7 @@ Pass each template verbatim, substituting the transcript path or digest where ma
 
 ## 3. Synthesize
 
-One Agent call, `subagent_type: general-purpose`, `model` unset. It spot-verifies citations through MCP, so it needs every MCP tool. Pass `references/synthesizer.md` verbatim, with each reviewer's full output inlined where marked. It returns an Accepted / Rejected / Backlog list.
+One Agent call, `subagent_type: general-purpose`, model from the `reflect judgment, divergent, synthesizer` role. It spot-verifies citations through MCP, so it needs every MCP tool. Pass `references/synthesizer.md` verbatim, with each reviewer's full output inlined where marked. It returns an Accepted / Rejected / Backlog list.
 
 ## 4. Structural enforcement check
 

@@ -46,7 +46,7 @@ The default role-to-model mapping is the file shape shown in step 5 below. If `~
 
 **(c) Show the roles and confirm.** Show every role with its value as a table. Mark any value whose provider or model was not detected as needing a choice. Also list each line step 2 dropped, and one line per skipped provider. Ask whether to accept as-is or change specific roles, offering the detected models plus `parent` as the options. Use AskUserQuestion, which takes at most four options per question, so offer the most likely models and let "Other" take the rest.
 
-For panel roles (arena runners, architect runners, interrogate reviewers) the value is a list, and one subagent runs per entry, `parent` included, so the list length sets the count. A panel is for diverse review, so warn when every entry is from one provider. `arena cross-judge pool` is also a list, but Arena runs one judge. It tries only values from a provider other than the parent's (Claude), in list order, so order it by preference. A `parent` value never judges. `trail reviewer` must also be a provider other than Claude, because `show-me-your-work` needs a different model family to review the work. `swarm workers` is the default model for every worker unless a race or comparison assigns another model per arm.
+For panel roles (arena runners, architect runners, interrogate reviewers) the value is a list, and one subagent runs per entry, `parent` included, so the list length sets the count. A panel is for diverse review, so warn when every entry is from one provider. `arena cross-judge pool` is also a list, but Arena runs one judge. It tries only values from a provider other than the parent's (Claude), in list order, so order it by preference. A `parent` value never judges. `trail reviewer` and `pr verifier` must also be a provider other than Claude, because `show-me-your-work` and the Orchestrate playbook need a different model family to check the work. `swarm workers` is the default model for every worker unless a race or comparison assigns another model per arm.
 
 ### 4. Validate
 
@@ -75,6 +75,7 @@ reflect tooling: parent:xhigh
 reflect judgment, divergent, synthesizer: parent:xhigh
 history explorers: claude/sonnet:xhigh
 trail reviewer: codex/default:xhigh
+pr verifier: codex/default:xhigh
 arena runners: parent:xhigh, codex/default:xhigh
 arena cross-judge pool: codex/default:xhigh, claude/opus:xhigh
 swarm workers: parent:xhigh
@@ -82,7 +83,7 @@ architect runners: parent:xhigh, codex/default:xhigh
 interrogate reviewers: parent:xhigh, codex/default:xhigh
 ```
 
-`history explorers` covers the chat-history fan-out in `recall` and `automate-me`. `trail reviewer` is the cross-model reviewer in `show-me-your-work`.
+`history explorers` covers the chat-history fan-out in `recall` and `automate-me`. `trail reviewer` is the cross-model reviewer in `show-me-your-work`. `pr verifier` checks each PR in the Orchestrate playbook.
 
 ### 6. Confirm
 

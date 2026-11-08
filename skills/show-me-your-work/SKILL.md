@@ -64,7 +64,7 @@ Correct the log, not the story. The audit never edits or removes a row, even an 
 
 ## Cross-model review of the trail
 
-Before handing back, spawn a subagent on a different model family from the one that did the work. In Claude Code that is the `codex:codex-rescue` agent from the Codex plugin. If it isn't available, say so in the Attention section. Self-review is not a substitute. The subagent reads the audit trail and the run's transcript, then flags what the user should pay attention to. Not a redo of the work, a scan for what's suboptimal or risky. Pick each subagent's reasoning level for the job, per the Subagents section of `../flatpaper-mode/SKILL.md`.
+Before handing back, spawn a subagent on a different model family from the one that did the work. Use the `trail reviewer` role (default `codex/default`) from the models file, per the Subagents section of `../flatpaper-mode/SKILL.md`. A value from the family that did the work doesn't count. If no reviewer from another family is available, say so in the Attention section. Self-review is not a substitute. The subagent reads the audit trail and the run's transcript, then flags what the user should pay attention to. Not a redo of the work, a scan for what's suboptimal or risky. Pick each subagent's reasoning level for the job, per the Subagents section of `../flatpaper-mode/SKILL.md`.
 
 - Decisions logged with weak or absent evidence.
 - Verification steps skipped or claimed without proof in the transcript.

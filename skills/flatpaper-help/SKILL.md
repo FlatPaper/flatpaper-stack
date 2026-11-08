@@ -24,18 +24,24 @@ Infer the need from the message and the conversation. A named situation, such as
 
 Check the state that changes the answer, and mention it only when it does:
 
+- No `~/.claude/flatpaper-stack/models.md` means `/flatpaper-stack:setup-flatpaper-stack` hasn't run for this user, so every role uses its default model.
 - No `verify-*` skill or other app harness in the project means agents have no scripted way to drive the app. Mention `/flatpaper-stack:create-verification-skill` when the question is about proving a change works.
 - No formal verification skill in the project means no property is checked past what tests reach. Mention `/flatpaper-stack:create-formal-verification-skill` when the question is about a race, an invariant, or another case tests rarely hit. When one exists and the code it covers changed after the commit it records as last in sync, mention `/flatpaper-stack:maintain-formal-verification-skill` if the question touches that code.
+
+When the models file is missing and it matters, ask whether the user wants to pick a model for each role and a reasoning budget now. It matters when the user is new, the question is about setup or cost, or the answer depends on which models run. Ask at most once per chat. If the need is also unclear, ask both questions together. Offer two choices:
+
+- Now: give them `/flatpaper-stack:setup-flatpaper-stack` to type, and answer their question too.
+- Later: answer their question, and add one line saying every role keeps its default model until they run `/flatpaper-stack:setup-flatpaper-stack`.
 
 ## Get set up
 
 1. Install per the [README](../../README.md), then start a new session so the skills load.
-2. If the project has no verification skill yet, offer `/flatpaper-stack:create-verification-skill`, and `/flatpaper-stack:create-formal-verification-skill` for code with races or invariants.
+2. Run [`/flatpaper-stack:setup-flatpaper-stack`](../setup-flatpaper-stack/SKILL.md). It finds the Claude, Codex, and Gemini models this Claude Code can use, asks for a reasoning budget, maps a model to each role, and writes the models file. Skills read the file each time they spawn a subagent. Then it offers once each to generate a verification skill and a formal verification skill for the project, unless the project already has one.
 3. Start a real task with `/flatpaper-stack:flatpaper-mode`, a goal, and a check that can pass or fail.
 
-Installing changes nothing until the user invokes a skill. Only `control-cli`, `control-ui`, `verify-this`, and `deslop` load from the user's words. Offer to word their first prompt with them, per [`references/prompting.md`](references/prompting.md).
+Installing changes nothing until the user invokes a skill. Only `setup-flatpaper-stack`, `control-cli`, `control-ui`, `verify-this`, and `deslop` load from the user's words. Offer to word their first prompt with them, per [`references/prompting.md`](references/prompting.md).
 
-If cost is the worry, say where the tokens go and how to spend fewer. flatpaper-stack spends extra tokens on subagents and review panels. Most subagents leave `model` unset and run on the chat's model, so a cheaper chat model (`/model`) makes them cheaper too. A shorter panel list runs fewer subagents, one for each entry. Save `/flatpaper-stack:flatpaper-mode` for work that needs rigor.
+If cost is the worry, say where the tokens go and how to spend fewer. flatpaper-stack spends extra tokens on subagents and review panels. Rerun `/flatpaper-stack:setup-flatpaper-stack` and pick a smaller budget or cheaper models. A role set to `parent` runs on the chat's model, so a cheaper chat model (`/model`) makes it cheaper too. A shorter panel list runs fewer subagents, one for each entry. Save `/flatpaper-stack:flatpaper-mode` for work that needs rigor.
 
 flatpaper-stack adapts poteto's pstack, which is built for Cursor, to Claude Code. Each command takes a `flatpaper-stack:` prefix, such as `/flatpaper-stack:flatpaper-mode`. Steps that needed a Cursor-only feature, such as Bugbot, cloud agents, or Automations, were dropped or swapped for a Claude Code equivalent.
 
@@ -86,6 +92,7 @@ The default answer is `/flatpaper-stack:flatpaper-mode`, which runs most of the 
 | Turn what a finished task taught into skill edits | [`/flatpaper-stack:reflect`](../reflect/SKILL.md) |
 | Stop agents from repeating the same mistakes in this repo | [`/flatpaper-stack:correct`](../correct/SKILL.md) |
 | Build a page whose buttons wake a Grok Bot over a webhook | [`/make-bot-ui`](../make-bot-ui/SKILL.md) |
+| Pick a model for each role and a reasoning budget | [`/flatpaper-stack:setup-flatpaper-stack`](../setup-flatpaper-stack/SKILL.md) |
 | Find their way around flatpaper-stack | `/flatpaper-stack:flatpaper-help` |
 
 If a skill directory next to this one is missing from the table, read its frontmatter and route by its description. The `principle-*` directories are covered under principles below.
@@ -128,8 +135,9 @@ Principles are one-rule skills that `/flatpaper-stack:flatpaper-mode` reads and 
 |---|---|
 | The mode stopped applying after a few turns | Start each task with `/flatpaper-stack:flatpaper-mode`. |
 | A question got treated as the next step of the last task | Say "new task", or say the turn doesn't need the mode. |
+| A new model choice had no effect | Check that `~/.claude/flatpaper-stack/models.md` has a line for that role. A model named in the chat beats the file. A provider that went missing falls back to the role's default, and the reply says so. |
 | Runs cost more than expected | See the cost paragraph under Get set up. |
-| A skill didn't load on its own | Only `control-cli`, `control-ui`, `verify-this`, and `deslop` load from the user's words. The others load when the user types them or when `/flatpaper-stack:flatpaper-mode` runs them, and it doesn't run every skill. |
+| A skill didn't load on its own | Only `setup-flatpaper-stack`, `control-cli`, `control-ui`, `verify-this`, and `deslop` load from the user's words. The others load when the user types them or when `/flatpaper-stack:flatpaper-mode` runs them, and it doesn't run every skill. |
 | Parallel agents overwrote each other | Give each agent its own worktree (`isolation: "worktree"` on the Agent call). |
 | An overnight run moved but finished nothing | `/loop` needs a check that can pass or fail, not a duration. |
 | The reply claims success from a green build | Ask for the real command, flow, stored value, or profile. That's the prove-it-works principle. |
