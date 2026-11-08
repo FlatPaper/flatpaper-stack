@@ -60,8 +60,7 @@ One job each, under 5 KB, no real dependencies.
 - [x] 6.1 `architect`
 - [x] 6.2 `interrogate`
 - [x] 6.3 `blast-radius`
-- [ ] 6.4 `benchmark-checklist`
-  - Revisit: `principle-explain-the-number` line 14 already links `../benchmark-checklist/SKILL.md`. Check that the link resolves. If the skill is user-only, change "run" to "read and follow".
+- [x] 6.4 `benchmark-checklist`
 
 ## Layer 7: The router
 
@@ -72,7 +71,9 @@ One job each, under 5 KB, no real dependencies.
 - [ ] 7.2 Bug fix
 - [ ] 7.3 Feature
 - [ ] 7.4 Opening a PR
+  - Revisit: `benchmark-checklist` (Report section) says "per the **Opening a PR** playbook". Point it at the playbook's file path.
 - [ ] 7.5 Remaining playbooks, one at a time, chosen when needed
+  - Revisit: `benchmark-checklist` (Other perf material section) names the **Perf issue** and **Hillclimb** playbooks. Point each at its file path when it lands, or drop the line if that playbook stays unported.
 
 ## Layer 8: Verification
 
