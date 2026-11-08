@@ -69,14 +69,13 @@ One job each, under 5 KB, no real dependencies.
 - [x] 7.1 `flatpaper-agent` and `flatpaper-mode` core with one playbook: Investigation. `scripts/` and `references/` stay out until a playbook needs them.
 - [x] 7.1b `control-cli`, `control-ui`, `verify-this`. Source is `cursor-team-kit/skills/` at `2776ddd`, not `pstack/`: Bug fix step 1 and the router's Shipping UI trigger need them. `LICENSE` gains a Cursor credit line.
 - [x] 7.2 Bug fix
-- [ ] 7.3 Feature
-  - Revisit: `flatpaper-mode` (Nontrivial multi-step trigger) points at "Feature step 3" for the throughput checkpoint. Check that step 3 still is the checkpoint.
+- [x] 7.3 Feature
 - [ ] 7.4 Opening a PR
   - Revisit: `benchmark-checklist` (Report section) says "per the **Opening a PR** playbook". Point it at the playbook's file path.
-  - Revisit: Bug fix step 6 says "Run **Opening a PR**". Check that it resolves once the playbook lands.
+  - Revisit: Bug fix step 6 and Feature step 8 say "Run **Opening a PR**". Check that both resolve once the playbook lands.
 - [ ] 7.5 Remaining playbooks, one at a time, chosen when needed
   - Revisit: `benchmark-checklist` (Other perf material section) names the **Perf issue** and **Hillclimb** playbooks. Point each at its file path when it lands, or drop the line if that playbook stays unported.
-  - Revisit: `flatpaper-mode` Playbooks list names 20 playbooks that are not imported. Until each lands, matching one opens a missing file. Drop the entries that stay unported.
+  - Revisit: `flatpaper-mode` Playbooks list names 19 playbooks that are not imported. Until each lands, matching one opens a missing file. Drop the entries that stay unported.
   - Revisit: `flatpaper-mode` triggers point at the Prototype, Babysit, and Shipping playbooks. The Babysit trigger also says "not Cursor's built-in babysit skill" and "address the bugbot comments". Drop both Cursor phrases when Babysit lands.
   - Revisit: `poteto-mode/scripts/` (watch-pr, check-plan, worktree-audit, bootstrap) comes in with Babysit, Shipping, Multi-phase plan, and Worktree cleanup. `references/bugbot-triage.md` stays out (Bugbot is dropped).
 
