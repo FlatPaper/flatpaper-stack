@@ -95,7 +95,7 @@ One job each, under 5 KB, no real dependencies.
 ## Layer 8: Verification
 
 - [x] 8.1 `create-verification-skill`, `maintain-verification-skill`
-- [ ] 8.2 `statechart`
+- [x] 8.2 `statechart`
 - [ ] 8.3 `create-formal-verification-skill`, `maintain-formal-verification-skill`
 
 ## Layer 9: Session helpers
