@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Explore the codebase to answer "how does X work?" questions. Produce architectural explanations at the level of a senior engineer onboarding onto a subsystem, enough to build a working mental model, not so much that it reads like annotated source code.
 
-Every spawn is an Agent subagent with `subagent_type: Explore`, which is read-only. Explorers use the `how explorer` role (default `claude/sonnet`), and every explainer uses the `how explainer` role (default `parent`), from the models file, per the Subagents section of `../flatpaper-mode/SKILL.md`. Pick each subagent's reasoning level for the job, per that same section.
+Every spawn is an Agent subagent with `subagent_type: Explore`, which is read-only. Explorers use the `how explorer` role (default `claude/sonnet`), and every explainer uses the `how explainer` role (default `parent`), from its line in `~/.claude/flatpaper-stack/models.md`, or the default when the file or the line is missing. Pick each subagent's reasoning level for the job, per the Subagents section of `../flatpaper-mode/SKILL.md`.
 
 ## 1. Assess complexity
 

@@ -8,7 +8,7 @@ color: yellow
 
 # Flatpaper mode
 
-Bundled skills live at `../<name>/SKILL.md` from this file, so put this file's absolute path in every `flatpaper-agent` prompt.
+Bundled skills live at `../<name>/SKILL.md` from this file. All of them are user-only: when a trigger below names one, read its SKILL.md before acting on it, and never invoke it. Put this file's absolute path in every `flatpaper-agent` prompt.
 
 ## Non-negotiables
 
@@ -17,24 +17,24 @@ The Principles section below grounds every trigger. In your reply, name each pri
 Remaining triggers:
 
 - Your first message on a task → tell the user, in your own words, their goal, the problem they are solving, and, if the task ships a change, the smallest change you expect to meet it. Don't wait for confirmation. If the evidence rules out the change the user asked for, show it and stop. Restate the user's goal in each subagent brief, and open each PR's `## Why` with it. Open each final report with it too, your final reply included, except after a fully specified one-line edit.
-- Nontrivial change, architecture decision, or "are we sure?" → the **how** skill.
+- Nontrivial change, architecture decision, or "are we sure?" → read `../how/SKILL.md` and follow it.
 - About to `AskUserQuestion` on a "which approach", "how should I", or "what should this do" fork → classify it before you ask. If the answer is a fact you could observe by running something (behavior, timing, layout, output, perf, even whether an eval separates), it is not the human's to answer. Sketch it via the Prototype playbook (`playbooks/prototype.md`) and let the result decide. If the task is a read-only Investigation whose deliverable is a cited answer, stay in it and answer from the evidence rather than building a sketch. Reserve the question for a genuine product or preference call no experiment can settle. Under a full-autonomy grant, decide a call the grant covers, act on it, and report it, with no reply word and no offer. Under the grant, for a call only the operator can make, apply a default, report it with a full explanation, and say in plain words what the operator could tell you to do instead. The operator answers in their own words. Never give a shorthand token to type back. Gates the operator named and the Always-pause list in Autonomy still need the operator.
 - Any code → name the data shape first, and choose its organizing structure per **principle-model-the-domain**.
-- Code crossing a function boundary → the **architect** skill, parallel design exploration before implementing.
-- Parallel fan-out → the **swarm** skill for coverage matrices, races, gauntlets, and exploration partitions. Use **arena** for design or code bakeoffs with base selection and grafting.
-- Contested design → the **interrogate** skill (multi-model adversarial) before shipping.
+- Code crossing a function boundary → read `../architect/SKILL.md` and follow it: parallel design exploration before implementing.
+- Parallel fan-out → read `../swarm/SKILL.md` and follow it for coverage matrices, races, gauntlets, and exploration partitions. For design or code bakeoffs with base selection and grafting, read `../arena/SKILL.md` and follow it instead.
+- Contested design → read `../interrogate/SKILL.md` and follow it (multi-model adversarial) before shipping.
 - Nontrivial multi-step → write the throughput checkpoint (Feature step 3).
-- Any prose surface, your reply to the user included → the **unslop** skill. Write the reply per **Writing the reply**. Agent-facing prose also follows the **skill-creator** skill (Anthropic's skill for authoring SKILL.md files).
-- Docs, RFCs, readmes, PR descriptions, or commit messages → the **technical-writing** skill (`/flatpaper-stack:technical-writing`).
+- Any prose surface, your reply to the user included → read `../unslop/SKILL.md` and follow it. Write the reply per **Writing the reply**. Agent-facing prose also follows the **skill-creator** skill (Anthropic's skill for authoring SKILL.md files).
+- Docs, RFCs, readmes, PR descriptions, or commit messages → read `../technical-writing/SKILL.md` and follow it.
 - Before commit → the **deslop** skill (`/flatpaper-stack:deslop`).
-- Before review → the **no-comments** skill (`/flatpaper-stack:no-comments`).
+- Before review → read `../no-comments/SKILL.md` and follow it.
 - Shipping UI / IDE / CLI → the matching control skill. This plugin bundles `control-cli` (CLIs and TUIs) and `control-ui` (browser / Electron / web UIs). For bug fixes, reproduce first on the same surface yourself. Hand to the user only under the narrow Bug fix step 1 exception.
-- Running a benchmark, measuring perf yourself, or reporting a speedup or regression you measured → the **benchmark-checklist** skill before you report or act on the number.
+- Running a benchmark, measuring perf yourself, or reporting a speedup or regression you measured → read `../benchmark-checklist/SKILL.md` and follow it before you report or act on the number.
 - Any PR-status request ("babysit this", "get it green", "address the review comments", and most often "check on PR X" or "anything outstanding on X") → the **Babysit** playbook (`playbooks/babysit.md`). Never triggered by merely opening a PR. Declare its mode before polling. The playbook's step 1 owns the request-to-mode mapping. Reaching for `drive` inside a phase agent stops that agent finishing its turn.
 - Asked to land or ship a green stack → the **Shipping** playbook (`playbooks/shipping.md`). Green is not safe. Nothing gets armed before an independent per-PR verdict, and only the contiguous verified run from the root lands.
 - A review bot or the agentic security review commented → skeptical posture. They catch real bugs and also file non-issues and nitpicks, so assess each on its merits and dismiss noise with a concrete reason instead of churning code.
 - Broken skill mid-task → fix it in its own PR. Don't block. Don't silently work around it.
-- Long, autonomous, or multi-phase work, or any task the user steps away from to review later ("going to bed", "trust it when i'm back", "/loop until X") → a decision trail via the **show-me-your-work** skill. Commit it when stakes need an auditable record. Keep it local otherwise.
+- Long, autonomous, or multi-phase work, or any task the user steps away from to review later ("going to bed", "trust it when i'm back", "/loop until X") → a decision trail: read `../show-me-your-work/SKILL.md` and follow it. Commit it when stakes need an auditable record. Keep it local otherwise.
 
 ## Principles
 
@@ -133,7 +133,7 @@ Comments follow the same rule as the reply. Write them clean as you go. Keep a c
 
 Open a task list with `TaskCreate` whose first items are the matched playbook's steps, copied in verbatim, before any task-specific todos. A step you choose not to do stays in the list with a one-line `skip: <reason>`. Match the task to a playbook below and open its full steps at `playbooks/<title>.md`, with the title in kebab case, hyphens kept and other punctuation dropped, unless the entry gives its file. Copy its steps in verbatim.
 
-A large or cross-cutting effort (a migration across many call sites, an ambitious multi-part change), or work the user steps away from to trust later, routes to the **figure-it-out** skill even when a narrower playbook like Feature fits. Use **figure-it-out** whenever no bundled playbook fits. It designs a bespoke, rigorous playbook for the task. A standing project-scale program (multi-day, many stacked PRs, a fleet of subagents under one coordinator) routes to **Orchestrate** instead. figure-it-out designs one bespoke run, orchestrate runs the program.
+A large or cross-cutting effort (a migration across many call sites, an ambitious multi-part change), or work the user steps away from to trust later, routes to the **figure-it-out** skill (read `../figure-it-out/SKILL.md` and follow it) even when a narrower playbook like Feature fits. Use **figure-it-out** whenever no bundled playbook fits. It designs a bespoke, rigorous playbook for the task. A standing project-scale program (multi-day, many stacked PRs, a fleet of subagents under one coordinator) routes to **Orchestrate** instead. figure-it-out designs one bespoke run, orchestrate runs the program.
 
 - **Investigation.** Read-only question: how does X work, why was Y built this way, are we sure about Z, should we do X or Y.
 - **Bug fix.** A reported defect to reproduce, root-cause, and fix with runtime evidence.

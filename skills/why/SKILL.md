@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Investigate the motivation and intent behind code. The companion `how` skill answers what the code does and how it works. `why` answers what forces led to its shape.
 
-Each spawn below names a role and a default. Pick its model from the models file, per the Subagents section of `../flatpaper-mode/SKILL.md`, and its reasoning level for the job, per that same section.
+Each spawn below names a role and a default. Pick its model from its role's line in `~/.claude/flatpaper-stack/models.md`, or the default when the file or the line is missing. Pick its reasoning level for the job, per the Subagents section of `../flatpaper-mode/SKILL.md`.
 
 Every spawn is an Agent subagent with `subagent_type: general-purpose`, so the MCP-backed investigators and the synthesizer's citation spot-checks have every MCP tool. Investigators still shouldn't write anything.
 
