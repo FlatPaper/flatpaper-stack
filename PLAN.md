@@ -102,8 +102,7 @@ One job each, under 5 KB, no real dependencies.
 
 - [x] 9.1 `ketchup`, `recall`
 - [x] 9.1b `ketchup-video`: `ketchup` as a short subtitled slide video. Renders with `ffmpeg`. A terminal can't play video, so it shares the file path plus an Artifact page that plays it.
-- [ ] 9.2 `reflect`, `figure-it-out`
-  - Revisit: `flatpaper-mode` names **figure-it-out** (Playbooks section) and `reflect` (Subagents section). The Refactoring playbook also routes large or cross-cutting work to **figure-it-out**, and Orchestrate (intro) contrasts itself with it. Check all four still fit once they land.
+- [x] 9.2 `reflect`, `figure-it-out`
 - [ ] 9.3 `poteto-help`
 
 ## Layer 10: End-to-end check
