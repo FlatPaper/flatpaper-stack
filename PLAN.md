@@ -105,20 +105,31 @@ One job each, under 5 KB, no real dependencies.
 - [x] 9.2 `reflect`, `figure-it-out`
 - [x] 9.3 `flatpaper-help` (upstream `poteto-help`, renamed like the router)
 
-## Layer 10: End-to-end check
+## Layer 10: Fill the gaps, then check end to end
 
-Run after the last brick. Run it again after any big change. Start a new session so every skill loads.
+First, four bricks that earlier bricks already point to. Each goes in the usual way.
 
-- [ ] 10.1 Static check. `claude plugin validate .` passes. No "Revisit" lines remain. A scan finds no Cursor-only names, no slash command without the `flatpaper-stack:` prefix, and no mention of a skill that is not imported.
-- [ ] 10.2 Chains. Run each skill that uses another one. In the transcript, confirm that it read the other skill's file and made no blocked Skill call. Chains so far: `teach` -> `how`, `why`. `no-comments` -> `comment-sicko` -> `how`, `why`. `technical-writing` -> `unslop`.
-- [ ] 10.3 Smoke test. Run every skill once on a real target. Record each result in a table: the skill, pass or fail, and one line on what it did.
+- [ ] 10.1 `deslop`: removes AI-looking code from a branch's diff. Source is `cursor-team-kit/skills/` at `2776ddd`, like 7.1b.
+  - Revisit: `flatpaper-mode` (Before commit trigger), Opening a PR, Autopilot-full (step 2), Multi-phase plan (PR mechanics), and `flatpaper-help` (Not in flatpaper-stack list) name `deslop`. Check each mention once it lands. `flatpaper-help` should then list it as bundled.
+- [ ] 10.2 `automate-me`: drafts a personal mode skill from the user's past chats.
+  - Revisit: `recall` step 1 routes "turning habits into a durable skill" to `automate-me`, and `flatpaper-help` lists it (Pick a skill table, Make flatpaper-stack my own). Check both once it lands.
+- [ ] 10.3 `typescript-best-practices`: rules for any `.ts` or `.tsx` work.
+  - Revisit: `principle-type-system-discipline` line 9 and the `flatpaper-help` Pick a skill table point to it. Check both once it lands.
+- [ ] 10.4 `setup-flatpaper-stack` (upstream `setup-pstack`, renamed like the router). Import byte for byte, then rewrite for Claude Code. It does two things:
+  1. Asks how much the user wants to spend.
+  2. Picks a model and reasoning level for each role from the models this Claude Code actually has: Claude (`haiku`, `sonnet`, `opus`, `fable`), GPT through the Codex plugin (`codex:codex-rescue`) when installed, and Gemini when a Gemini plugin or MCP is installed. Detect, never require: a missing provider is skipped with one line, and no step asks for an API key.
+
+  Decide in the brick where the choices are saved, since Claude Code has no always-applied rule file like Cursor's, and how skills read them.
+  - Revisit: `setup-pstack` mentions were removed from `flatpaper-help` (Get set up, model-rule check, cost, Pick a skill, Fix a run). Add them back as `setup-flatpaper-stack`.
+
+Then the check. Run it after the last brick, and again after any big change. Start a new session so every skill loads.
+
+- [ ] 10.5 Static check. `claude plugin validate .` passes. No "Revisit" lines remain. A scan finds no Cursor-only names, no slash command without the `flatpaper-stack:` prefix, and no mention of a skill that is not imported.
+- [ ] 10.6 Chains. Run each skill that uses another one. In the transcript, confirm that it read the other skill's file and made no blocked Skill call. Chains so far: `teach` -> `how`, `why`. `no-comments` -> `comment-sicko` -> `how`, `why`. `technical-writing` -> `unslop`.
+- [ ] 10.7 Smoke test. Run every skill once on a real target. Record each result in a table: the skill, pass or fail, and one line on what it did.
 
 ## Not planned
 
-Cursor-only, or not needed yet: `setup-pstack`, `automate-me`, `make-bot-ui`, `typescript-best-practices`, `automations/benny`, and `docs/guide/` (the pstack user guide; `flatpaper-help` dropped its links to it). Revisit any of them later.
+Cursor-only, or not needed yet: `make-bot-ui`, `automations/benny`, and `docs/guide/` (the pstack user guide; `flatpaper-help` dropped its links to it). Revisit any of them later.
 
-- Revisit: `flatpaper-mode` (Before commit trigger), Opening a PR, Autopilot-full (step 2), and Multi-phase plan (PR mechanics) name `deslop` from `cursor-team-kit`, and so does `flatpaper-help` (Not in flatpaper-stack list). It is not imported. Decide: port (from `cursor-team-kit` like 7.1b), swap, or drop.
-- Revisit: `recall` step 1 routes "turning habits into a durable skill" to `automate-me`, and `flatpaper-help` lists it (Pick a skill table, Make flatpaper-stack my own). If that skill stays unplanned, decide whether to keep the pointer.
-- Revisit: `principle-type-system-discipline` line 9 and the `flatpaper-help` Pick a skill table point to `typescript-best-practices`. If that skill stays unplanned, decide whether to keep the pointer.
 - Revisit: `flatpaper-help` Pick a skill table lists `make-bot-ui` (a Grok Bot webhook page, Cursor-only). Decide: drop the row or port.
-- Revisit: `setup-pstack` mentions were removed from `flatpaper-help` (Get set up, model-rule check, cost, Pick a skill, Fix a run). When a `setup-flatpaper-stack` skill owns model config, add it back there.
