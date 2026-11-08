@@ -71,7 +71,7 @@ One job each, under 5 KB, no real dependencies.
 - [x] 7.2 Bug fix
 - [x] 7.3 Feature
 - [x] 7.4 Opening a PR
-- [ ] 7.5 Remaining playbooks, one at a time, chosen when needed
+- [x] 7.5 Remaining playbooks, one at a time, chosen when needed
   - [x] Refactoring
   - [x] Authoring a skill
   - [x] Pause safely
@@ -90,7 +90,7 @@ One job each, under 5 KB, no real dependencies.
   - [x] Orchestrate
   - [x] Multi-phase plan (with `scripts/check-plan.mjs`)
   - [x] Worktree cleanup (with `scripts/worktree-audit.sh`; transcript scan adapted for Claude Code)
-  - Revisit: `flatpaper-mode` Playbooks list names 1 playbook that is not imported. Until each lands, matching one opens a missing file. Drop the entries that stay unported.
+  - [x] Visual parity
 
 ## Layer 8: Verification
 
