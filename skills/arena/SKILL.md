@@ -14,7 +14,7 @@ Every candidate gets the same prompt, so the prompt is the contract.
 
 1. State the artifact each candidate is producing.
 2. Derive the rubric, 3-6 concrete gradeable criteria for what success looks like on *this* task. It is the picker's tool in Phase D. Candidates only see the task.
-3. Pick the runners. Unless the user names models, run two: one `general-purpose` Agent subagent with `model` unset so it runs on the parent model, and one `codex:codex-rescue` agent, which hands the task to Codex, a non-Claude family. If Codex isn't available, run two Claude runners and say so. Spawn more runners when the arena covers multiple design directions. Use the same model N times when the work is generation-bound rather than judgment-sensitive. Pick each subagent's reasoning level for the job, per the Subagents section of the **poteto-mode** skill.
+3. Pick the runners. Unless the user names models, run two: one `general-purpose` Agent subagent with `model` unset so it runs on the parent model, and one `codex:codex-rescue` agent, which hands the task to Codex, a non-Claude family. If Codex isn't available, run two Claude runners and say so. Spawn more runners when the arena covers multiple design directions. Use the same model N times when the work is generation-bound rather than judgment-sensitive. Pick each subagent's reasoning level for the job, per the Subagents section of `../flatpaper-mode/SKILL.md`.
 4. Give each candidate its own output location (a git worktree where possible, otherwise `/tmp/arena-<slug>/candidate-<n>/`), per the **separate-before-serializing-shared-state** principle skill (`../principle-separate-before-serializing-shared-state/SKILL.md`).
 
 ## Phase B: Fan out

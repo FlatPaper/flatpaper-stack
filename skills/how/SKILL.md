@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Explore the codebase to answer "how does X work?" questions. Produce architectural explanations at the level of a senior engineer onboarding onto a subsystem, enough to build a working mental model, not so much that it reads like annotated source code.
 
-Every spawn is an Agent subagent with `subagent_type: Explore`, which is read-only. Explorers set `model: sonnet`, and every explainer leaves `model` unset so it inherits the parent's model. Pick each subagent's reasoning level for the job, per the Subagents section of the **poteto-mode** skill.
+Every spawn is an Agent subagent with `subagent_type: Explore`, which is read-only. Explorers set `model: sonnet`, and every explainer leaves `model` unset so it inherits the parent's model. Pick each subagent's reasoning level for the job, per the Subagents section of `../flatpaper-mode/SKILL.md`.
 
 ## 1. Assess complexity
 

@@ -64,16 +64,20 @@ One job each, under 5 KB, no real dependencies.
 
 ## Layer 7: The router
 
-`poteto-mode` is 107 KB. It goes in small.
+`flatpaper-mode` (upstream `poteto-mode`) is 107 KB. It goes in small. Upstream `poteto-mode` and `poteto-agent` are renamed `flatpaper-mode` and `flatpaper-agent`.
 
-- [ ] 7.1 `poteto-agent` and `poteto-mode` core with one playbook: Investigation
-  - Revisit: `how` line 11, `why` line 11, `no-comments` step 1, `show-me-your-work` (Cross-model review section), `swarm` (Phase A step 3), and `arena` (Phase A step 3) say "per the Subagents section of the **poteto-mode** skill". `poteto-mode` is user-only upstream, so point each one at the file path. Check that a Subagents section survives the port.
+- [x] 7.1 `flatpaper-agent` and `flatpaper-mode` core with one playbook: Investigation. `scripts/` and `references/` stay out until a playbook needs them.
 - [ ] 7.2 Bug fix
+  - Revisit: `flatpaper-mode` (control skill trigger) names "the narrow Bug fix step 1 exception". Check that step 1 still has it.
 - [ ] 7.3 Feature
+  - Revisit: `flatpaper-mode` (Nontrivial multi-step trigger) points at "Feature step 3" for the throughput checkpoint. Check that step 3 still is the checkpoint.
 - [ ] 7.4 Opening a PR
   - Revisit: `benchmark-checklist` (Report section) says "per the **Opening a PR** playbook". Point it at the playbook's file path.
 - [ ] 7.5 Remaining playbooks, one at a time, chosen when needed
   - Revisit: `benchmark-checklist` (Other perf material section) names the **Perf issue** and **Hillclimb** playbooks. Point each at its file path when it lands, or drop the line if that playbook stays unported.
+  - Revisit: `flatpaper-mode` Playbooks list names 21 playbooks that are not imported. Until each lands, matching one opens a missing file. Drop the entries that stay unported.
+  - Revisit: `flatpaper-mode` triggers point at the Prototype, Babysit, and Shipping playbooks. The Babysit trigger also says "not Cursor's built-in babysit skill" and "address the bugbot comments". Drop both Cursor phrases when Babysit lands.
+  - Revisit: `poteto-mode/scripts/` (watch-pr, check-plan, worktree-audit, bootstrap) comes in with Babysit, Shipping, Multi-phase plan, and Worktree cleanup. `references/bugbot-triage.md` stays out (Bugbot is dropped).
 
 ## Layer 8: Verification
 
@@ -85,6 +89,7 @@ One job each, under 5 KB, no real dependencies.
 
 - [ ] 9.1 `ketchup`, `recall`
 - [ ] 9.2 `reflect`, `figure-it-out`
+  - Revisit: `flatpaper-mode` names **figure-it-out** (Playbooks section) and `reflect` (Subagents section). Check both still fit once they land.
 - [ ] 9.3 `poteto-help`
 
 ## Layer 10: End-to-end check
@@ -99,4 +104,5 @@ Run after the last brick. Run it again after any big change. Start a new session
 
 Cursor-only, or not needed yet: `setup-pstack`, `automate-me`, `make-bot-ui`, `ketchup-video`, `typescript-best-practices`, `automations/benny`. Revisit any of them later.
 
+- Revisit: `flatpaper-mode` (Before commit and Shipping UI triggers) names `deslop`, `control-cli`, and `control-ui` from `cursor-team-kit`. None exist in Claude Code. Decide: port, swap, or drop.
 - Revisit: `principle-type-system-discipline` line 9 points to `typescript-best-practices`. If that skill stays unplanned, decide whether to keep the pointer.
