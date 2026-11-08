@@ -109,8 +109,7 @@ One job each, under 5 KB, no real dependencies.
 
 First, four bricks that earlier bricks already point to. Each goes in the usual way.
 
-- [ ] 10.1 `deslop`: removes AI-looking code from a branch's diff. Source is `cursor-team-kit/skills/` at `2776ddd`, like 7.1b.
-  - Revisit: `flatpaper-mode` (Before commit trigger), Opening a PR, Autopilot-full (step 2), Multi-phase plan (PR mechanics), and `flatpaper-help` (Not in flatpaper-stack list) name `deslop`. Check each mention once it lands. `flatpaper-help` should then list it as bundled.
+- [x] 10.1 `deslop`: removes AI-looking code from a branch's diff. Source is `cursor-team-kit/skills/` at `2776ddd`, like 7.1b.
 - [ ] 10.2 `automate-me`: drafts a personal mode skill from the user's past chats.
   - Revisit: `recall` step 1 routes "turning habits into a durable skill" to `automate-me`, and `flatpaper-help` lists it (Pick a skill table, Make flatpaper-stack my own). Check both once it lands.
 - [ ] 10.3 `typescript-best-practices`: rules for any `.ts` or `.tsx` work.

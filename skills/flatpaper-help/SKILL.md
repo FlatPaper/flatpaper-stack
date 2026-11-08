@@ -33,7 +33,7 @@ Check the state that changes the answer, and mention it only when it does:
 2. If the project has no verification skill yet, offer `/flatpaper-stack:create-verification-skill`, and `/flatpaper-stack:create-formal-verification-skill` for code with races or invariants.
 3. Start a real task with `/flatpaper-stack:flatpaper-mode`, a goal, and a check that can pass or fail.
 
-Installing changes nothing until the user invokes a skill. Only `control-cli`, `control-ui`, and `verify-this` load from the user's words. Offer to word their first prompt with them, per [`references/prompting.md`](references/prompting.md).
+Installing changes nothing until the user invokes a skill. Only `control-cli`, `control-ui`, `verify-this`, and `deslop` load from the user's words. Offer to word their first prompt with them, per [`references/prompting.md`](references/prompting.md).
 
 If cost is the worry, say where the tokens go and how to spend fewer. flatpaper-stack spends extra tokens on subagents and review panels. Most subagents leave `model` unset and run on the chat's model, so a cheaper chat model (`/model`) makes them cheaper too. A shorter panel list runs fewer subagents, one for each entry. Save `/flatpaper-stack:flatpaper-mode` for work that needs rigor.
 
@@ -69,6 +69,7 @@ The default answer is `/flatpaper-stack:flatpaper-mode`, which runs most of the 
 | Have different models review a diff and try to break it | [`/flatpaper-stack:interrogate`](../interrogate/SKILL.md) |
 | Fix a bug test-first when a cheap local test exists | [`/flatpaper-stack:tdd`](../tdd/SKILL.md) |
 | Apply TypeScript rules to `.ts` or `.tsx` work | [`/typescript-best-practices`](../typescript-best-practices/SKILL.md) |
+| Strip AI-looking code (extra comments, needless try/catch, `any` casts, deep nesting) from the branch's diff before commit | [`/flatpaper-stack:deslop`](../deslop/SKILL.md) |
 | Strip comments before review, using a reviewer that didn't write them | [`/flatpaper-stack:no-comments`](../no-comments/SKILL.md) |
 | Clean AI tells out of prose | [`/flatpaper-stack:unslop`](../unslop/SKILL.md) |
 | Write docs, an RFC, a README, a PR description, or a commit message to a standard | [`/flatpaper-stack:technical-writing`](../technical-writing/SKILL.md) |
@@ -94,13 +95,13 @@ Close calls:
 - `/flatpaper-stack:how` explains what the code does. `/flatpaper-stack:why` explains the reasons. `/flatpaper-stack:teach` runs one or both and explains the result plainly.
 - `/flatpaper-stack:arena` gives every worker the same brief and merges the best parts. `/flatpaper-stack:swarm` splits work into slices or a race and returns one report.
 - `/flatpaper-stack:architect` implements right after it settles the design. Add "with checkpoint" to review the design before it writes code.
+- `/flatpaper-stack:deslop` sweeps the diff for five kinds of AI slop in one quick pass. `/flatpaper-stack:no-comments` goes deep on comments only, using a reviewer that didn't write them.
 - `/flatpaper-stack:interrogate` reviews the diff. `/flatpaper-stack:blast-radius` looks for breakage outside the diff and proves the one fact that makes the change safe.
 - `/flatpaper-stack:recall` rebuilds context across recent chats. `/flatpaper-stack:ketchup` covers only this chat since the user's last message. Resuming one specific chat or branch is the Session pickup playbook.
 - `/flatpaper-stack:figure-it-out` designs one rigorous run. The Orchestrate playbook runs a program that spans days and many PRs. The Autonomous run playbook drives one task to a finish condition.
 
 Not in flatpaper-stack:
 
-- `/deslop` ships in Cursor's `cursor-team-kit` plugin. `control-cli`, `control-ui`, and `verify-this` come from there too, and are bundled here.
 - `/loop` is a Claude Code built-in. Skill authoring uses the **skill-creator** skill (Anthropic's skill for authoring SKILL.md files).
 - flatpaper-stack has no `/orchestrate` skill. Orchestrate is a `/flatpaper-stack:flatpaper-mode` playbook. If the slash menu shows `/orchestrate`, another plugin provides it.
 
@@ -128,7 +129,7 @@ Principles are one-rule skills that `/flatpaper-stack:flatpaper-mode` reads and 
 | The mode stopped applying after a few turns | Start each task with `/flatpaper-stack:flatpaper-mode`. |
 | A question got treated as the next step of the last task | Say "new task", or say the turn doesn't need the mode. |
 | Runs cost more than expected | See the cost paragraph under Get set up. |
-| A skill didn't load on its own | Only `control-cli`, `control-ui`, and `verify-this` load from the user's words. The others load when the user types them or when `/flatpaper-stack:flatpaper-mode` runs them, and it doesn't run every skill. |
+| A skill didn't load on its own | Only `control-cli`, `control-ui`, `verify-this`, and `deslop` load from the user's words. The others load when the user types them or when `/flatpaper-stack:flatpaper-mode` runs them, and it doesn't run every skill. |
 | Parallel agents overwrote each other | Give each agent its own worktree (`isolation: "worktree"` on the Agent call). |
 | An overnight run moved but finished nothing | `/loop` needs a check that can pass or fail, not a duration. |
 | The reply claims success from a green build | Ask for the real command, flow, stored value, or profile. That's the prove-it-works principle. |

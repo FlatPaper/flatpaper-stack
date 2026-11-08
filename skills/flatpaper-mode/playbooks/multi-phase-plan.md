@@ -57,7 +57,7 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 - [ ] Use `gh` for every PR operation. Never require `gt`.
 - [ ] Open the PR ready, never draft, per **Opening a PR**. Use `gh pr create --base <base-branch>`. A stack child targets its parent branch.
 - [ ] Run the repo's lint and typecheck once before the PR-facing push. Push with hooks on.
-- [ ] Run `/deslop` before each commit and `/flatpaper-stack:no-comments` before review.
+- [ ] Run `/flatpaper-stack:deslop` before each commit and `/flatpaper-stack:no-comments` before review.
 - [ ] Triage every review-bot and security-reviewer comment skeptically, per step 8 of `<plugin>/skills/flatpaper-mode/playbooks/babysit.md`.
 - [ ] Rebase onto current trunk before the code-ready report and babysit. Keep that merge base in fix rounds. Rebase again only at merge prep, on a `git merge-tree` conflict with trunk, on a CI failure that comes from a change on trunk, or when a known concurrent change to the same files lands.
 
