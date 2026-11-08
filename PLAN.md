@@ -1,6 +1,6 @@
 # Plan: build pstack brick by brick
 
-Source: [cursor/plugins/pstack](https://github.com/cursor/plugins/tree/2776ddd/pstack) at commit `2776ddd`. Every brick is copied from there.
+Source: [cursor/plugins/pstack](https://github.com/cursor/plugins/tree/2776ddd/pstack) at commit `2776ddd`. Every brick is copied from there, except 7.1b, which comes from [cursor-team-kit](https://github.com/cursor/plugins/tree/2776ddd/cursor-team-kit) at the same commit.
 
 ## How each brick goes in
 
@@ -67,6 +67,7 @@ One job each, under 5 KB, no real dependencies.
 `flatpaper-mode` (upstream `poteto-mode`) is 107 KB. It goes in small. Upstream `poteto-mode` and `poteto-agent` are renamed `flatpaper-mode` and `flatpaper-agent`.
 
 - [x] 7.1 `flatpaper-agent` and `flatpaper-mode` core with one playbook: Investigation. `scripts/` and `references/` stay out until a playbook needs them.
+- [x] 7.1b `control-cli`, `control-ui`, `verify-this`. Source is `cursor-team-kit/skills/` at `2776ddd`, not `pstack/`: Bug fix step 1 and the router's Shipping UI trigger need them. `LICENSE` gains a Cursor credit line.
 - [ ] 7.2 Bug fix
   - Revisit: `flatpaper-mode` (control skill trigger) names "the narrow Bug fix step 1 exception". Check that step 1 still has it.
 - [ ] 7.3 Feature
@@ -104,5 +105,5 @@ Run after the last brick. Run it again after any big change. Start a new session
 
 Cursor-only, or not needed yet: `setup-pstack`, `automate-me`, `make-bot-ui`, `ketchup-video`, `typescript-best-practices`, `automations/benny`. Revisit any of them later.
 
-- Revisit: `flatpaper-mode` (Before commit and Shipping UI triggers) names `deslop`, `control-cli`, and `control-ui` from `cursor-team-kit`. None exist in Claude Code. Decide: port, swap, or drop.
+- Revisit: `flatpaper-mode` (Before commit trigger) names `deslop` from `cursor-team-kit`. It is not imported. Decide: port (from `cursor-team-kit` like 7.1b), swap, or drop.
 - Revisit: `principle-type-system-discipline` line 9 points to `typescript-best-practices`. If that skill stays unplanned, decide whether to keep the pointer.
