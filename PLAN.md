@@ -111,8 +111,7 @@ First, four bricks that earlier bricks already point to. Each goes in the usual 
 
 - [x] 10.1 `deslop`: removes AI-looking code from a branch's diff. Source is `cursor-team-kit/skills/` at `2776ddd`, like 7.1b.
 - [x] 10.2 `automate-me`: drafts a personal mode skill from the user's past chats.
-- [ ] 10.3 `typescript-best-practices`: rules for any `.ts` or `.tsx` work.
-  - Revisit: `principle-type-system-discipline` line 9 and the `flatpaper-help` Pick a skill table point to it. Check both once it lands.
+- [x] 10.3 `typescript-best-practices`: rules for any `.ts` or `.tsx` work.
 - [ ] 10.4 `setup-flatpaper-stack` (upstream `setup-pstack`, renamed like the router). Import byte for byte, then rewrite for Claude Code. It does two things:
   1. Asks how much the user wants to spend.
   2. Picks a model and reasoning level for each role from the models this Claude Code actually has: Claude (`haiku`, `sonnet`, `opus`, `fable`), GPT through the Codex plugin (`codex:codex-rescue`) when installed, and Gemini when a Gemini plugin or MCP is installed. Detect, never require: a missing provider is skipped with one line, and no step asks for an API key.
@@ -123,7 +122,7 @@ First, four bricks that earlier bricks already point to. Each goes in the usual 
 Then the check. Run it after the last brick, and again after any big change. Start a new session so every skill loads.
 
 - [ ] 10.5 Static check. `claude plugin validate .` passes. No "Revisit" lines remain. A scan finds no Cursor-only names, no slash command without the `flatpaper-stack:` prefix, and no mention of a skill that is not imported.
-- [ ] 10.6 Chains. Run each skill that uses another one. In the transcript, confirm that it read the other skill's file and made no blocked Skill call. Chains so far: `teach` -> `how`, `why`. `no-comments` -> `comment-sicko` -> `how`, `why`. `technical-writing` -> `unslop`.
+- [ ] 10.6 Chains. Run each skill that uses another one. In the transcript, confirm that it read the other skill's file and made no blocked Skill call. Chains so far: `teach` -> `how`, `why`. `no-comments` -> `comment-sicko` -> `how`, `why`. `technical-writing` -> `unslop`. `typescript-best-practices` -> `principle-type-system-discipline`.
 - [ ] 10.7 Smoke test. Run every skill once on a real target. Record each result in a table: the skill, pass or fail, and one line on what it did.
 
 ## Not planned

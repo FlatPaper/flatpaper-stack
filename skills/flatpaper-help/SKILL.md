@@ -68,7 +68,7 @@ The default answer is `/flatpaper-stack:flatpaper-mode`, which runs most of the 
 | Run parallel checks over slices, or race workers, as parallel subagents | [`/flatpaper-stack:swarm`](../swarm/SKILL.md) |
 | Have different models review a diff and try to break it | [`/flatpaper-stack:interrogate`](../interrogate/SKILL.md) |
 | Fix a bug test-first when a cheap local test exists | [`/flatpaper-stack:tdd`](../tdd/SKILL.md) |
-| Apply TypeScript rules to `.ts` or `.tsx` work | [`/typescript-best-practices`](../typescript-best-practices/SKILL.md) |
+| Apply TypeScript rules to `.ts` or `.tsx` work | [`/flatpaper-stack:typescript-best-practices`](../typescript-best-practices/SKILL.md) |
 | Strip AI-looking code (extra comments, needless try/catch, `any` casts, deep nesting) from the branch's diff before commit | [`/flatpaper-stack:deslop`](../deslop/SKILL.md) |
 | Strip comments before review, using a reviewer that didn't write them | [`/flatpaper-stack:no-comments`](../no-comments/SKILL.md) |
 | Clean AI tells out of prose | [`/flatpaper-stack:unslop`](../unslop/SKILL.md) |
