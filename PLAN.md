@@ -89,8 +89,8 @@ One job each, under 5 KB, no real dependencies.
   - [x] Autopilot-stack
   - [x] Orchestrate
   - [x] Multi-phase plan (with `scripts/check-plan.mjs`)
-  - Revisit: `flatpaper-mode` Playbooks list names 2 playbooks that are not imported. Until each lands, matching one opens a missing file. Drop the entries that stay unported.
-  - Revisit: `poteto-mode/scripts/worktree-audit.sh` comes in with Worktree cleanup. `watch-pr` and `bootstrap` landed with Babysit, `check-plan` with Multi-phase plan. `references/bugbot-triage.md` stays out (Bugbot is dropped).
+  - [x] Worktree cleanup (with `scripts/worktree-audit.sh`; transcript scan adapted for Claude Code)
+  - Revisit: `flatpaper-mode` Playbooks list names 1 playbook that is not imported. Until each lands, matching one opens a missing file. Drop the entries that stay unported.
 
 ## Layer 8: Verification
 
