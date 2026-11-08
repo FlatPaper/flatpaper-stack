@@ -112,11 +112,12 @@ First, four bricks that earlier bricks already point to. Each goes in the usual 
 - [x] 10.1 `deslop`: removes AI-looking code from a branch's diff. Source is `cursor-team-kit/skills/` at `2776ddd`, like 7.1b.
 - [x] 10.2 `automate-me`: drafts a personal mode skill from the user's past chats.
 - [x] 10.3 `typescript-best-practices`: rules for any `.ts` or `.tsx` work.
-- [ ] 10.4 `setup-flatpaper-stack` (upstream `setup-pstack`, renamed like the router). Import byte for byte, then rewrite for Claude Code. It does two things:
+- [x] 10.4 `setup-flatpaper-stack` (upstream `setup-pstack`, renamed like the router). Import byte for byte, then rewrite for Claude Code. It does two things:
   1. Asks how much the user wants to spend.
   2. Picks a model and reasoning level for each role from the models this Claude Code actually has: Claude (`haiku`, `sonnet`, `opus`, `fable`), GPT through the Codex plugin (`codex:codex-rescue`) when installed, and Gemini when a Gemini plugin or MCP is installed. Detect, never require: a missing provider is skipped with one line, and no step asks for an API key.
 
-  Decide in the brick where the choices are saved, since Claude Code has no always-applied rule file like Cursor's, and how skills read them.
+  Decided: choices go in `~/.claude/flatpaper-stack/models.md`, one `role: provider/model:effort` line per role (`parent:<effort>` leaves `model` unset). Skills read it by path, as upstream skills read `pstack-models.mdc`. No `CLAUDE.md` import.
+- [ ] 10.4b Wire every model mention to the models file. Each skill that names a model reads its role line, else keeps today's default: "Use the `<role>` line in `~/.claude/flatpaper-stack/models.md`. If the file or line is missing, use `<default>`." Readers: `how`, `why`, `reflect`, `arena`, `architect`, `swarm`, `interrogate`, `recall`, `automate-me`, `show-me-your-work`, `flatpaper-mode` (Subagents section), `flatpaper-help`. Family rules stay: the `show-me-your-work` reviewer and the arena judge must be a different family from the parent. A few files per step, each shown as before -> after.
   - Revisit: `setup-pstack` mentions were removed from `flatpaper-help` (Get set up, model-rule check, cost, Pick a skill, Fix a run). Add them back as `setup-flatpaper-stack`.
 
 Then the check. Run it after the last brick, and again after any big change. Start a new session so every skill loads.
