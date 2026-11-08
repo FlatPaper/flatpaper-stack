@@ -91,7 +91,6 @@ The default answer is `/flatpaper-stack:flatpaper-mode`, which runs most of the 
 | Turn their own working habits into a personal mode skill | [`/flatpaper-stack:automate-me`](../automate-me/SKILL.md) |
 | Turn what a finished task taught into skill edits | [`/flatpaper-stack:reflect`](../reflect/SKILL.md) |
 | Stop agents from repeating the same mistakes in this repo | [`/flatpaper-stack:correct`](../correct/SKILL.md) |
-| Build a page whose buttons wake a Grok Bot over a webhook | [`/make-bot-ui`](../make-bot-ui/SKILL.md) |
 | Pick a model for each role and a reasoning budget | [`/flatpaper-stack:setup-flatpaper-stack`](../setup-flatpaper-stack/SKILL.md) |
 | Find their way around flatpaper-stack | `/flatpaper-stack:flatpaper-help` |
 

@@ -121,7 +121,7 @@ First, four bricks that earlier bricks already point to. Each goes in the usual 
 
 Then the check. Run it after the last brick, and again after any big change. Start a new session so every skill loads.
 
-- [ ] 10.5 Static check. `claude plugin validate .` passes. No "Revisit" lines remain. A scan finds no Cursor-only names, no slash command without the `flatpaper-stack:` prefix, and no mention of a skill that is not imported.
+- [x] 10.5 Static check. `claude plugin validate .` passes. No "Revisit" lines remain. A scan finds no Cursor-only names, no slash command without the `flatpaper-stack:` prefix, and no mention of a skill that is not imported.
 - [ ] 10.6 Chains. Run each skill that uses another one. In the transcript, confirm that it read the other skill's file and made no blocked Skill call. Chains so far: `teach` -> `how`, `why`. `no-comments` -> `comment-sicko` -> `how`, `why`. `technical-writing` -> `unslop`. `typescript-best-practices` -> `principle-type-system-discipline`.
 - [ ] 10.7 Smoke test. Run every skill once on a real target. Record each result in a table: the skill, pass or fail, and one line on what it did.
 
@@ -129,4 +129,3 @@ Then the check. Run it after the last brick, and again after any big change. Sta
 
 Cursor-only, or not needed yet: `make-bot-ui`, `automations/benny`, and `docs/guide/` (the pstack user guide; `flatpaper-help` dropped its links to it). Revisit any of them later.
 
-- Revisit: `flatpaper-help` Pick a skill table lists `make-bot-ui` (a Grok Bot webhook page, Cursor-only). Decide: drop the row or port.
