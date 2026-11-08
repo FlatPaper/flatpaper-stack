@@ -82,7 +82,7 @@ The default answer is `/flatpaper-stack:flatpaper-mode`, which runs most of the 
 | Vet a performance number before reporting or acting on it | [`/flatpaper-stack:benchmark-checklist`](../benchmark-checklist/SKILL.md) |
 | Run a large or cross-cutting change, or one to review after stepping away | [`/flatpaper-stack:figure-it-out`](../figure-it-out/SKILL.md) |
 | Keep a decision log during a run, and review it afterward | [`/flatpaper-stack:show-me-your-work`](../show-me-your-work/SKILL.md) |
-| Turn their own working habits into a personal mode skill | [`/automate-me`](../automate-me/SKILL.md) |
+| Turn their own working habits into a personal mode skill | [`/flatpaper-stack:automate-me`](../automate-me/SKILL.md) |
 | Turn what a finished task taught into skill edits | [`/flatpaper-stack:reflect`](../reflect/SKILL.md) |
 | Stop agents from repeating the same mistakes in this repo | [`/flatpaper-stack:correct`](../correct/SKILL.md) |
 | Build a page whose buttons wake a Grok Bot over a webhook | [`/make-bot-ui`](../make-bot-ui/SKILL.md) |
@@ -138,7 +138,7 @@ For a run that drifts, [`references/prompting.md`](references/prompting.md) has 
 
 ## Make flatpaper-stack my own
 
-- [`/automate-me`](../automate-me/SKILL.md) drafts a personal mode skill from the user's own history, to use alongside `/flatpaper-stack:flatpaper-mode`.
+- [`/flatpaper-stack:automate-me`](../automate-me/SKILL.md) drafts a personal mode skill from the user's own history, to use alongside `/flatpaper-stack:flatpaper-mode`.
 - [`/flatpaper-stack:reflect`](../reflect/SKILL.md) after a session turns its lessons into skill edits the user approves.
 - `/flatpaper-stack:flatpaper-mode write a skill for <workflow>` runs the authoring playbook. The eval playbook tests a skill change blind.
 - Fix a misbehaving skill in its own PR, not inside the feature work where it went wrong.

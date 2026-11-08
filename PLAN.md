@@ -110,8 +110,7 @@ One job each, under 5 KB, no real dependencies.
 First, four bricks that earlier bricks already point to. Each goes in the usual way.
 
 - [x] 10.1 `deslop`: removes AI-looking code from a branch's diff. Source is `cursor-team-kit/skills/` at `2776ddd`, like 7.1b.
-- [ ] 10.2 `automate-me`: drafts a personal mode skill from the user's past chats.
-  - Revisit: `recall` step 1 routes "turning habits into a durable skill" to `automate-me`, and `flatpaper-help` lists it (Pick a skill table, Make flatpaper-stack my own). Check both once it lands.
+- [x] 10.2 `automate-me`: drafts a personal mode skill from the user's past chats.
 - [ ] 10.3 `typescript-best-practices`: rules for any `.ts` or `.tsx` work.
   - Revisit: `principle-type-system-discipline` line 9 and the `flatpaper-help` Pick a skill table point to it. Check both once it lands.
 - [ ] 10.4 `setup-flatpaper-stack` (upstream `setup-pstack`, renamed like the router). Import byte for byte, then rewrite for Claude Code. It does two things:
