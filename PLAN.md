@@ -103,7 +103,7 @@ One job each, under 5 KB, no real dependencies.
 - [x] 9.1 `ketchup`, `recall`
 - [x] 9.1b `ketchup-video`: `ketchup` as a short subtitled slide video. Renders with `ffmpeg`. A terminal can't play video, so it shares the file path plus an Artifact page that plays it.
 - [x] 9.2 `reflect`, `figure-it-out`
-- [ ] 9.3 `poteto-help`
+- [x] 9.3 `flatpaper-help` (upstream `poteto-help`, renamed like the router)
 
 ## Layer 10: End-to-end check
 
@@ -115,8 +115,10 @@ Run after the last brick. Run it again after any big change. Start a new session
 
 ## Not planned
 
-Cursor-only, or not needed yet: `setup-pstack`, `automate-me`, `make-bot-ui`, `typescript-best-practices`, `automations/benny`. Revisit any of them later.
+Cursor-only, or not needed yet: `setup-pstack`, `automate-me`, `make-bot-ui`, `typescript-best-practices`, `automations/benny`, and `docs/guide/` (the pstack user guide; `flatpaper-help` dropped its links to it). Revisit any of them later.
 
-- Revisit: `flatpaper-mode` (Before commit trigger), Opening a PR, Autopilot-full (step 2), and Multi-phase plan (PR mechanics) name `deslop` from `cursor-team-kit`. It is not imported. Decide: port (from `cursor-team-kit` like 7.1b), swap, or drop.
-- Revisit: `recall` step 1 routes "turning habits into a durable skill" to `automate-me`. If that skill stays unplanned, decide whether to keep the pointer.
-- Revisit: `principle-type-system-discipline` line 9 points to `typescript-best-practices`. If that skill stays unplanned, decide whether to keep the pointer.
+- Revisit: `flatpaper-mode` (Before commit trigger), Opening a PR, Autopilot-full (step 2), and Multi-phase plan (PR mechanics) name `deslop` from `cursor-team-kit`, and so does `flatpaper-help` (Not in flatpaper-stack list). It is not imported. Decide: port (from `cursor-team-kit` like 7.1b), swap, or drop.
+- Revisit: `recall` step 1 routes "turning habits into a durable skill" to `automate-me`, and `flatpaper-help` lists it (Pick a skill table, Make flatpaper-stack my own). If that skill stays unplanned, decide whether to keep the pointer.
+- Revisit: `principle-type-system-discipline` line 9 and the `flatpaper-help` Pick a skill table point to `typescript-best-practices`. If that skill stays unplanned, decide whether to keep the pointer.
+- Revisit: `flatpaper-help` Pick a skill table lists `make-bot-ui` (a Grok Bot webhook page, Cursor-only). Decide: drop the row or port.
+- Revisit: `setup-pstack` mentions were removed from `flatpaper-help` (Get set up, model-rule check, cost, Pick a skill, Fix a run). When a `setup-flatpaper-stack` skill owns model config, add it back there.
