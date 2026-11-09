@@ -30,11 +30,11 @@ When a worker must start from a branch other than the current one, its brief nam
 
 Every brief stands alone. Include the goal, scope, exact slice or race arm, how to verify, and what to report. Reports use `PASS`, `ISSUES`, or `BLOCKED` with evidence. A worker that can prove a defect reports `ISSUES` and lists every issue it can prove, not only the first.
 
-If a worker drops out, proceed with N-1 and note it.
+If a worker drops out, treat it as a missing result. In a race, proceed with N-1 and note it. For coverage, respawn it once as Phase C says.
 
 ## Phase C: Aggregate
 
-Read the terminal results. Drop a result that does not record the SHAs and method its brief names, and respawn that worker once. After a second miss, record a gap. A gap does not count as a pass. For coverage, every required slice needs a result. For a race, apply the selection rule declared up front. Use first pass, rank all, or best-of. Do not paste raw worker dumps.
+Read the terminal results. Drop a result that does not record the SHAs and method its brief names, and respawn that worker once. Respawn a worker that dropped out once too. After a second miss, record a gap. A gap does not count as a pass. For coverage, every required slice needs a result, so the swarm reports `PASS` only when every slice passed. For a race, apply the selection rule declared up front. Use first pass, rank all, or best-of. Do not paste raw worker dumps.
 
 ## Phase D: Report
 
