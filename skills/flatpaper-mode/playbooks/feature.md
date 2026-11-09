@@ -1,20 +1,21 @@
 ### Feature
 
-**You own the design. Plan, review, verify.**
+**You own the design. Plan, review, verify.** Delegate implementation. Stay in the lead.
 
-1. Trace the affected code before designing. A claim the brief makes about existing code ("make X public", "nothing else calls this") is a hypothesis. Count its consumers before you design, since the count decides the design.
-2. Pin what must not change (existing output, existing commands) and record it before editing.
-3. Name the data shape first, and pick its organizing structure (model the domain).
-4. If the change crosses module boundaries or has several valid shapes, run the `architect` skill through its sketch phases only (A and B); implementation happens in step 6 against that sketch. Sketch two designs before committing, writing how the caller uses each one first. Judge the sketches against `../references/design-red-flags.md`. If running something would settle the choice, prototype it.
-5. Write the throughput checkpoint as four task items. An item that does not apply (one file, no fan-out) stays with `n/a: <reason>`. It is not dropped.
-   - **Blocking first steps.** What must finish before any work can run in parallel.
-   - **Independent workstreams.** Disjoint files, services, or layers that can run in parallel. Shared writes run one after another.
-   - **Shared mutable state.** Split the target first (separate before serializing shared state). Serialize only for a real invariant.
-   - **Smallest safe decomposition.** If one worker is best, say why.
-   Code-coupled work goes to one owner. The session running the playbook fans out after the blocking steps. Fan out across subagents only for slices that produce independent artifacts. Run that fan-out with the `swarm` skill. Rewrite the checkpoint at each phase boundary, and give a new phase to a fresh subagent instead of redirecting a running one.
-6. Implement in small units, each ending in a check (sequence verifiable units). When you improve a shared primitive, port the change to every consumer and verify each one.
-7. Verify on the real surface through the project's `verify-<app>` skill: the new behavior works, and the pinned behavior is unchanged.
-8. If the change added, removed, or rewired something the architecture page shows, run the Architecture page playbook in update mode and include it in the same PR.
-9. Hand the diff to a fresh subagent for review. It did not write the change. If the design is contested, run the `interrogate` skill before the PR.
+1. `how` over the affected subsystem.
+2. `architect` for parallel design exploration.
+3. Write the throughput checkpoint as four todo items. A dimension that genuinely does not apply (single file, no fan-out) keeps its item with `n/a: <reason>` rather than being dropped:
+   - **Blocking first steps.** Gates run before fan-out.
+   - **Independent workstreams.** Disjoint files, services, or layers parallelize. Shared writes serialize.
+   - **Shared mutable state.** Default to splitting the target (the **separate-before-serializing-shared-state** principle skill). Serialize only for real invariants.
+   - **Smallest safe decomposition.** If one worker is best, name why.
+4. Delegate code-writing to a subagent on the model the Subagents section names (by default the parent model, with `model` unset) with a specific scope (file paths, named data shape and its organizing structure per **principle-model-the-domain**, a state machine over scattered booleans, a table/registry over branching, a typed model over repeated shape assumptions, chosen before the delegate writes logic, and success criteria). Pick each subagent's reasoning level for the job, per the Subagents section. When the implementation admits multiple valid shapes (error handling, abstraction layer, test structure), delegate via the **arena** skill instead so the runners surface the alternatives and the cross-judge guards the pick. Mandatory: no skip-with-reason escape, and Laziness Protocol does not override it (the gain is review separation, not lines saved). A subagent forbidden to spawn satisfies this by owning the diff directly with the same review separation. No "standing by" reply that waits on a nested agent. Comments per **Comments**. Surgical edits, re-ground against the source for upstream-derived files. Port shared-primitive improvements to all consumers and verify each. Commit liberally.
+5. Verify on the matching surface. "Inconclusive" or wrong-surface is not a pass. Flag it.
+6. Rebase into small, ordered commits. Stack follow-ups.
+   Use the **sequence-verifiable-units** principle skill, building, verifying, and committing each small unit before the next.
+7. If the design is contested, `interrogate` before shipping.
+8. Run **Opening a PR**.
 
-**Reply:** what you built, what you chose and why, the throughput checkpoint, the proof for both new and unchanged behavior, and open decisions. Tables for design alternatives.
+Code-coupled work (one feature, one migration) goes to a single owner with the checkpoint inline. That owner fans out internally after the blocking phase. Parent-level fan-out is for slices that produce independent artifacts (audits, cross-subsystem investigations, competing experiments). Rewrite the checkpoint at phase boundaries. Spawn a fresh owner rather than chaining interrupts.
+
+**Reply:** what you built, what you chose and why, the throughput checkpoint, open decisions. Tables for design alternatives.

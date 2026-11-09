@@ -1,221 +1,72 @@
-# flatpaper
+# flatpaper-stack
 
-A Claude Code plugin for agent work you can trust and review later. Adapted from poteto's [pstack](https://github.com/cursor/plugins/tree/main/pstack).
-
-It is built for Claude Code. The hooks, the `/flatpaper-stack:` skill names, the task tools, and the plugin layout are Claude Code's. pstack is the Cursor version of the same ideas.
+A Claude Code plugin for agent work you can check and review later. Adapted from poteto's [pstack](https://github.com/cursor/plugins/tree/main/pstack).
 
 Three ideas carry it:
 
 1. Every task has a done check that can fail.
-2. Proof comes from the real artifact, not the agent's word.
+2. Proof comes from the real result, not the agent's word.
 3. Long work leaves a decision trail you can audit in minutes.
 
-## What's inside
+## Prerequisites
 
-| Piece | What it does |
-|---|---|
-| `guidelines.md` | Always-on rules, loaded at session start by a hook |
-| `UserPromptSubmit` hook | One-line reminder on every prompt: concise replies, a done check, proof, and constraints, and the principles footer in flatpaper-mode sessions |
-| `gh pr create` gate | In a flatpaper-mode session, blocks `gh pr create` until the session has run `tidy`, `no-comments`, `technical-writing`, and `unslop`, and lists the Opening a PR steps that always run. A `PreToolUse` hook in the flatpaper-mode skill's frontmatter |
-| `/flatpaper-stack:flatpaper-mode` | Rigorous mode. Matches the task to a playbook (investigation, bug fix, feature, refactoring, prototype, autonomous run, autopilot stack, orchestrate, architecture page, perf, babysit, session pickup, pause safely, worktree cleanup, multi-phase plan, runtime forensics, trace forensics, opening a PR) |
-| Architecture drift line | At session start, says when `docs/architecture/` is behind this repo's commits, or behind the latest release of the repo it describes. Silent otherwise. |
-| `/flatpaper-stack:show-me-your-work` | Decision log (TSV), audited against the transcript, with an Attention section from a fresh reviewer |
-| `/flatpaper-stack:create-verification-skill` | Generates a project-local `verify-<app>` skill (launch, doctor, drive, evidence, cleanup, feature map) and proves it once, including that Doctor can fail. flatpaper-mode playbooks drive the app through it and offer to create one when a task needs it |
-| `/flatpaper-stack:maintain-verification-skill` | Rechecks the `verify-<app>` feature map against the code and the live app, and opens at most one PR of proven corrections |
-| `/flatpaper-stack:create-formal-verification-skill` | Picks the property where a bug costs the most and tests reach the least, verifies it with the tool that fits (TLA+ by default for ordering bugs), shows it failing on a broken variant, and leaves a project skill that records the code it covers and the commit it was last in sync with |
-| `/flatpaper-stack:maintain-formal-verification-skill` | Reads the commits that touched verified code since the commit the skill records as last in sync, updates the model or harness, reruns, and says whether each failure is drift in the verification or a bug in the code |
-| `/flatpaper-stack:blast-radius` | Finds what a change breaks outside its diff, and proves the facts it is safe because of with a rerunnable script |
+**Required**
 
-### Skills flatpaper-mode calls for you
+- [Claude Code](https://code.claude.com), a recent version.
+- `git`.
 
-You don't type these. A playbook step runs them. You can still call one directly.
+**Recommended**
 
-| Skill | Called from | What it does |
+| Tool | Used for | Without it |
 |---|---|---|
-| `/flatpaper-stack:why` | Investigation | Finds why code is the way it is, from git, PRs, and whichever trackers, docs, chat, and observability connectors the session can reach. Every claim gets a confidence tier |
-| `/flatpaper-stack:how` | Investigation | Explains how code works for an engineer new to the area, and where new code should live. A narrow question is read directly. For a large area, read-only explorers on `sonnet` trace it in parallel, and one explainer on `opus` writes the answer |
-| `/flatpaper-stack:figure-it-out` | flatpaper-mode, for large or cross-cutting work and any task no playbook fits | Designs a bespoke playbook: a falsifiable done check, a rigor level, a verification harness built before the work, a hypothesis loop with a VERIFIED, NOT VERIFIED, or INCONCLUSIVE verdict per unit, and a decision log |
-| `/flatpaper-stack:architect` | Feature | Sketches types, signatures, and module structure in competing designs before code |
-| `/flatpaper-stack:interrogate` | Feature, Refactoring | Two fresh adversaries, a read-only Codex seat first and then `opus`, try to break the change. Keeps only findings whose run fails when rerun |
-| `/flatpaper-stack:swarm` | Feature, Perf, Multi-phase plan | Fans out parallel workers and returns one table |
-| `/flatpaper-stack:arena` | Prototype | Runs two candidates, a read-only Codex seat first and then `opus`. On code, Codex proposes a diff and Claude writes what lands. A Codex judge scores the candidates by anonymous label. Picks a base and grafts the best parts of the others |
-| `/flatpaper-stack:statechart` | Bug fix, and the skills `create-formal-verification-skill` writes | Checks a TLA+ model and draws how the system moves between states as a Mermaid statechart. The report gives the shortest path to each state that breaks a rule. Needs Node 22.18+ (23.6+ on 23.x), Bun 1.1.5+, or Deno 2.0+. Installs TLC and Java with mise on first run |
-| `/flatpaper-stack:benchmark-checklist` | Perf | Vets a performance number before you report or act on it: the limiter, tuning, physical limits, errors, repeat runs, end-to-end share, and whether the work ran |
-| `/flatpaper-stack:tidy` | Opening a PR | Fresh reviewers check the diff for reuse, simplification, efficiency, and altitude. Applies the fixes that hold up and reports what it skipped. Quality only, not bugs |
-| `/flatpaper-stack:no-comments` | Opening a PR | A fresh reviewer deletes comments that don't earn their place and flags code that needs prose to make sense. Fixes the accepted flags and offers to turn claimed constraints into a type, test, or lint |
-| `/flatpaper-stack:unslop` | Every reply | Cuts AI tells from prose |
-| `/flatpaper-stack:technical-writing` | Docs and PR text | Layered writing standard for docs, READMEs, PR descriptions, and commit messages |
-
-Claude writes all code. Subagents run on `opus`, `sonnet`, `fable`, and `haiku`. Panels (`interrogate`, `arena`, `architect`, and `swarm` read-only races) pair `opus` with a read-only Codex seat, and the `arena` judge runs on Codex. Each Codex seat runs through `skills/flatpaper-mode/scripts/codex-seat.sh`, which calls the [codex plugin](https://github.com/openai/codex-plugin-cc) and bills your ChatGPT plan. When Codex is missing, throttled, times out, or rejects the model, the script prints one `codex seat fallback:` line naming the cause, and a `sonnet` seat takes its place. The flatpaper-mode skill's Subagents section maps every role to its model and effort.
-
-Run the session on Opus 5.5 at `high` effort: `claude --model opus --effort high`, or add both flags to the alias under Install. Opus 5.5 defaults to `medium` effort. Code writers and most reviewers run on the session model, so it sets the quality of the code. Comment Sicko runs on Opus. Switch to `--model fable` only for the hardest long unattended runs, when Opus falls short. Fable costs 2.5 times Opus per token.
-
-### Subagents
-
-flatpaper-mode is a by-hand skill, so a subagent cannot load it from its skill list. The plugin ships two agents for that.
-
-| Agent | Spawned by | What it does |
-|---|---|---|
-| `flatpaper-stack:flatpaper-agent` | flatpaper-mode, for code-writing delegates and helpers | Reads the mode, its principles, and the guidelines before any work. Does not run the playbook itself |
-| `flatpaper-stack:comment-sicko` | `/flatpaper-stack:no-comments` | Deletes comments that don't earn their place and flags code that needs prose. Touches comments only. Runs on Opus |
-
-### Skills you call by hand
-
-These act on your session or your repo at a time you choose.
-
-| Skill | What it does |
-|---|---|
-| `/flatpaper-stack:correct` | Makes a repeated agent mistake impossible: architecture, types, a lint, a hook, a test, docs last. Each check is shown failing on the mistake and passing on the fix |
-| `/flatpaper-stack:reflect` | Three reviewers mine this session's transcript. Each learning becomes a proposed edit to a skill, `CLAUDE.md`, or memory, shown for your approval |
-| `/flatpaper-stack:recall` | Rebuilds recent context from this project's sessions, decision logs, git, and open PRs into a short current-state brief |
-| `/flatpaper-stack:ketchup` | Catches you up on what changed since your last message in under 150 words, with each action item laid out so you can decide |
-| `/flatpaper-stack:ketchup-video` | Catches you up like `ketchup`, but shows what happened as a short subtitled slide video on a private Artifact page, with the action items as text. Needs `ffmpeg` and a headless browser |
-| `/flatpaper-stack:teach` | Explains a change or subsystem so you understand it. Runs `how` and `why`, starts from a plain definition, builds diagrams up one part at a time, and goes deeper when you ask. No quizzes |
-| `/flatpaper-stack:bro` | Restates the last reply in plain words, with no jargon |
-| `/flatpaper-stack:flatpaper-help` | Answers how-to questions about flatpaper: setup, wording a flatpaper-mode prompt, which skill or playbook fits, and fixes for a run that went wrong. Hands back a prompt to send instead of starting the work |
-| `/flatpaper-stack:sharpen` | Rewrites a prompt deeper, not bigger: what a top professional would add, the raw material and methods they would use, and an outside check that the result is right. Returns the prompt and does not do the task |
+| [`gh`](https://cli.github.com), logged in | Reading PRs, issues, and history in `why`, `recall`, and PR work | Those steps say they couldn't check GitHub |
+| [Codex plugin](https://github.com/openai/codex-plugin-cc) | A second opinion from a different model family in `arena`, `interrogate`, `architect`, and `show-me-your-work` | Those seats fall back to Claude or are skipped, and the skill says so |
+| Node 22.18+ (or 23.6+), Bun 1.1.5+, or Deno 2.0+ | `statechart` and the formal-verification skills | Those skills can't run |
+| [`mise`](https://mise.jdx.dev) | `statechart` installs TLC and Java through it on first run, which needs the network | `statechart` can't run |
+| `ffmpeg` and a headless Chromium | `ketchup-video` | It gives the text catch-up only |
+| Playwright, or the app's own browser test setup | `control-ui` | It builds a smaller harness, or stops and says why |
+| `tmux` | `control-cli` | It falls back to a small PTY script |
 
 ## Install
 
 Load it from a local clone with a shell alias. Edits take effect on the next session.
 
 ```bash
+git clone https://github.com/FlatPaper/flatpaper-stack ~/Documents/GitHub/flatpaper-stack
 alias claude='claude --plugin-dir ~/Documents/GitHub/flatpaper-stack'
 ```
 
-To use it in the IDE extension or desktop app too, install it from the local clone instead. Nothing is published.
+To use it in the IDE extension or the desktop app too, install it from the clone:
 
 ```bash
 claude plugin marketplace add ~/Documents/GitHub/flatpaper-stack
 claude plugin install flatpaper-stack@flatpaper-stack --scope user
 ```
 
-## Settings
+Optional: run `/flatpaper-stack:setup-flatpaper-stack` once. It checks which models you have, including Codex, and writes `~/.claude/flatpaper-stack/models.md`. Without the file, every skill uses its built-in defaults: each helper at `medium` effort, Sonnet for search and easy work, the session's model for judgment, and the matching GPT model for second opinions.
 
-Add these to `~/.claude/settings.json`, then restart Claude Code. A session that is already open keeps its old tool list.
+## How to use it
 
-```json
-{
-  "env": {
-    "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1"
-  },
-  "attribution": { "commit": "", "pr": "", "sessionUrl": false }
-}
-```
-
-| Setting | Required | Why |
-|---|---|---|
-| `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` | Yes | Claude Code hides `TaskCreate` and `TaskUpdate` by default on newer models. flatpaper-mode puts each playbook step in the task list with them. Without it, the mode falls back to a checklist in its replies. |
-| `attribution` | No | Removes the Claude co-author line from commits and PRs, enforced by Claude Code instead of a rule. |
-
-Check the plugin after editing a skill or playbook with `scripts/check-skills.sh`. It lints frontmatter, README listings, playbook wiring, relative paths, skill and agent references, agents dispatched by bare name, non-Anthropic, non-Codex model names, Codex calls that bypass `codex-seat.sh`, and references to the upstream plugin in skills and agents. After editing a script, run `scripts/test-scripts.sh`. It runs fixtures for `check-plan.sh`, `worktree-audit.sh`, `pr-gate.sh`, and `codex-seat.sh`. CI runs both on Linux and macOS.
-
-Optional tools: `jq` and `gh` (logged in). The finish steps read a PR back with `gh`. Without it, that check is reported inconclusive. The architecture drift line uses both to check the latest release of the repo a page describes. Without them, it still checks this repo's commits.
-
-## Use
-
-Quick questions need nothing. The guidelines are always on.
-
-### The prompt format
-
-For real work, start with the mode and give up to five parts, one sentence each:
+**Most of the time, use one command.** Start real work with flatpaper-mode and say what done looks like:
 
 ```
-/flatpaper-stack:flatpaper-mode <goal>. done means <check>. show me <proof>. <what you know>. <constraints>.
+/flatpaper-stack:flatpaper-mode fix the csv export dropping its last row. done means the 60k-row fixture exports every row. show me row counts before and after. no PR.
 ```
 
-| Part | What it is | Example |
-|---|---|---|
-| `<goal>` | The outcome, not the steps. Its wording steers the playbook (see below). | fix the csv export dropping its last row |
-| `<check>` | Something that can pass or fail. Not "see if", not a duration. | done means the 60k-row fixture exports every row |
-| `<proof>` | The real output you want to see. | show me row counts before and after |
-| `<what you know>` | Facts only, not your theory of the cause. | started after yesterday's deploy. failing job is 4812 |
-| `<constraints>` | What it must not do, or must do first. | repro first. no PR. don't touch the schema |
+The goal is the only part you need. Adding a done check, the proof you want to see, and any limits ("no PR", "don't touch the schema") keeps the agent from quietly weakening them. flatpaper-mode picks the right playbook (investigation, bug fix, feature, refactor, and others) and calls the other skills for you.
 
-Only the goal is required. A missing check, proof or constraints gets proposed back to you in one line, but yours is the one the agent can't quietly weaken.
+**A few you'll call yourself:**
 
-### Words that steer the playbook
-
-| Say | Playbook |
+| Command | When |
 |---|---|
-| how does, why is, is anything wrong, are we sure | Investigation (read-only) |
-| fix, broken, repro | Bug fix |
-| add, build, support | Feature |
-| clean up, restructure, without changing behavior | Refactoring |
-| try, sketch, which works better | Prototype |
-| im stepping away, run until, /loop until | Autonomous run |
-| migrate every caller, an ambitious multi-part change, figure it out | `figure-it-out` designs a bespoke playbook |
-| autopilot, build the stack, I'll land it | Autopilot stack |
-| orchestrate, run this whole project, own this migration until it lands | Orchestrate |
-| map this repo, update the architecture page | Architecture page |
-| speed up, make it faster, cut the cost | Perf |
-| babysit, get it green, address the review comments | Babysit |
-| pick up, take over this branch, continue from the log | Session pickup |
-| pause, stop for now, pick this up tomorrow | Pause safely |
-| clean up worktrees | Worktree cleanup |
-| plan this migration, break this into PRs | Multi-phase plan |
-| why is this process hung, what is it doing right now | Runtime forensics |
-| read this trace, what does this profile show | Trace forensics |
+| `/flatpaper-stack:flatpaper-help` | You're not sure how to word a request or which skill fits |
+| `/flatpaper-stack:ketchup` | You stepped away and want a short catch-up |
+| `/flatpaper-stack:bro` | The last reply was too dense |
+| `/flatpaper-stack:recall` | You're starting a session and want your recent context back |
+| `/flatpaper-stack:teach` | You want a change or subsystem explained so you understand it |
 
-### Several tasks in one session
+Run the session on Opus at `high` effort (`claude --model opus --effort high`) for the best code. Helpers pick their own models from the settings above.
 
-Each prompt is matched to a playbook again. When the kind of work changes (review, then fix, then PR), the mode switches playbooks and marks the old one's open steps as superseded. Starting with `new task:` makes the switch explicit. Don't `/clear` in between. The next step usually needs what the last one found.
+## License
 
-```
-/flatpaper-stack:flatpaper-mode is anything on the architecture page wrong or hard to follow? done means each finding cites the line and the code that contradicts it. read-only.
-fix the wrong items. show me a before/after table with evidence. no PR yet.
-raise a draft PR.
-```
-
-Every playbook ends with the same finish steps: run the repo's tests, follow its PR rules, and read the PR back with `gh pr view`. Where a repo sets no PR rules, the Opening a PR playbook supplies defaults: Conventional Commits titles, a short PR body with fixed headings, and draft unless you say ready. Written repo rules replace only those format defaults. `tidy`, `no-comments`, the risk call (`blast-radius` if the diff is risky), `technical-writing`, and `unslop` always run. In a flatpaper-mode session, a hook blocks `gh pr create` until the session transcript shows a Skill call or slash command for `tidy`, `no-comments`, `technical-writing`, and `unslop`. Other Bash calls go through. `FLATPAPER_PR_GATE_OFF=1` turns it off. The repo's rules files (`AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, `docs/README.md`, the PR template) are read at the start of every task.
-
-### Steering a run
-
-Steering prompts are one line. Name the principle or the rule that was broken.
-
-```
-i said the goal is to repro. i did not ask for a fix yet. stay on the bug fix playbook.
-apply prove it works. show me the real output, not the build log.
-apply attack the premise. both fixes assumed the cache is stale.
-```
-
-### Pitfalls
-
-- **Naming skills in the prompt.** "investigate, then prototype, then build" reorders steps the playbook already sequences. State the goal and the constraints.
-- **Leading with your theory of the cause.** The agent searches where you pointed. Give facts, let it restate the problem, then share your hunch.
-- **Taking the first design.** Ask for two prototypes and pick from what runs.
-- **Reviewing a plan with no code behind it.** Review of an abstract plan invents risks. Settle open questions with a prototype, then review what got built.
-- **Parallel agents in one worktree.** They overwrite each other. Say "own worktree per attempt".
-- **Looping before you trust the loop.** A loop that can't verify its own work only makes unchecked work faster. Get `/flatpaper-stack:create-verification-skill` working first.
-- **Trusting an unvetted number.** A warm cache or a skipped code path can fake a speedup. Use the Perf playbook.
-- **Accepting every review comment.** Reviews mix real catches and noise. Babysit triages each one against the code.
-- **Correcting the same mistake by hand.** A correction in chat helps one run. Turn it into a check, a lint, or a hook.
-- **Editing a skill mid-task.** Note the problem and fix the skill in its own change.
-
-### Examples
-
-```
-/flatpaper-stack:flatpaper-mode the dashboard shows no runs through the Coder URL. done means a smoke run appears through the Coder URL. show me the /api/runs response. /ws returns 403 through the proxy; a local tunnel works. repro first.
-
-/flatpaper-stack:flatpaper-mode scan every test in this repo for tests that would pass if the code did nothing, and for behavior with no test. done means every test file is judged. show me the results as an artifact. no PR.
-```
-
-When you step away:
-
-```
-/flatpaper-stack:flatpaper-mode im stepping away. <goal>. done means <check>. keep a decision log. if stuck, stop and write up why.
-```
-
-When you're back:
-
-```
-/flatpaper-stack:show-me-your-work catch me up on what you did
-```
-
-Read the Attention section first.
-
-Once per repo, give the agent a scripted way to prove the app works:
-
-```
-/flatpaper-stack:create-verification-skill
-```
+MIT. See [LICENSE](LICENSE). Portions are adapted from pstack and cursor-team-kit, both MIT.

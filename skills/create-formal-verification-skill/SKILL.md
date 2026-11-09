@@ -1,6 +1,6 @@
 ---
 name: create-formal-verification-skill
-description: "Generate a project-local skill that formally verifies the code where a bug costs the most and tests reach the least, in any language, with whichever verification tool fits. Use for /create-formal-verification-skill, \"model-check this race\", \"prove this invariant\", or when concurrency, retries, state machines, parsers, or unsafe code need more than tests."
+description: "Generate a project-local skill that formally verifies the code where a bug costs the most and tests reach the least, in any language, with whichever verification tool fits. Use for /flatpaper-stack:create-formal-verification-skill, \"model-check this race\", \"prove this invariant\", or when concurrency, retries, state machines, parsers, or unsafe code need more than tests."
 disable-model-invocation: true
 ---
 
@@ -28,15 +28,15 @@ Pick the tool that answers the question at the lowest cost: a model checker, a p
 - **Cheap to rerun.** One command, a reproducible tool version, and a run short enough that the next agent will use it on every relevant change.
 - **Kept in step with the code.** Record which files and functions each check covers, and the commit at which you last confirmed that the verification describes them. When the covered code changes after that commit, the next agent can see that the verification needs another look.
 
-## Generate the formal verification skill
+## Generate the verify skill
 
-Write `.claude/skills/<area>/SKILL.md`, named for the area it verifies. Never name it `verify` or give it a `verify-` prefix, which belong to the `verify-<app>` skill that `/flatpaper-stack:create-verification-skill` writes. Give it frontmatter with `name: <area>` and a `description` that names the area and says when to use it. Without frontmatter, the skill never registers. From the skill alone, the next agent must be able to tell whether a change touches the verified code, run the check, tell a real bug from a modeling error, and update the verification when a change is intended. Put the coverage record and the sync commit in the skill, and tell the next agent to move the sync commit forward only after it confirms that the verification describes the code at the new commit. Use this repo's real commands, paths, and nouns, and leave no placeholders.
+Write a project-local skill with frontmatter that names the area and says when to use it. Without frontmatter, the skill never registers. From the skill alone, the next agent must be able to tell whether a change touches the verified code, run the check, tell a real bug from a modeling error, and update the verification when a change is intended. Put the coverage record and the sync commit in the skill, and tell the next agent to move the sync commit forward only after it confirms that the verification describes the code at the new commit. Use this repo's real commands, paths, and nouns, and leave no placeholders.
 
-If the check is a TLA+ model, tell the next agent to read every result with `/flatpaper-stack:statechart`. It shows each invariant violation the checker finds as its shortest path in plain words. When the check passes, it draws a chart of how the system moves between states. Refer to `/flatpaper-stack:statechart` by name. Its commands, options, and file paths change between releases and machines, so copy none of them into the generated skill or its scripts.
+If the check is a TLA+ model, tell the next agent to read every result with the flatpaper-stack [`/flatpaper-stack:statechart`](../statechart/SKILL.md) skill. It shows each invariant violation the checker finds as its shortest path in plain words. When the check passes, `/flatpaper-stack:statechart` draws a chart of how the system moves between states. Refer to `/flatpaper-stack:statechart` by name. Its commands, options, and file paths change between releases and machines, so copy none of them into the generated skill or its scripts.
 
 ## Prove it before you hand off
 
-Follow the generated skill once, as the next agent would, on a scratch change that breaks the property in the real code. It must catch the break. Then drop the scratch change and confirm that the check is back where it started: passing, or failing only on the findings you will report. A formal verification skill that was never run is a draft. If the skill misses the break or a step does not run, fix the skill or the verification, not the scratch change.
+Follow the generated skill once, as the next agent would, on a scratch change that breaks the property in the real code. It must catch the break. Then drop the scratch change and confirm that the check is back where it started: passing, or failing only on the findings you will report. A verify skill that was never run is a draft. If the skill misses the break or a step does not run, fix the skill or the verification, not the scratch change.
 
 ## Hand off
 

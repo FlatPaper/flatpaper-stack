@@ -1,25 +1,34 @@
 ### Opening a PR
 
-**You own the commits and the PR text. The repo's rules win, these are the defaults.**
+Invoked at the end of every other playbook.
 
-Finish step 2 runs this playbook when the task commits or opens a PR. Steps 1 and 2 apply while you work, not only at the end. Step 7 is Finish step 3. Read the repo's commit and PR rules first (`CONTRIBUTING.md`, `AGENTS.md`, `CLAUDE.md`, `docs/README.md`, the PR template under `.github/`). Where they set a format, a branch name, a template, labels, or draft or ready, follow them and skip the matching default here. Only a written rule counts. Past PRs and commits are precedent, not rules. The `tidy` and `no-comments` commits in step 2, the risk call in step 4 (say whether the diff is risky, and run `blast-radius` if it is), and step 5 always run.
+**Worktree.** Work from a git worktree off main. Subagents inherit it. Multiple `Agent` calls on the same branch each get their own worktree (`isolation: "worktree"`), or `git fetch && git reset --hard origin/<branch>` between them. Dirty branch with unrelated work: patch out, fresh worktree, apply. Snarled worktree: reset from main, redo minimally.
 
-1. Work from a git worktree off the base branch. A writing subagent gets its own worktree (`isolation: "worktree"` on the `Agent` call). Two workers never share one branch at once. A dirty branch with unrelated work: save the change as a patch, make a fresh worktree, and apply it there. A tangled worktree: reset from the base and redo the change minimally. Before you commit from a worktree, stop every agent that still holds it, including the agents those agents spawned, and confirm each stop. Check that `git status` shows only this task's changes.
-2. Commit in small, ordered commits. Each commit could land on its own and the order tells the story. Amend when a fix belongs in the commit you just made. Make a new commit when it is separable. A commit body does not restate the subject. Before pushing, run the `tidy` skill, then the `no-comments` skill, over the diff against the base, and commit each result as its own commit. Check that `git log <base>..HEAD --oneline` reads as a sequence of landable steps.
-3. Write the title. Default format is Conventional Commits, `type(scope): subject`, with no trailing period. Type is one of `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, or `perf`. Scope is the area. The subject is short and imperative, and names a real symbol when one carries the change, for example `fix(parser): reject dates before 1970`. Check the title against the repo's format if it has one.
-4. Write the body as a one-minute briefing for a reviewer who has the diff. It says why the change exists, what it leaves out, what it could break, and how you proved it works. The body becomes the squash commit body, so keep it under about 40 lines. Use these `##` headings in this order, and drop a section with nothing to say (except Scope):
-   - `## Why`: the user's goal, then the problem and approach, 1 to 3 short sentences. No SHAs or rebase history.
-   - `## What changed`: 1 to 3 short bullets. Name a real symbol or path only when it carries the change. Name both sides of a rename.
-   - `## Scope`: always present. 1 to 3 items on what it covers and what it leaves out on purpose (a follow-up, a known gap).
-   - `## Tradeoffs`: only rejected alternatives a reviewer would ask about.
-   - `## Blast Radius`: 1 to 2 sentences on who or what it touches and why that is safe or risky. For a risky diff, run the `blast-radius` skill first and put its one safety fact and proof rung here.
-   - `## Verification`: 1 to 3 bullets, each a real command and its outcome. For perf, one primary number with its unit, before and after, and a link to the rest.
+**Commits.** Commit liberally. Rebase into small, ordered commits before opening PRs. Each commit is a future PR: landable, ordered to tell the story. Amend when the fix belongs in a just-made commit. New commit when separable. Commit bodies don't restate the subject.
 
-   Attach screenshots or videos when they prove a claim. Full SHAs, run logs, and file-by-file checklists go in a linked artifact, not the body. A repo PR template replaces these headings. Check that every section present has content and Scope is there.
-5. Edit the title, body, and commit messages with the `technical-writing` skill (every layer except Diátaxis), then run the `unslop` skill over them. Check that the text has no em dashes, no filler, and no unsupported claims.
-6. Push and open the PR with `gh pr create`. Open it as a draft (`--draft`) unless the user said it is ready or the repo's rules say otherwise. Prefer several narrow PRs to one large one. For a stack, the root PR targets the base branch and each child targets its parent's branch (`gh pr create --base <parent-branch>`, or `gh pr edit <pr> --base <parent-branch>` to retarget). A Babysit run treats a draft as waiting on a human and stops there until the user marks it ready, except for an Autopilot stack or Orchestrate owner's own draft. Check that `gh pr create` printed a URL.
-7. Read the PR back with `gh pr view --json title,body,baseRefName,isDraft,labels` and `gh pr checks`. Compare the title, body, base, draft state, and labels against the repo's rules and this playbook, and fix what is off with `gh pr edit`. Pending checks are pending, not passed. Check that the read-back matches what you meant to open.
+**PRs.** Run `/flatpaper-stack:deslop` over the diff before commit and `/flatpaper-stack:no-comments` before review. Write every PR title, description, and commit body with `/flatpaper-stack:technical-writing` (every layer except Diátaxis, and apply the STE vocabulary rules: one word per action, keep articles, a plain verb over `-ing` where one works), then apply **unslop** (user-only, so read `../../unslop/SKILL.md` instead of invoking it).
 
-Opening a PR does not start a babysit. Post the URL and keep building. Run the Babysit playbook (`babysit.md`) only when the user asks for it, or when you are an Autopilot stack or Orchestrate owner (`autopilot-stack.md`, `orchestrate.md`), whose brief assigns the babysit.
+**Titles.** Conventional Commits `type(scope): subject`, no trailing period. Type such as `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, or `perf`. Scope is the area, such as `flatpaper-stack` or `flatpaper-mode`. Subject is short, imperative, and names a real symbol when one carries the change, for example `fix(flatpaper-stack): retarget opening-a-pr babysit trigger`.
 
-**Reply:** the PR URL, the title, the draft or ready state, and the pasted `gh pr view` and `gh pr checks` output.
+**Descriptions.** The PR body is a one-minute briefing, not a lab notebook, for a reviewer who has the diff. It says why the change exists, what it leaves out, what it could break, and how you proved it works. Write short, simple sentences with few identifiers, no walls of text. The body becomes the squash commit body, so keep that commit under about 40 lines. Use `##` headings, not bold lead-ins, in this order, and drop a section with nothing to say:
+
+- `## Why`: the problem and approach, 1–3 short sentences. No SHAs, rebase genealogy, or "based on main" preamble.
+- `## What changed`: 1–3 short bullets. Name a real symbol or path only when it carries the change. Name both sides of a rename or retarget.
+- `## Scope`: always. 1–3 short items on what it covers and what it deliberately leaves out (a follow-up, a known gap). No symbols, paths, or file-by-file essay.
+- `## Tradeoffs`: only rejected alternatives a reviewer would otherwise ask about. Skip when there was no real choice.
+- `## Blast Radius`: 1–2 sentences on who or what it touches and why that is safe or risky. If main is red, state the cost of leaving it red.
+- `## Verification`: 1–3 bullets, each a real run path and its outcome. Perf: one primary number with its unit, `before → after`, and a link to the arena or swarm directory for the rest. No sample-size methodology, swarm recitals, or metric tables.
+
+After the sections, attach videos or screenshots when they prove a claim. Full SHAs, swarm or arena lane recitals, lever-correction essays, file-by-file checklists, and "CLEAN" verdicts go in a linked artifact, not the body.
+
+**Forge.** Resolve the forge before the first PR operation and keep that choice for create, edit, view, watch, and merge. Use the GitHub CLI (`gh`). Do not require Graphite (`gt`).
+
+**Built-in PR tool.** When the run provides a built-in PR tool, create, edit, retarget, and mark ready through it, never through a forge CLI. A CLI-made PR misses what the tool tracks. Use the resolved forge for everything the tool does not cover, and for every PR operation when the run has no such tool.
+
+**Size and stacks.** Prefer five narrow PRs to one large PR. A stack is a base-branch chain. The root PR targets trunk. Each child branch rebases onto its parent's exact tip and its PR targets the parent branch. As a parent merges, move its child onto trunk per `playbooks/shipping.md` step 4. Without a built-in PR tool, per the resolved forge, create a child with `gh pr create --base <parent-branch>`, and retarget one with `gh pr edit <pr> --base <parent-branch>`. Branch from trunk only for independent work. Rebase on trunk before substantial stack work.
+
+**Readiness.** Open every PR ready, never as a draft. A built-in PR tool can default to draft, so set `draft: false` on every creation call through it. With `gh`, omit `--draft`. If a PR still opens as a draft, mark it ready through the PR tool, or run `gh pr ready <number>`. Run `gh pr view <number>` before you refer to PR status.
+
+**Babysit.** Opening a PR does not start a babysit. Post the URL and keep building. Finish the phase or stack first. Run a separate babysit pass only when the user asks for one after the whole stack exists. A babysit for each new PR stalls the build and spends checks on commits later waves restart. Push back when feedback drifts from intent.
+
+A subagent that opens a PR runs `/flatpaper-stack:deslop` and `/flatpaper-stack:no-comments`, and posts the URL. It returns to the parent without babysitting, unless it is an Autopilot-full or Autopilot-stack owner. That owner's brief assigns the babysit loop and is the ask `playbooks/babysit.md` waits for. The owner starts the loop after its code-ready report, reports merge-ready, and is exempt from the rules here and in `playbooks/babysit.md` that hold babysitting until a whole stack is built.

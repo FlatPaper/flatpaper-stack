@@ -1,35 +1,35 @@
-# Explorer prompt
+# Explorer Prompt Template
 
-Build each explorer's brief from this template. Fill in the placeholders.
+Build each explorer subagent's prompt from this template. Fill in the placeholders.
 
 ---
 
-Other explorers are tracing other slices of the same subsystem in parallel. Don't cover everything. Go deep on your angle. Don't change any file in the repo. Scratch files outside it, such as a test input under `/tmp`, are fine.
+Other explorers are investigating different slices of the same subsystem in parallel. Don't try to cover everything. Focus on your assigned angle and go deep.
 
 ## Question
 
 > {QUESTION}
 
-## Your angle
+## Your Exploration Angle
 
-{ANGLE}
+{EXPLORATION_ANGLE}
 
 ## Output
 
-### Components found
-The key types, services, classes, and abstractions. For each: name, `file:line`, and one sentence on what it does.
+### Components Found
+The key types, services, classes, and abstractions. For each: name, file path, and a one-sentence description of what it does.
 
 ### Flow
-The execution flow, step by step. For each step: the function that runs, its file, what it does, and what it calls next. Include the data that passes between steps.
+The execution flow step by step. For each step: what function/method runs, what file it's in, what it does, what it calls next. Include the data that flows between steps.
 
-### Files read
-Every file you read, so the explainer can cite them.
+### Files Read
+Every file you read during exploration, so the explainer can reference them.
 
 ### Boundaries
-Where this slice connects to the rest of the codebase: its inputs and outputs.
+Where this subsystem connects to other parts of the codebase. The inputs and outputs.
 
-### Non-obvious things
-Anything surprising, historically motivated, or easy to get wrong. Code that looks like it works one way but works another.
+### Non-Obvious Things
+Anything surprising, historically motivated, or easy to get wrong. Things that look like they should work one way but work another.
 
-### Open questions
-Anything you could not trace. Name each gap.
+### Open Questions
+Anything you couldn't fully trace or understand. Be honest about gaps.

@@ -1,6 +1,6 @@
 ---
 name: create-verification-skill
-description: "Generate a project-local verification skill that drives your app the way a user does — any language, framework, or platform. Use for /create-verification-skill, \"make a control skill for this repo\", or when a project has no scripted way to prove UI/CLI/service behavior."
+description: "Generate a project-local verification skill that drives your app the way a user does — any language, framework, or platform. Use for /flatpaper-stack:create-verification-skill, \"make a control skill for this repo\", or when a project has no scripted way to prove UI/CLI/service behavior."
 disable-model-invocation: true
 ---
 
@@ -25,7 +25,7 @@ If the checkout doesn't build or start as-is, fix that first (or report it preci
 Write `.claude/skills/verify-<app>/SKILL.md` with YAML frontmatter (`name: verify-<app>` and a `description` that names the app, the surface, and when to reach for it — without frontmatter the skill never registers) and these sections, each grounded in what the interview actually found (no placeholders left):
 
 - **Launch:** the exact command that starts the app for verification, and how to tell it's ready (a log line, a prompt). Launch must reach a usable state from an empty data dir, including any migrations and seed data. Ready means usable, not just that a process answers. A database health check can pass while its init scripts are still running. Include teardown. For a short-lived CLI or TUI there is no server to keep alive: launch means build the binary (or install deps) once, then start each drive in its own isolated PTY or tmux session.
-- **Doctor:** one read-only check that answers "is this instance worth driving?" — process up, right version/build, port owned by us, auth valid. An agent runs this first whenever anything looks off. Prefer checks that exercise behavior over checks that confirm presence: "installed", "running", or "returns 200" can all pass while a user is still blocked. For each check, ask whether it could pass while the user's path is broken. If yes, replace it with one that runs the step the user depends on (a preflight, an auth probe, a read of the real data).
+- **Doctor:** one read-only check that answers "is this instance worth driving?" — process up, right version/build, port owned by us, auth valid. An agent runs this first whenever anything looks off.
 - **Drive:** the harness recipe with real selectors/commands from this repo, not examples. Prefer stable handles (ARIA labels, data attributes, prompt strings, route paths) over coordinates and tab order.
 - **Evidence:** what to capture for a proof and where it goes. State the proof standards: exercise the real user path, not internal setters or test-only endpoints; capture the action and the resulting state, not just the final screen; verify side effects (files written, rows inserted, messages sent) alongside what's visible; mocks only where a production boundary already isolates the external system. When the safe path is a dry-run or test mode, verify what it actually skips by observing (files, network, git refs) rather than trusting its name: some dry-runs still touch the network or open a browser.
 - **Cleanup:** how to tear down instances the run created. Never kill by process name; kill what you started. Cleanup removes instances and scratch state, never the evidence: proof artifacts survive the teardown, in a location the skill names.
@@ -39,8 +39,6 @@ Create `.claude/skills/verify-<app>/features/README.md` plus one file per user-f
 
 Run its own instructions end to end once: launch, doctor, drive ONE mapped feature (one is enough; the map exists so later runs can cover the rest), capture evidence, clean up. After cleanup, confirm the evidence still exists at the named location — a cleanup that eats the proof fails this step. Fix what fails, and run the generated cleanup after every failed iteration too, so broken attempts don't strand processes and ports. A generated skill that was never executed is a draft, not a deliverable. If you proved it in a stand-in for the real target (a container in place of a fresh VM, a local stack in place of a remote one), list every setup step the stand-in did that the target will not. Those steps stay unverified until a run on the real target covers them.
 
-Then prove Doctor can fail. Break one precondition it guards, in a way that is easy to undo and touches only an instance this run owns. Run Doctor and confirm it reports the failure and names the cause. Restore the precondition and confirm Doctor passes again. A Doctor that stays green with a broken precondition is hollow. Fix it before handing over.
+## 5. Offer the maintenance loop
 
-## 5. Keep it current
-
-The feature map rots as the app changes. Tell the user to run `/flatpaper-stack:maintain-verification-skill` after notable app changes, or on a schedule. It checks every feature in the map from source and live, and ships map fixes in their own PR. Never edit product code to make the map pass. A live run that fails on the app is a regression to report.
+Point the user at `/flatpaper-stack:maintain-verification-skill` for keeping the map honest as the app changes. Suggest a cadence only if they ask.

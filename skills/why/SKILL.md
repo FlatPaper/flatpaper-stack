@@ -1,104 +1,98 @@
 ---
 name: why
-description: Find out why code is the way it is. Anchors in git history, discovers which evidence sources this session can reach (issue trackers, docs, chat, observability, error tracking, data warehouse), searches each in parallel, and returns a cited answer with every claim in a confidence tier and every unsearched source named. Use for "why does X work this way", "why did we pick Y", design rationale, where a threshold came from, regressions, postmortems, or before changing code whose purpose is unclear.
+description: "Use for 'why does X work this way', 'why we picked Y', design rationale, regressions, postmortems, or data-backed thresholds. Discovers available MCPs and queries each evidence category (source control, issue tracker, long-form docs, real-time chat, infrastructure observability, error tracking, product analytics warehouse) in parallel, then returns a cited read on decisions and tradeoffs. Use how for runtime behavior."
+disable-model-invocation: true
 ---
 
 # Why
 
-Find the forces that gave code its shape.
+Investigate the motivation and intent behind code. The companion `how` skill answers what the code does and how it works. `why` answers what forces led to its shape.
 
-For what code does and how it works, use the Investigation playbook (`${CLAUDE_PLUGIN_ROOT}/skills/flatpaper-mode/playbooks/investigation.md`). This skill answers why.
+Each spawn below names a role and a default. Pick its model from its role's line in `~/.claude/flatpaper-stack/models.md`, or the default when the file or the line is missing. Before you spawn, read `../flatpaper-mode/references/spawning.md` in full and follow it for each spawn's model and effort.
 
-Work like a careful investigator. Say what you know, what you infer, and what you could not find. Every claim sits in one of the confidence tiers in `${CLAUDE_PLUGIN_ROOT}/skills/flatpaper-mode/references/principles.md` (Direct, Supported, Inferred, Speculative, Unknown). `references/epistemics.md` adds the phrasing rules and traps the tiers don't cover.
+Every spawn is an Agent subagent with `subagent_type: general-purpose`, so the MCP-backed investigators and the synthesizer's citation spot-checks have every MCP tool. Investigators still shouldn't write anything.
 
-## Step 1. Pin the target and the question
+## Operating Posture
 
-The target is a chunk of code, a pattern, a feature, or a named decision. The question is a rationale, a tradeoff, a motivating edge case, an outside constraint, dead code, or a history sweep.
+Before Step 1, read `references/epistemics.md` in full. It holds the confidence framework and phrasing guide. You and the synthesizer both follow it, including when you answer inline. Operate as a **careful, cautious, and precise investigator**. Be honest about what you know vs what you're inferring.
 
-If the target is vague, take your best guess from the conversation (open files, recent edits, what was just discussed). State it in one line so the user can redirect, then go on.
+## Step 1. Understand the Target and the Question
 
-Check: one line naming the target and one naming the question.
+The **target** is usually a chunk of code, a pattern, a feature, or a named design decision. The **question** is usually a design rationale, a tradeoff, a motivating edge case, an external constraint, dead code, or a broad history sweep.
 
-## Step 2. Build the code anchor
+If the target is vague ("why do we do it this way?" with no clear referent), make your best guess from conversation context (open files, recent edits, cursor location, what was just discussed). State your interpretation briefly so the user can redirect if you're off, then proceed.
 
-Do this inline before spawning anything. Collect:
+## Step 2. Establish the Code Anchor
 
-- File paths and line ranges, and the key symbols.
-- Last-touch commits: `git blame -L <start>,<end> <file>`.
-- History through renames: `git log --follow --oneline -- <file>`, then `git log --follow -p -- <file>` where the diffs matter.
-- PR numbers from commit subjects (`(#1234)`) and bodies (`git log -1 --format=%B <commit>`).
-- The bodies and discussion of each substantive PR: `gh pr view <n> --json title,body,author,createdAt,mergedAt,labels,closingIssuesReferences,comments,reviews`.
-- Ticket IDs named in commits or PR bodies.
+Before spawning investigators, build the seed context inline: file paths and line ranges, key symbols (functions, classes, constants), the last few commits touching the target, PR numbers from merge commits (pattern `(#1234)` in the subject line), and any linked ticket IDs. Run `git blame -L <start>,<end> <file>` for last-touch commits, `git log --follow -p -- <file>` for full history with patches through renames, `git log --oneline -20 -- <file>` for recent commits with PR numbers visible, and `git log -1 --format=%B <commit>` to extract PR numbers. Then pull the PR bodies and discussion for any substantive commit: `gh pr view <number> --json title,body,author,createdAt,mergedAt,labels,closingIssuesReferences,comments,reviews`. This anchor goes to every investigator and to the synthesizer.
 
-Note whether the target looks defensive: null checks, retries, timeouts, rate limits, feature flags, egress guards, OOM handling. If it does, investigators also get `references/sources/incident-postmortem.md`.
+## Step 3. Spawn Parallel Investigators
 
-Check: the anchor lists files, symbols, commits, PRs, and ticket IDs, or says "none found" for each.
+**Default to the full parallel investigation.** The goal is a complete coverage map, not a minimal one. Document the null, don't skip the search.
 
-## Step 3. Discover the evidence sources
+### Discovery
 
-Claude Code exposes MCP connectors as tools named `mcp__<server>__<tool>`. Read this session's tool list, including tools listed only by name as deferred. Don't assume any connector is present, and never guess a tool name.
+Before spawning investigators, list the available MCPs from the Claude Code environment. Use the `mcp__<server>__<tool>` names in your tool list, including deferred tools. Otherwise run `claude mcp list`.
 
-Map each server to one evidence category:
+Map each available MCP to one evidence category:
 
-| Category | Best at | Playbook |
-|---|---|---|
-| Source control | Rationale captured in review | `references/sources/code-archaeology.md` |
-| Issue tracker | The product or business forcing function | `references/sources/issue-tracker.md` |
-| Long-form docs | Design rationale written before the code | `references/sources/docs.md` |
-| Team chat | Deliberation that never reached a doc | `references/sources/chat.md` |
-| Observability and error tracking | The runtime reality that motivated defensive code | `references/sources/observability.md` |
-| Data warehouse | Where a number came from, flag and experiment history | `references/sources/observability.md` |
+1. Source control history
+2. Issue / ticket tracker
+3. Long-form documents
+4. Real-time team chat
+5. Infrastructure observability
+6. Error / exception tracking
+7. Product analytics warehouse
 
-Classify by server name, tool names, and tool descriptions. If a server fits two categories, pick its main evidence and note the call. Source control is always reachable through git and `gh`. GitHub Issues are reachable through `gh issue` even with no tracker connector.
+Source control is always available through git and `gh`. For the other six, classify using the MCP name, server instructions, tool names, and resource descriptors. If an MCP could fit more than one category, choose the one matching its primary evidence. Record ambiguous cases in the coverage map.
 
-For each server, record one status:
+Spawn one investigator per category that has a matching MCP, all in a single message so they run concurrently, each owning exactly one tool or MCP. Don't ask one agent to cover multiple MCPs. Role: `why investigators` (default `claude/sonnet`). Investigators need MCP tools, so a `codex` or `gemini` value falls back to the default.
 
-- **Reachable.** It exposes search or read tools. If those tools are deferred, load them with `ToolSearch` before use.
-- **Needs auth.** It exposes only `authenticate` or `complete_authentication`. Record it as unreachable and name it in the gaps, with the server to authenticate. Don't stop the investigation and don't start an auth flow unless the user is present and asks.
-- **None.** No server in the session maps to the category.
+Each investigator's prompt is `references/investigator-prompt.md` filled in, plus:
+- the category playbook `references/sources/<source>.md` for the selected MCP, adapted from the examples in `references/source-playbook.md`
+- `references/sources/incident-postmortem.md` **if the target code looks defensive** (null checks, retry logic, timeout handling, rate limiting, feature flags, egress guards, OOM handlers)
+- the code anchor and the user's original question
 
-Check: a coverage table with every category, its server or "none", and its status.
+### Investigator roster, one per available evidence category
 
-## Step 4. Spawn investigators in parallel
+Each category below is uniquely positioned to surface one shape of "why", shown after "Best at". Use it to know what to expect back, to name a gap when a category returns empty, and, only in the rare provably-irrelevant case, to justify a skip.
 
-Default to full coverage. An empty search is a finding. Spawn one investigator per reachable category, all in one message with `run_in_background: true`. Each owns exactly one category. Don't ask one agent to cover two servers.
+1. **Source control** (git history, `gh` for PRs, code comments, tests). Always spawn, the only guaranteed source. Best at *implementation-time rationale captured during review*.
+2. **Issue / ticket tracker** (e.g. Linear, Jira, GitHub Issues, Plane, Shortcut MCP). Best at *the product or business forcing function*. Strongest when the why is external to engineering.
+3. **Long-form documents** (e.g. Notion, Confluence, Google Docs, Coda MCP). Best at *long-form design rationale*, written out before it becomes code.
+4. **Real-time team chat** (e.g. Slack, Discord, Microsoft Teams, Mattermost MCP). Best at *real-time deliberation that never reached a doc*. Especially important when the source control, ticket, and doc paper trail is thin.
+5. **Infrastructure observability** (e.g. Datadog, New Relic, Honeycomb, Grafana, Splunk MCP). Best at *infrastructure and runtime reality that motivated the code*. Strongest when the target reacts to an infra signal (timeouts, retries, rate limits, circuit breakers).
+6. **Error / exception tracking** (e.g. Sentry, Rollbar, Bugsnag, Airbrake MCP). Best at *the specific exceptions and error trajectories that motivated defensive or corrective code*. Strongest for catch blocks, null guards, type checks, retries, and other defenses.
+7. **Product analytics warehouse** (e.g. Databricks, Snowflake, BigQuery, ClickHouse, dbt, Redshift MCP). Best at *product and data reality that shaped the code*. Strongest for flag-gated code, experiment-driven ships, data migrations, and "where did this number come from" questions.
 
-- Source control: `subagent_type: "Explore"`, `model: "sonnet"`. It is read-only and needs only git, `gh`, and file search.
-- Every MCP-backed category: `subagent_type: "general-purpose"`, `model: "sonnet"`. Tell it not to write files or change anything in the external system.
+### When to skip an investigator
 
-Each brief is `references/investigator-prompt.md` filled in, plus the category's playbook from the table, plus `references/sources/incident-postmortem.md` when the target looks defensive, plus the anchor and the user's question verbatim.
+Only with an **explicit, written justification** that goes in the final Sources Consulted. Two valid reasons:
 
-Skip a category only with a written reason that goes into Sources Consulted. Two reasons are valid:
+- **No MCP is available for that category** in this environment. Flag it as a gap, not a choice: "Real-time team chat skipped. No matching MCP available, so the conversational record was not searchable."
+- **The source is provably irrelevant**, not just "probably irrelevant." A high bar: "Error / exception tracking skipped. Target is a build-time script with no runtime code path."
 
-- **Unreachable.** No server, or it needs auth. This is a gap, not a choice: "Team chat not searched. The Slack connector needs authentication."
-- **Provably irrelevant.** A high bar: "Error tracking skipped. The target is a build script with no runtime path."
+Always spawn at least the source-control investigator and the synthesizer, even when a PR body seems to hold the whole answer. Answer inline only when the user asks for a quick answer.
 
-For a trivial target, one commit whose PR body fully answers the question, you may answer inline. Say that you checked and the other searches would be redundant. This should be rare.
+## Step 4. Synthesize
 
-Check: every category is either spawned or has a written skip reason.
+Spawn one synthesizer. Role: `why synthesizer` (default `parent`). It gets:
+1. The investigator findings, including any null results and any categories skipped with justification
+2. The code anchor
+3. The user's original question
+4. The epistemics framework from `references/epistemics.md`
+5. The synthesizer prompt template from `references/synthesizer-prompt.md`
 
-## Step 5. Synthesize
+## Step 5. Present
 
-When all investigators return, spawn one synthesizer: `subagent_type: "general-purpose"`, `model: "opus"`. General-purpose keeps MCP access so it can spot-check citations. Give it all findings including nulls, the skip reasons, the anchor, the question, and `references/synthesizer-prompt.md` filled in. It reads `references/epistemics.md` and the confidence tiers before writing. When you paste a template into a brief, replace `${CLAUDE_PLUGIN_ROOT}` with the plugin's real path (two directories above this skill's base directory), since a subagent cannot expand it.
+Present the synthesizer's output to the user. You may lightly edit for clarity or add context from the conversation, but **do not rewrite the confidence language**.
 
-Check: the output has every section of the synthesizer template, and Sources Consulted has one line per category.
+## Output Format
 
-## Step 6. Present
+The structure is the one in `references/synthesizer-prompt.md`: The Question, The Code in Question, What We Found, What We Can Reasonably Infer, Competing Hypotheses, What We Don't Know, Sources Consulted, Confidence Summary. Adapt as needed, but keep the confidence separation intact, and keep Sources Consulted as one line per investigator, including the ones that returned nothing or were skipped, with the reason.
 
-Hand the user the synthesizer's output. You may tighten it or add context from the conversation. Don't change the confidence language or move a claim between tiers.
+After Sources Consulted, if the user's `why` question is a precursor to changing this code, convert the lineage findings into a Preserve / Change / Avoid / Risk constraint set for planning the change.
 
-If the user asks why because they plan to change the code, add a constraint set after Sources Consulted:
+## Common Failure Modes to Avoid
 
-- **Preserve.** Behavior the record says was deliberate.
-- **Change.** What the record says is free to change, or was a stopgap.
-- **Avoid.** Approaches the record shows were tried and rejected.
-- **Risk.** What breaks if a Speculative or Unknown reading turns out wrong.
-
-## Failure modes
-
-- **Recency bias.** The latest commit is not the whole story. The current shape is usually many earlier decisions. Trace back.
-- **Confirming the user's guess.** A hypothesis in the question is one candidate. Test it.
-- **Code as its own evidence.** What the code does is not why it exists.
-- **Silent gaps.** A source you could not reach goes in the answer, by name.
-
-**Reply:** the synthesized answer, then Sources Consulted with one line per category, including the ones not searched and why.
+- **Recency bias**. Assuming the most recent commit is authoritative. The current shape is often the accretion of many earlier decisions. Trace back.

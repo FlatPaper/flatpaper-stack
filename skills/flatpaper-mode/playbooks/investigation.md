@@ -1,12 +1,14 @@
 ### Investigation
 
-**You own the answer.** Read-only. The output is a cited explanation or a recommendation, not a code change.
+**You own the answer. Plan, route, write.**
 
-1. For "how does X work" and "where should this live", run the `how` skill. It reads a narrow area directly, and splits a large one across read-only explorers and one explainer. Either way the answer comes in its sections with `file:line` citations.
-2. For "why was it built this way" questions, run the `why` skill. It anchors in git history first and then checks the other sources this session can reach. "Nobody wrote down why" is a valid finding.
-3. Put each claim in a confidence tier from `../references/principles.md`. Cite `file:line`, commits, PRs, and command output for each claim. A hypothesis the user embeds in the question ("I assume it's for performance?") is a claim to test.
-4. For a choice between options, answer with a recommendation and a tradeoffs table. If running something would settle the choice, say so and route to Prototype.
+Investigation requests are read-only. They produce a cited explanation or a recommendation, not a code change.
 
-No code changes. If the findings point at a fix, say so and stop. The fix is matched to its own playbook on the next prompt.
+1. Route through the **how** skill. For motivation questions, also route through the **why** skill.
+2. Throughput checkpoint stays one line: `throughput checkpoint: n/a, read-only investigation`.
+3. Produce the `how`-shaped output (Overview / Key Concepts / How It Works / Where Things Live / Gotchas), or a recommendation with a tradeoffs table if the request is a decision between alternatives.
+4. Apply the **unslop** skill to the reply (user-only, so read `../../unslop/SKILL.md` instead of invoking it).
 
-**Reply:** the answer first, then the evidence used, then open questions. For "are we sure?", give your real judgment and push back if the premise is wrong.
+No PR, no babysit, no `architect` unless the investigation precedes a code change. If it does, hand back to the user and re-route to Bug fix or Feature.
+
+**Reply:** the investigation output. For "are we sure?" answers, include your real judgment with reasons. Push back if the premise is wrong (see Autonomy).

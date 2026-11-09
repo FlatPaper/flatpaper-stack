@@ -2,10 +2,10 @@
 
 **You own the resume point. Read the prior trail, don't redo it.**
 
-1. Locate the prior trail. Read the show-me-your-work decision log first if one exists (`decisions.tsv` or `.audit/<task-slug>.tsv`), then `flatpaper/<branch>/RESUME.md` under the git common dir (`git rev-parse --git-common-dir`) or any other `RESUME.md`, and the last `wip:` commit that Pause safely left. If you will log, your first row is the `start` row show-me-your-work requires. Then `git log` and `git diff` against the base, the open tasks, and the PR state (`gh pr view`, `gh pr checks`). A prior transcript lives under `~/.claude/projects/<project-dir>/<session-id>.jsonl`. Read only this project's directory and the ones for its worktrees under `.claude/worktrees/`. Never glob across other projects. Parse a long transcript in a subagent and keep the reduced timeline here.
-2. Reconstruct the state: the branch and worktree, what landed, what was decided, what is open. The trail is authoritative input. Don't re-derive it.
-3. Diff done against planned and name the resume point. Don't redo completed work.
-4. Verify the inherited claims the next step builds on, on the real artifact. Re-read live state (branch, PR, CI) and rerun the cheapest check behind each claim. A prior self-report is not proof. A claim that fails is a finding to log, not a reason to restart.
-5. Route the remaining work to its playbook. Pickup ends here and the routed playbook owns the rest.
+1. Locate the prior trail. A local transcript under `~/.claude/projects/<project>/`, where `<project>` is the working directory path with each `/` replaced by `-` (do not glob across `~/.claude/projects/*/`, that crosses workspace boundaries and reads private chats from unrelated projects), or a pushed branch. Read the metadata overview and last messages first, then scan back for the decision points. Parse a long transcript in a subagent and keep the reduced timeline in the main thread (the **principle-guard-the-context-window** skill). Pick each subagent's reasoning level for the job, per the Subagents section.
+2. Reconstruct operational state. The branch and worktree, what already landed (`git log`, `git diff` against the base), the open todos, the decisions made. The prior trail is authoritative input. Resist the bias to re-derive it.
+3. Diff done vs pending. Compare what shipped against what was planned, name the resume point, do not re-run the prior repro or redo completed work. A "let me verify from scratch" pass means you're treating the trail as untrustworthy when it's authoritative.
+4. Route the remaining work to the matching playbook and pick the verdict: continue the execution, ship a finished recommendation, ratify or override a prior conclusion, or postmortem a failed run. The pickup playbook ends here. The routed playbook owns the rest.
+5. Verify the inherited claims against the original goal on the real artifact (the **principle-prove-it-works** skill). A passing prior self-report is not the proof.
 
-**Reply:** where the prior session stopped, what you inherited and what you rechecked, any inherited claim that failed, the resume point, and the playbook you routed to.
+**Reply:** where the prior agent stopped, what you inherited vs redid (ideally nothing redone), the resume point, and the outcome.

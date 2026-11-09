@@ -1,58 +1,71 @@
 # Epistemics
 
-How to reason and write when the evidence is old, partial, and sometimes contradictory. The five confidence tiers (Direct, Supported, Inferred, Speculative, Unknown) are defined in `${CLAUDE_PLUGIN_ROOT}/skills/flatpaper-mode/references/principles.md`. This file adds what the tiers leave out.
+How to reason about confidence when evidence is historical, fragmentary, and sometimes contradictory, and how to tell the user without flattening it into false certainty. Code shows what it does, not *why it exists*. The why lives in commits, PRs, tickets, docs, and conversations, all incomplete, biased, and sometimes missing. Pretending otherwise produces confident-sounding guesses that mislead the user.
 
-Code shows what it does, not why it exists. The why lives in commits, PRs, tickets, docs, and conversations, and all of them are incomplete. A confident guess misleads the user, because they will act on it.
+## Confidence Tiers
 
-## Claims about human decisions
+Every claim in the output must sit in one tier. The tier sets its section and its phrasing.
 
-When the exact scope of a human ruling matters, find the person's original words. Keep the source, the speaker, and enough of the wording to show the scope. An agent's summary of a ruling is an interpretation, however old it is, and a paraphrase alone cannot establish the scope. If the original is gone, say so and leave the scope uncertain. Never invent a firm ban or permission.
+### 1. Direct
 
-"Avoid that endpoint during this migration" and an agent's "the user forbids that endpoint" are different claims. Report the original and the interpretation separately. Copies of one interpretation in several notes are one evidence chain, not several decisions. Trace them to their source before raising confidence.
+An explicit, textual citation answers the question: something an author actually *wrote* that says why, not "the code does X so the author must have wanted X." For example, a PR description "this fixes the bug where users with >1000 items couldn't paginate", a ticket "we're adding this because customer Acme requested it in their security review", a code comment "// clamp to 100 because the upstream API rejects larger values", a design doc "we chose option A over option B because we need persistence across restarts", or a chat message from the author "switching to this approach since the old one was flaky in tests".
 
-## What counts as Direct
+Phrasing: confident, present tense, cited. "This exists because X."
 
-Something an author wrote that says why. Not "the code does X, so the author wanted X." Examples:
+### 2. Supported
 
-- A PR body: "this fixes the bug where users with more than 1000 items couldn't paginate."
-- A ticket: "we're adding this because Acme asked for it in their security review."
-- A code comment: "clamp to 100 because the upstream API rejects larger values."
-- A design doc: "we chose A over B because we need persistence across restarts."
-- A chat message from the author: "switching to this since the old one was flaky in tests."
+Multiple pieces of indirect evidence converge on one conclusion. No single source states it explicitly, but the pattern across sources makes it likely. For example, the PR title says "improve performance", the ticket is labeled "perf", and the surrounding commits all touch the same hot path. Or several tests added with the change all exercise very large inputs. Or the author's other PRs from the same week all name the same incident.
 
-## Phrasing by tier
+Phrasing: confident but clearly derived, citing each item. "The evidence points strongly to X: [the specific pieces]."
 
-- **Direct.** Plain, present tense, cited. "This exists because X." Source next to it.
-- **Supported.** Confident but visibly derived. "The evidence points strongly to X:" then each item.
-- **Inferred.** Hedged, with the chain shown. "Given A and B, C seems likely because D."
-- **Speculative.** "One possibility is X, but we found no direct evidence." Usually sits next to other hypotheses.
-- **Unknown.** Name what you searched and with what terms. "We searched the tracker for A and B, read the 6 PRs that touched this file since 2023, and grepped the repo for the threshold value. None gave a reason." That beats "we couldn't find out."
+### 3. Inferred
 
-Confidence words need a citation right next to them and never go on an inference: "because", "the reason is", "was designed to", "fixes", "addresses", "solves", "the team decided".
+A reasonable reading of the context that nothing explicitly supports. It is *your interpretation*, not a fact from the record. For example, the PR doesn't say why, but the error was happening in production (per the incident channel timing) and the fix was rushed (merged the same day), so it was likely a hotfix. Or the function name suggests retry logic, and its retry count of 3 matches the team's 3-retry convention elsewhere in the codebase.
 
-Hedges mark interpretation: "appears to", "seems to", "likely", "suggests", "is consistent with", "one reading is", "plausibly", "may have been".
+Phrasing: hedged, with the chain explicit. "Given A and B, C seems likely because D."
 
-Avoid "obviously", "clearly", "of course", "just" (as in "it's just for performance"), and "I think". If it were obvious the user would not be asking. Write "the evidence suggests" instead of a personal opinion.
+### 4. Speculative
 
-## Don't rationalize
+A plausible hypothesis on thin evidence, where other explanations fit equally well. Worth presenting, since the user may know which is right, but mark it as a guess. For example, "This might be a workaround for a browser bug that's since been fixed, but we found no contemporary evidence of that", or "It's possible this threshold was chosen to match an SLA commitment, but no SLA doc references it."
 
-Code that makes sense today may have been written for reasons that no longer hold, or that were wrong at the time. Don't fit a clean story onto messy history. Don't assume the author did the right thing and work backward. Don't assume a consistent pattern was deliberate. It may be copy and paste. Absence of evidence is not evidence of absence: "nobody mentioned security, so it wasn't a concern" is not a finding.
+Phrasing: "One possibility is X, but we have no direct evidence." Usually lives in Competing Hypotheses, alongside other possibilities.
 
-## The user's guess
+### 5. Unknown
 
-"Why do we do it this way, I assume it's for performance?" The guess is a lead, not a conclusion. Treat it as one candidate and check it on its own. If the evidence supports it, say so with citations. If not, say so and give what the evidence does support.
+You looked and couldn't find out. A valid, important outcome. Document it.
 
-## When sources disagree
+Phrasing: "We searched X, Y, and Z and found no evidence of why." Be specific about *what* you searched. "We couldn't find out" is less useful than "We searched the ticket tracker with keywords A and B, scanned the 6 PRs that touched this file since 2023, and grep'd the repo for string literals matching the threshold. None surfaced a rationale."
 
-Show both, with citations. Don't pick the tidier one. A ticket that says "needed for customer X's compliance" and a PR that says "cleaning up tech debt" may both be true: the ticket motivated the work and the PR gave the author's framing. Let the user make the call.
+## Phrasing Guide
 
-## When evidence is missing
+**Confidence words** imply Direct or Supported evidence and need a citation immediately adjacent. Never use them for inferences: "because", "the reason is", "was designed to" (claims author intent), "fixes" / "addresses" / "solves" (claims the change achieved its goal), "the team decided" (claims a group decision happened).
 
-An honest "we don't know" is one of the most useful outputs. It tells the user the answer is not in the obvious places, and who to ask: the author, the product owner, the team lead. Name each gap: the question, the sources searched, the terms used, and what came back.
+**Hedges** signal interpretation, not report. Use them liberally in What We Can Reasonably Infer: "appears to", "seems to", "likely", "suggests", "is consistent with", "one reading is", "plausibly", "may have been", "the evidence points toward".
 
-## Before finalizing
+**Words to avoid:**
 
-- Every claim in What We Found has a citation, or it moves to Inferred or Competing Hypotheses.
-- Phrasing matches the tier.
-- No claim uses the code as evidence of its own intent.
-- What We Don't Know exists and names specific gaps. An empty one is suspicious.
+- "obviously". If it were obvious, the user wouldn't be asking
+- "clearly". Almost always precedes a claim that isn't clear
+- "of course". Same
+- "just" (as in "it's just X for performance"). Dismissive and usually hides uncertainty
+- "I think" / "I believe". You're synthesizing evidence, not giving a personal opinion. Use "the evidence suggests" instead.
+
+## Avoid Rationalization
+
+Code that "makes sense" today may have been written for reasons that no longer apply, or that were wrong at the time. Don't retrofit a clean rationale onto messy history. Don't assume the author did the "right" thing and work backward to justify it. Don't assume a consistent pattern was intentional when it might be copy-paste. Don't turn an absence of evidence into evidence of absence ("no one mentioned security concerns, so it must not have been a concern").
+
+## The Sycophancy Trap
+
+Users often embed a hypothesis: "Why do we do it this way, I assume it's for performance?" Don't simply confirm it. The guess is a prompt for investigation, not a conclusion to validate. Treat it as one candidate among others and check the evidence independently. If the evidence supports it, say so with citations. If not, say so, and present what the evidence *does* support.
+
+## When Evidence Contradicts
+
+Surface both sources in the output, with citations. Don't pick the one that fits a tidier narrative. For example, the ticket says "we need this for customer X's compliance requirement" and the PR says "cleaning up tech debt in this area". Both may be true (the ticket motivated the work, the PR gave the author's framing), or one may be wrong. Let the user make the call.
+
+## When Evidence Is Missing
+
+An honest "we don't know" is one of the most valuable outputs. The user learns the answer isn't in the obvious places, that they'll need to ask a human (the original author, the product owner, the team lead), or that they can decide the question isn't worth pursuing further. Failing to mark a gap, and instead filling it with a confident guess, actively harms the user, because they'll act on the guess. Name each gap concretely: the question, the sources searched, what you searched for in each, and what you found (nothing, or only tangential material).
+
+## Before Finalizing
+
+Before the synthesizer delivers the output, it checks every claim in "What We Found" and "What We Can Reasonably Infer". Each claim has a citation or moves to Inferred or Hypotheses. Its phrasing matches its tier. It doesn't treat code as evidence for its own intent (if it does, remove or reclassify it). The output has a "What We Don't Know" section. If no gaps are mentioned, that's suspicious. Either the evidence was unusually complete or something is being swept under the rug.

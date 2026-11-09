@@ -1,145 +1,155 @@
 ---
 name: flatpaper-help
-description: Guides users through flatpaper setup, /flatpaper-stack:flatpaper-mode, and picking the skill, playbook, or principle for a task. Type /flatpaper-stack:flatpaper-help with a question.
+description: Guides users through flatpaper-stack setup, /flatpaper-stack:flatpaper-mode, and picking the skill, playbook, or principle for a task. Type /flatpaper-stack:flatpaper-help with a question.
 disable-model-invocation: true
 ---
 
-# flatpaper help
+# Flatpaper help
 
-Answer the user's question about flatpaper, hand them a prompt they can send, and link the file the answer came from. For a help question, don't start the work. The user asked how, and a flatpaper run spends real tokens, so let them send the prompt.
+Answer the user's question about flatpaper-stack, hand them a prompt they can send, and link the file the answer came from. For a help question, don't start the work. The user asked how, and a flatpaper-stack run spends real tokens, so let them send the prompt.
 
-A message that asks for work, such as "use flatpaper to fix this bug", is not a help question. Read `${CLAUDE_PLUGIN_ROOT}/skills/flatpaper-mode/SKILL.md`, do the work under it, and mention once that starting the next task with `/flatpaper-stack:flatpaper-mode` does the same.
+A message that asks for work, such as "use flatpaper-stack to fix this bug", is not a help question. Read [`flatpaper-mode`](../flatpaper-mode/SKILL.md), and do the work under it.
 
-This file maps questions to the skills and guide sections that hold the answers. Those files own the details. Read the file you route to before you quote it, and trust it when it disagrees with this map. Paths here point into the installed plugin, which the user may not have open, so give the user the file's public copy: `https://github.com/FlatPaper/flatpaper-stack/blob/main/` followed by its path. The guide is published at https://claude.ai/artifact/UtoWgg52numPjfmQg2r27P. Its sections have anchors, such as `#c-first`, that you can append.
+This file maps questions to the skills and files that hold the answers. Those files own the details. Read the file you route to before you quote it, and trust it when it disagrees with this map. The links here are relative to this file, so give the user the file's full path on disk, which they can open from the terminal.
 
 ## Find out what they need
 
-Infer the need from the message and the conversation. A named situation, such as "which skill reviews a PR?", goes straight to its section. If the need is still unclear, ask one multiple-choice question with `AskUserQuestion`, with these options, then answer only the section they pick:
+Infer the need from the message and the conversation. A named situation, such as "which skill reviews a PR?", goes straight to its section. If the need is still unclear, ask one multiple-choice question with these options, then answer only the section they pick:
 
 - Get set up
 - Start a task with `/flatpaper-stack:flatpaper-mode`
 - Pick a skill for a situation
 - Fix a run that went wrong
+- Make flatpaper-stack my own
 
 Check the state that changes the answer, and mention it only when it does:
 
-- `CLAUDE_CODE_ENABLE_TODO_TOOLS` not set to `1` in `~/.claude/settings.json` means flatpaper-mode can't put playbook steps in the task list and falls back to a checklist in its replies.
-- No `verify-*` skill under the project's `.claude/skills/` means agents have no scripted way to drive the app. Mention `/flatpaper-stack:create-verification-skill` when the question is about proving a change works.
-- No project skill under `.claude/skills/` that runs a model checker, prover, or other verifier against named code means no property is checked past what tests reach. Mention `/flatpaper-stack:create-formal-verification-skill` when the question is about a race, an invariant, or another case tests rarely hit. If such a skill exists, check whether its covered code changed after its sync commit. If it did and the question touches that code, mention `/flatpaper-stack:maintain-formal-verification-skill`.
-- No `docs/architecture/` in the project means agents have no map to read first. Mention the Architecture page playbook when the question is about onboarding an agent to a repo.
+- No `~/.claude/flatpaper-stack/models.md` means `/flatpaper-stack:setup-flatpaper-stack` hasn't run for this user, so every role uses its default model.
+- No `verify-*` skill or other app harness in the project means agents have no scripted way to drive the app. Mention `/flatpaper-stack:create-verification-skill` when the question is about proving a change works.
+- No formal verification skill in the project means no property is checked past what tests reach. Mention `/flatpaper-stack:create-formal-verification-skill` when the question is about a race, an invariant, or another case tests rarely hit. When one exists and the code it covers changed after the commit it records as last in sync, mention `/flatpaper-stack:maintain-formal-verification-skill` if the question touches that code.
+
+When the models file is missing and it matters, ask whether the user wants to pick a model for each role and a reasoning budget now. It matters when the user is new, the question is about setup or cost, or the answer depends on which models run. Ask at most once per chat. If the need is also unclear, ask both questions together. Offer two choices:
+
+- Now: give them `/flatpaper-stack:setup-flatpaper-stack` to type, and answer their question too.
+- Later: answer their question, and add one line saying every role keeps its default model until they run `/flatpaper-stack:setup-flatpaper-stack`.
 
 ## Get set up
 
-1. Load the plugin from a local clone with the `--plugin-dir` alias, or install it with `claude plugin marketplace add` and `claude plugin install flatpaper-stack@flatpaper-stack`. The Install section of the `README.md` has both.
-2. Add the settings in the README's Settings section to `~/.claude/settings.json`, then restart Claude Code. A session that is already open keeps its old tool list.
+1. Install per the [README](../../README.md), then start a new session so the skills load.
+2. Run [`/flatpaper-stack:setup-flatpaper-stack`](../setup-flatpaper-stack/SKILL.md). It finds the Claude, Codex, and Gemini models this Claude Code can use, asks for a reasoning budget, maps a model to each role, and writes the models file. Skills read the file each time they spawn a subagent. Then it offers once each to generate a verification skill and a formal verification skill for the project, unless the project already has one.
 3. Start a real task with `/flatpaper-stack:flatpaper-mode`, a goal, and a check that can pass or fail.
 
-Installing turns on the guidelines and the prompt hook in every session. The skills run only when the user types them, a playbook step calls them, or, for the ones that allow it, the model picks them from the user's words. [Guide 1.1](https://claude.ai/artifact/UtoWgg52numPjfmQg2r27P#install) has the details. Offer to word their first prompt with them, per `references/prompting.md`.
+Installing changes nothing until the user invokes a skill. Only `setup-flatpaper-stack`, `control-cli`, `control-ui`, `verify-this`, and `deslop` load from the user's words. Offer to word their first prompt with them, per [`references/prompting.md`](references/prompting.md).
 
-If cost is the worry, say where the tokens go and how to spend fewer. flatpaper spends extra tokens on subagents and review panels. `/flatpaper-stack:interrogate` and `/flatpaper-stack:arena` each run three agents on different models. Save `/flatpaper-stack:flatpaper-mode` for work that needs rigor. Quick questions need nothing, because the guidelines are always on. Name a cheaper skill directly when the user wants less than a playbook gives.
+If cost is the worry, say where the tokens go and how to spend fewer. flatpaper-stack spends extra tokens on subagents and review panels. Rerun `/flatpaper-stack:setup-flatpaper-stack` and pick a smaller budget or cheaper models. A role set to `parent` runs on the chat's model, so a cheaper chat model (`/model`) makes it cheaper too. A shorter panel list runs fewer subagents, one for each entry. Save `/flatpaper-stack:flatpaper-mode` for work that needs rigor.
 
-flatpaper is built for Claude Code. Route only to the skills, playbooks, and settings in this plugin and in Claude Code.
+flatpaper-stack adapts poteto's pstack, which is built for Cursor, to Claude Code. Each command takes a `flatpaper-stack:` prefix, such as `/flatpaper-stack:flatpaper-mode`. Steps that needed a Cursor-only feature, such as Bugbot, cloud agents, or Automations, were dropped or swapped for a Claude Code equivalent.
+
+Other tools can read the skills, because they use the Agent Skills format. But most workflow skills, including `/flatpaper-stack:flatpaper-mode`, `/flatpaper-stack:how`, `/flatpaper-stack:why`, and `/flatpaper-stack:teach`, spawn Claude Code subagents, and `/loop` is a Claude Code feature, so those parts may not work there.
 
 ## Start a task with `/flatpaper-stack:flatpaper-mode`
 
-`/flatpaper-stack:flatpaper-mode` matches the task to a playbook, creates one task per playbook step, and runs the other skills as the steps need them. A step it skips stays in the list as `skip: <reason>`. A good prompt has up to five parts, one sentence each: goal, done check, proof, what the user knows, and constraints. It doesn't list skills, because a hand-written sequence tends to drop or reorder steps the playbook would keep. Read `references/prompting.md` before you help word one. [Guide 3.1](https://claude.ai/artifact/UtoWgg52numPjfmQg2r27P#c-first) walks through a first session.
+`/flatpaper-stack:flatpaper-mode` matches the task to a playbook, copies the playbook's steps into the task list, and runs the other skills as the steps need them. A step it skips stays in the list as `skip: <reason>`. A good prompt states the goal and how to tell it's done. It doesn't list skills, because a hand-written sequence tends to drop or reorder steps the playbook would keep. Read [`references/prompting.md`](references/prompting.md) before you help word one.
 
-The mode re-matches every prompt to a playbook, so review, then fix, then PR works in one session without retyping the command. Starting a message with "new task:" makes the switch explicit. Don't `/clear` between steps of one piece of work, because the next step needs what the last one found. After a `/clear`, start the next task with the command again.
-
-`/flatpaper-stack:flatpaper-mode` spawns its code-writing delegates as `flatpaper-stack:flatpaper-agent`, which reads the mode before any work. To get the same style from a subagent of your own, spawn it with `subagent_type: "flatpaper-stack:flatpaper-agent"`.
+Typing `/flatpaper-stack:flatpaper-mode` loads the skill into the chat, and it can fade as a long chat moves on. Claude Code has no Custom Modes to pin it, so start each new task with `/flatpaper-stack:flatpaper-mode`. Mid-chat, "new task" makes the mode match a fresh playbook. `/flatpaper-stack:flatpaper-mode` already uses `flatpaper-agent` for the subagents its playbook steps spawn. To get the same style from a subagent of your own, spawn it with `subagent_type: "flatpaper-stack:flatpaper-agent"`.
 
 ## Pick a skill
 
-The default answer is `/flatpaper-stack:flatpaper-mode`, which runs most of the others when its steps need them. Name a skill directly when the user wants more or less of something than the playbook gives. Read the skill before you recommend it, and give one example prompt. Every command starts with `/flatpaper-stack:`.
+The default answer is `/flatpaper-stack:flatpaper-mode`, which runs most of the others when its steps need them. Name a skill directly when the user wants more or less of something than the playbook gives. Read the skill before you recommend it, and give one example prompt.
 
 | The user wants to | Skill |
 |---|---|
-| Do any non-trivial task with rigor | `flatpaper-mode` |
-| Get a prompt rewritten deeper, not bigger, before sending it: what a top professional would add, their raw material and methods, and an outside check. It returns the prompt and doesn't do the task | `sharpen` |
-| Know how code works, or where new code should live | `how` |
-| Know why code is shaped this way, or where a number came from | `why` |
-| Actually understand a change or subsystem, explained plainly at their pace | `teach` |
-| Hear the last reply again in plain words | `bro` |
-| Run a large migration or a multi-part change no playbook fits | `figure-it-out`, or `flatpaper-mode`, which routes there |
-| Catch up on their own recent work in this project | `recall` |
-| Catch up on what changed in this chat since their last message | `ketchup` |
-| Get that catch-up as a short subtitled video instead of text | `ketchup-video` |
-| Know what a diff could break outside itself | `blast-radius` |
-| Settle types and module shape before code that crosses a module boundary | `architect` |
-| Get several attempts at one brief, merged into the best one | `arena` |
-| Run parallel checks over slices, or race workers | `swarm` |
-| Check a speedup or regression they measured before reporting it | `benchmark-checklist` |
-| Have different models try to break a diff, keeping only findings a run proves | `interrogate` |
-| Clean up a diff for reuse, simplicity, and efficiency without changing behavior | `tidy` |
-| Strip comments before review, using a reviewer that didn't write them | `no-comments` |
-| Clean AI tells out of prose | `unslop` |
-| Write docs, an RFC, a README, a PR description, or a commit message to a standard | `technical-writing` |
-| Give agents a scripted way to drive the app and prove behavior | `create-verification-skill` |
-| Bring a verification skill and its feature map back in line with the app | `maintain-verification-skill` |
-| Formally verify a race, an invariant, or another property tests rarely reach | `create-formal-verification-skill` |
-| Bring a formal verification back in line after the code it covers changed, and learn whether a failure is drift or a bug | `maintain-formal-verification-skill` |
-| Show a PM or designer what the user sees as a chart checked by a TLA+ model, with the shortest path to each state that breaks a rule | `statechart` |
-| Keep a decision log during a run, and review it afterward | `show-me-your-work` |
-| Turn what a session taught into skill, `CLAUDE.md`, or memory edits | `reflect` |
-| Stop agents from repeating the same mistake in this repo | `correct` |
-| Find their way around flatpaper | `flatpaper-help` |
+| Do any non-trivial task with rigor | [`/flatpaper-stack:flatpaper-mode`](../flatpaper-mode/SKILL.md) |
+| Check that the agent understood their goal and the problem before it starts | [`/flatpaper-stack:in-your-own-words`](../in-your-own-words/SKILL.md) |
+| Get a prompt rewritten deeper, not bigger, before sending it: what a top professional would add, their raw material and methods, and an outside check. It returns the prompt and doesn't do the task | [`/flatpaper-stack:sharpen`](../sharpen/SKILL.md) |
+| Know how code works now, or where new code should live | [`/flatpaper-stack:how`](../how/SKILL.md) |
+| Know why code is shaped this way, or where a number came from | [`/flatpaper-stack:why`](../why/SKILL.md) |
+| Understand a change or subsystem, explained plainly | [`/flatpaper-stack:teach`](../teach/SKILL.md) |
+| Catch up on their own recent work on a topic | [`/flatpaper-stack:recall`](../recall/SKILL.md) |
+| Catch up on what changed in this chat since their last message, in plain words and small visuals, with every item waiting on them listed and decidable from the reply alone | [`/flatpaper-stack:ketchup`](../ketchup/SKILL.md) |
+| Catch up like `/flatpaper-stack:ketchup`, in a short subtitled video of slides, with the waiting calls as text under it | [`/flatpaper-stack:ketchup-video`](../ketchup-video/SKILL.md) |
+| Know what a small diff could break outside itself | [`/flatpaper-stack:blast-radius`](../blast-radius/SKILL.md) |
+| Settle types and module shape before code that crosses a function boundary | [`/flatpaper-stack:architect`](../architect/SKILL.md) |
+| Get several attempts at one brief, merged into the best one | [`/flatpaper-stack:arena`](../arena/SKILL.md) |
+| Run parallel checks over slices, or race workers, as parallel subagents | [`/flatpaper-stack:swarm`](../swarm/SKILL.md) |
+| Have different models review a diff and try to break it | [`/flatpaper-stack:interrogate`](../interrogate/SKILL.md) |
+| Fix a bug test-first when a cheap local test exists | [`/flatpaper-stack:tdd`](../tdd/SKILL.md) |
+| Apply TypeScript rules to `.ts` or `.tsx` work | [`/flatpaper-stack:typescript-best-practices`](../typescript-best-practices/SKILL.md) |
+| Strip AI-looking code (extra comments, needless try/catch, `any` casts, deep nesting) from the branch's diff before commit | [`/flatpaper-stack:deslop`](../deslop/SKILL.md) |
+| Strip comments before review, using a reviewer that didn't write them | [`/flatpaper-stack:no-comments`](../no-comments/SKILL.md) |
+| Clean AI tells out of prose | [`/flatpaper-stack:unslop`](../unslop/SKILL.md) |
+| Write docs, an RFC, a README, a PR description, or a commit message to a standard | [`/flatpaper-stack:technical-writing`](../technical-writing/SKILL.md) |
+| Hear the last reply again in plain words | [`/flatpaper-stack:bro`](../bro/SKILL.md) |
+| Give agents a scripted way to drive the app and prove behavior | [`/flatpaper-stack:create-verification-skill`](../create-verification-skill/SKILL.md) |
+| Bring a verification skill and its feature map back in line with the app | [`/flatpaper-stack:maintain-verification-skill`](../maintain-verification-skill/SKILL.md) |
+| Formally verify a race, invariant, or other property that tests rarely reach | [`/flatpaper-stack:create-formal-verification-skill`](../create-formal-verification-skill/SKILL.md) |
+| Bring a formal verification back in line after the code it covers changed, and learn whether a failure is drift or a bug | [`/flatpaper-stack:maintain-formal-verification-skill`](../maintain-formal-verification-skill/SKILL.md) |
+| Show a PM or designer what the user sees as a chart checked by a TLA+ model, with the shortest path to each state that breaks a rule | [`/flatpaper-stack:statechart`](../statechart/SKILL.md) |
+| Vet a performance number before reporting or acting on it | [`/flatpaper-stack:benchmark-checklist`](../benchmark-checklist/SKILL.md) |
+| Run a large or cross-cutting change, or one to review after stepping away | [`/flatpaper-stack:figure-it-out`](../figure-it-out/SKILL.md) |
+| Keep a decision log during a run, and review it afterward | [`/flatpaper-stack:show-me-your-work`](../show-me-your-work/SKILL.md) |
+| Turn their own working habits into a personal mode skill | [`/flatpaper-stack:automate-me`](../automate-me/SKILL.md) |
+| Turn what a finished task taught into skill edits | [`/flatpaper-stack:reflect`](../reflect/SKILL.md) |
+| Stop agents from repeating the same mistakes in this repo | [`/flatpaper-stack:correct`](../correct/SKILL.md) |
+| Pick a model for each role and a reasoning budget | [`/flatpaper-stack:setup-flatpaper-stack`](../setup-flatpaper-stack/SKILL.md) |
+| Find their way around flatpaper-stack | `/flatpaper-stack:flatpaper-help` |
 
-Each skill lives at `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md`. If a skill directory there is missing from the table, read its frontmatter and route by its description.
+If a skill directory next to this one is missing from the table, read its frontmatter and route by its description. The `principle-*` directories are covered under principles below.
 
 Close calls:
 
-- `/flatpaper-stack:how` explains how code works now. `/flatpaper-stack:why` finds the reasons. The Investigation playbook runs both.
-- `/flatpaper-stack:benchmark-checklist` vets one number. The Perf playbook runs it on every number while it makes something faster.
-- `/flatpaper-stack:arena` gives every worker the same brief and merges the best parts. `/flatpaper-stack:swarm` splits work into slices or a race and returns one table.
+- `/flatpaper-stack:how` explains what the code does. `/flatpaper-stack:why` explains the reasons. `/flatpaper-stack:teach` runs one or both and explains the result plainly.
+- `/flatpaper-stack:arena` gives every worker the same brief and merges the best parts. `/flatpaper-stack:swarm` splits work into slices or a race and returns one report.
 - `/flatpaper-stack:architect` implements right after it settles the design. Add "with checkpoint" to review the design before it writes code.
+- `/flatpaper-stack:deslop` sweeps the diff for five kinds of AI slop in one quick pass. `/flatpaper-stack:no-comments` goes deep on comments only, using a reviewer that didn't write them.
 - `/flatpaper-stack:interrogate` reviews the diff. `/flatpaper-stack:blast-radius` looks for breakage outside the diff and proves the one fact that makes the change safe.
-- Before a PR, the Opening a PR playbook runs `tidy`, then `no-comments`, on every push and `blast-radius` for a risky diff. The Feature and Refactoring playbooks run `interrogate` when the design is contested. Type any of them to run it regardless. Claude Code's built-in `/code-review` reviews the diff for correctness bugs without a multi-model panel.
-- `/flatpaper-stack:recall` rebuilds context across this project's recent sessions. `/flatpaper-stack:ketchup` covers only this chat since the user's last message. Resuming one specific branch is the Session pickup playbook.
-- `/flatpaper-stack:create-verification-skill` drives the app to prove behavior on the cases you run. `/flatpaper-stack:create-formal-verification-skill` checks one property over every case in a stated scope, such as every order of steps in a model.
-- `/flatpaper-stack:correct` makes one repeated mistake impossible in the repo. `/flatpaper-stack:reflect` mines a whole session for lessons.
+- `/flatpaper-stack:recall` rebuilds context across recent chats. `/flatpaper-stack:ketchup` covers only this chat since the user's last message. Resuming one specific chat or branch is the Session pickup playbook.
+- `/flatpaper-stack:figure-it-out` designs one rigorous run. The Orchestrate playbook runs a program that spans days and many PRs. The Autonomous run playbook drives one task to a finish condition.
 
-Not in flatpaper:
+Not in flatpaper-stack:
 
-- flatpaper has no skill for restating an ask. Ask flatpaper-mode to restate the issue in plain words first. For one long goal, use the Autonomous run playbook. For a queue of PRs, use the Multi-phase plan playbook, then the Autopilot stack playbook to build it. For a multi-day program, use the Orchestrate playbook.
-- Only Orchestrate merges unattended, and only after your go on the program and a verifier's pass at each PR's head. Autopilot stack stops at verified PRs, and the user lands them.
-- `/loop`, `/code-review`, and `/simplify` are Claude Code built-ins. The Autonomous run playbook uses `/loop`. `/flatpaper-stack:tidy` is flatpaper's version of `/simplify`, and the one the Opening a PR playbook runs.
-- Plan mode is a Claude Code feature and works alongside flatpaper.
+- `/loop` is a Claude Code built-in. Skill authoring uses the **skill-creator** skill (Anthropic's skill for authoring SKILL.md files).
+- flatpaper-stack has no `/orchestrate` skill. Orchestrate is a `/flatpaper-stack:flatpaper-mode` playbook. If the slash menu shows `/orchestrate`, another plugin provides it.
 
 ## Playbooks and principles
 
-Playbooks are step lists inside `/flatpaper-stack:flatpaper-mode`, not skills, so they have no slash command. Describing the task picks one. These phrases name one directly:
+Playbooks are step lists inside `/flatpaper-stack:flatpaper-mode`, not skills, so they have no slash command. Inside `/flatpaper-stack:flatpaper-mode`, describing the task picks one, and these phrases name one directly:
 
-- "how does", "why is", "are we sure" runs Investigation. It is read-only.
-- "babysit this pr" or "get it green" runs Babysit in `drive` mode. It drives the PR to merge-ready and stops there. "is pr 123 green?" runs one status pass instead, and asking only to answer the review comments handles just those threads. It never merges.
-- "take over this branch" or "continue from the log" runs Session pickup.
-- "pause" or "pick this up tomorrow" runs Pause safely.
-- "im stepping away" or "run until done" runs Autonomous run.
-- "autopilot" or "build the stack, I'll land it" runs Autopilot stack. Each PR gets its own owner agent and a verifying swarm. It never merges.
-- "run this whole project" or "own this migration until it lands" runs Orchestrate. One coordinator runs a multi-day program with one owner per PR. Each owner merges its own PR after a verifier on another model passes it.
-- "plan this migration" or "break this into PRs" runs Multi-phase plan. It writes the plan and doesn't implement it. A story that needs three or more PRs switches to it on its own, and flatpaper-mode says so. "Just build it" skips the plan. The plan names Autopilot stack, Orchestrate, or one task per PR as its next step. Part 3 of the guide, "Ship a story that spans several PRs", has the plan and build lines.
-- "map this repo" runs Architecture page.
+- "babysit this pr" or "check on pr 123" runs Babysit. It drives the PR to merge-ready and stops there. It doesn't merge unless the user asks to merge, land, or ship.
+- "land the stack" runs Shipping.
+- "take over this branch" runs Session pickup.
+- "pause safely" runs Pause safely.
+- "full autopilot on this queue" runs Autopilot-full. "autopilot, don't merge" runs Autopilot-stack.
+- "run the eval playbook" runs Eval.
 
-The Playbooks section of `${CLAUDE_PLUGIN_ROOT}/skills/flatpaper-mode/SKILL.md` lists every playbook and when it applies. The README's "Words that steer the playbook" table and [guide 3.2](https://claude.ai/artifact/UtoWgg52numPjfmQg2r27P#c-mode) give the trigger words for each.
+Without `/flatpaper-stack:flatpaper-mode`, a phrase such as "babysit this pr" can start another installed skill for the same job instead. The Playbooks section of [`flatpaper-mode`](../flatpaper-mode/SKILL.md) lists every playbook and when it applies.
 
-Principles are named rules in `${CLAUDE_PLUGIN_ROOT}/skills/flatpaper-mode/references/principles.md`. flatpaper-mode reads them and names each one that changed a decision. The user rarely reads the file. They steer with the names instead, as in "apply prove it works. show me the real output." [Guide 2.10](https://claude.ai/artifact/UtoWgg52numPjfmQg2r27P#i-principles) covers steering with them.
+flatpaper-stack has no planning skill. Claude Code's plan mode works alongside it. For work that spans phases or stacked PRs, asking `/flatpaper-stack:flatpaper-mode` for a plan runs the [Multi-phase plan playbook](../flatpaper-mode/playbooks/multi-phase-plan.md), which writes the plan and doesn't implement it. For a design question, the Prototype playbook or `/flatpaper-stack:architect` settles it in code first.
+
+Principles are one-rule skills that `/flatpaper-stack:flatpaper-mode` reads and cites in its replies. The user rarely invokes one. They steer with the names instead, as in "apply prove it works. show me the real output." Typing `/flatpaper-stack:principle-<name>` still loads one on demand.
 
 ## Fix a run that went wrong
 
 | Symptom | Fix |
 |---|---|
-| The mode stopped applying after a `/clear` | Start the next task with `/flatpaper-stack:flatpaper-mode` again. |
-| A question got treated as the next step of the last task | Start with "new task:", or say the turn doesn't need the mode. |
-| No task list, only a checklist in the reply | Set `CLAUDE_CODE_ENABLE_TODO_TOOLS` to `1` per the README's Settings section, then restart Claude Code. |
+| The mode stopped applying after a few turns | Start each task with `/flatpaper-stack:flatpaper-mode`. |
+| A question got treated as the next step of the last task | Say "new task", or say the turn doesn't need the mode. |
+| A new model choice had no effect | Check that `~/.claude/flatpaper-stack/models.md` has a line for that role. A model named in the chat beats the file. A provider that went missing falls back to the role's default, and the reply says so. |
 | Runs cost more than expected | See the cost paragraph under Get set up. |
-| A skill didn't run on its own | A skill with `disable-model-invocation: true` in its frontmatter starts only when the user types it or a playbook step reads it. The others start when a playbook step needs them, not on every task. |
-| A skill misbehaved mid-task | Note it and finish the task. Fix the skill in its own change, not inside the feature work. |
-| Parallel agents overwrote each other | Give each agent its own worktree. |
-| An unattended run moved but finished nothing | `/loop` needs a check that can pass or fail, not a duration. See the Autonomous run playbook. |
-| The reply claims success from a green build | Ask for the real command, flow, or stored value. That is the prove-it-works principle. |
-| The agent keeps making the same mistake | Run `/flatpaper-stack:correct` to turn it into a check. |
+| A skill didn't load on its own | Only `setup-flatpaper-stack`, `control-cli`, `control-ui`, `verify-this`, and `deslop` load from the user's words. The others load when the user types them or when `/flatpaper-stack:flatpaper-mode` runs them, and it doesn't run every skill. |
+| Parallel agents overwrote each other | Give each agent its own worktree (`isolation: "worktree"` on the Agent call). |
+| An overnight run moved but finished nothing | `/loop` needs a check that can pass or fail, not a duration. |
+| The reply claims success from a green build | Ask for the real command, flow, stored value, or profile. That's the prove-it-works principle. |
 
-For a run that drifts, `references/prompting.md` has one-line steers. [Guide 3.6](https://claude.ai/artifact/UtoWgg52numPjfmQg2r27P#c-pitfalls) lists common mistakes.
+For a run that drifts, [`references/prompting.md`](references/prompting.md) has one-line steers. [`references/recipes.md`](references/recipes.md) has the recipes worth copying.
+
+## Make flatpaper-stack my own
+
+- [`/flatpaper-stack:automate-me`](../automate-me/SKILL.md) drafts a personal mode skill from the user's own history, to use alongside `/flatpaper-stack:flatpaper-mode`.
+- [`/flatpaper-stack:reflect`](../reflect/SKILL.md) after a session turns its lessons into skill edits the user approves.
+- `/flatpaper-stack:flatpaper-mode write a skill for <workflow>` runs the authoring playbook. The eval playbook tests a skill change blind.
+- Fix a misbehaving skill in its own PR, not inside the feature work where it went wrong.
 
 ## Reply
 
-Lead with the answer. Give at most one example prompt in a code block, adapted from `references/recipes.md` when one fits, then the link to the file the answer came from. Keep it short unless the user asked for the whole map.
+Lead with the answer. Give at most one example prompt in a code block, adapted from [`references/recipes.md`](references/recipes.md) when one fits, then the link to that file. Keep it short unless the user asked for the whole map.

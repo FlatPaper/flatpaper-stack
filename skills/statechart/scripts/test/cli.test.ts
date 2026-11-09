@@ -9,7 +9,6 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { plainText } from "../backends/plain-text.ts";
 import { readMessages } from "../frontends/messages.ts";
-import { childEnv } from "../run.ts";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const corpus = path.join(here, "corpus");
@@ -49,7 +48,7 @@ function run(
     {
       encoding: "utf8",
       env: {
-        ...childEnv(),
+        ...process.env,
         JAVA: java,
         TLA2TOOLS: "tla2tools.jar",
         STATECHART_REPLAY: dir,
@@ -114,11 +113,11 @@ const launcherTools = () => {
 };
 
 const linkedLauncher = () => {
-  const links = fs.mkdtempSync(path.join(os.tmpdir(), "statechart-links-"));
+  const links = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "statechart-links-")));
   const [first, second] = [path.join(links, "a"), path.join(links, "b")];
   fs.mkdirSync(first);
   fs.mkdirSync(second);
-  fs.symlinkSync(path.relative(fs.realpathSync(second), launcher), path.join(second, "statechart"));
+  fs.symlinkSync(path.relative(second, launcher), path.join(second, "statechart"));
   fs.symlinkSync(path.join(second, "statechart"), path.join(first, "statechart"));
   return path.join(first, "statechart");
 };
@@ -239,7 +238,7 @@ function startCommand(
     ],
     {
       env: {
-        ...childEnv(),
+        ...process.env,
         JAVA: java,
         TLA2TOOLS: "tla2tools.jar",
         STATECHART_REPLAY: dir,

@@ -1,12 +1,10 @@
 ### Pause safely
 
-**You own a clean stop. Leave a checkpoint a cold-start session can resume from.**
+**You own a clean stop. Leave a checkpoint a cold-start agent can resume from.** This is explicit only. On "keep going", "going to bed, keep going", or "don't stop", do not pause.
 
-This fires only on an explicit request ("pause", "stop for now", "wrap up"). On "keep going" or "going to bed, keep going", do not pause.
+1. Stop at a safe boundary. Finish the current atomic step or back out of it. Start nothing new, and cancel any nested subagents.
+2. Take no irreversible action to pause. No PR and no push unless you already had one out.
+3. Make the work durable. Commit uncommitted edits as one clear `wip:` commit on the current branch so nothing is lost. If the tree is broken, say so in the commit body in one line.
+4. Write the resume note off-context. Capture intent, what you were doing, progress and what's verified, current state, next steps, key files, and gotchas. For the compaction trigger write it to a file like `/tmp/<slug>-resume.md`. If a show-me-your-work trail exists, point at it instead of duplicating it.
 
-1. Stop at a safe boundary. Finish the current atomic step or back out of it. Start nothing new. Stop running subagents, `/loop` wakes, and Monitor watches.
-2. Take no irreversible action to pause. Never `push --force`. Don't push a branch with an open PR, since a wip commit restarts CI and notifies reviewers. Open no PR. Skip the Finish steps with the reason `pause`, and leave the playbook's open steps open.
-3. Make one `wip:` commit on the current branch (use the repo's commit format if it rejects `wip:`, and keep the word wip), staging only the files you changed (`git add <files>`). If the current branch is main and the user did not make main the working branch, create a wip branch first. If the tree is broken, say so in one line of the commit body.
-4. Write the resume note to a file outside the context. Use the active decision log, or `flatpaper/<branch>/RESUME.md` under the repo's git common dir (`git rev-parse --git-common-dir`). Git never commits it, it survives worktree removal and the end of the session, and the branch keeps two paused worktrees from sharing one note. The scratchpad does not. It says where you are, what's done and verified, what's next, and the open questions, with key file paths. Read it back.
-
-**Reply:** where you stopped, the commit and whether the tree is clean, the resume note path, and the first action on resume. This is a pause, not a final report.
+**Reply:** where you are in the loop, what's on disk versus still in your head (paths, no diff dumps), the commits you made and whether the tree is clean, and the first action on resume. This is a pause, not a final report.
