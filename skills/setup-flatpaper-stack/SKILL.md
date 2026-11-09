@@ -13,6 +13,7 @@ Each value is `<provider>/<model>:<effort>`, or `parent:<effort>`.
 
 - `claude/<alias>`: an Agent subagent with `model` set to the alias. The aliases are the ones the Agent tool's `model` parameter offers (today `sonnet`, `opus`, `haiku`, `fable`). Each alias runs the newest model in that family. The Agent tool does not take full model IDs, so the file stores the alias.
 - `codex/<model>`: the `codex:codex-rescue` agent, with the brief saying `--model <model> --effort <effort>`. `codex/default` means no `--model`, so Codex uses its own default.
+- `codex/matched`: the Codex model at the parent's tier: Fable → `gpt-6-astra`, Opus → `gpt-6.1-sol`, Sonnet → `gpt-6.1-terra`, Haiku → `gpt-6-luna`, per the Subagents section of `../flatpaper-mode/SKILL.md`. It is the default for every Codex seat.
 - `gemini/<name>`: the agent or MCP tool that the detected Gemini plugin or MCP provides.
 - `parent`: leave `model` unset, so the role runs on the parent chat model.
 - `<effort>` is the reasoning level: the Agent `effort` for `claude` and `parent`, the `--effort` flag for `codex`. The ladder is `max` > `xhigh` > `high` > `medium` > `low`.
@@ -35,22 +36,22 @@ The default role-to-model mapping is the file shape shown in step 5 below. If `~
 
 ### 3. Budget, map, and confirm
 
-**(a) Ask for a budget.** Use AskUserQuestion. Offer these four options with these exact labels, and name the current budget when the file records one. With no file, say that `large` matches the skill defaults.
+**(a) Ask for a budget.** Use AskUserQuestion. Offer these four options with these exact labels, and name the current budget when the file records one. With no file, say that `small` matches the skill defaults.
 
 - `unlimited — max reasoning`
 - `large — xhigh reasoning`
 - `medium — high reasoning`
 - `small — medium reasoning`
 
-**(b) Apply it.** Build the working table from the skill defaults, and on a re-run keep any role whose model the user changed. `unlimited`, `large`, `medium`, and `small` set the effort of every value, panel entries included, to `max`, `xhigh`, `high`, or `medium`. If a model does not support that effort, use its highest supported effort below the target. So `unlimited` turns `parent:xhigh` into `parent:max`, and keeps `codex/gpt-6.1-sol:xhigh` at `xhigh` because the plugin caps Codex there. `small` turns them into `parent:medium` and `codex/gpt-6.1-sol:medium`.
+**(b) Apply it.** Build the working table from the skill defaults, and on a re-run keep any role whose model the user changed. `unlimited`, `large`, `medium`, and `small` set the effort of every value, panel entries included, to `max`, `xhigh`, `high`, or `medium`. The `hardest tasks` role goes one step higher, up to `max`. If a model does not support that effort, use its highest supported effort below the target. So `unlimited` turns `parent:xhigh` into `parent:max`, and keeps `codex/gpt-6.1-sol:xhigh` at `xhigh` because the plugin caps Codex there. `small` turns them into `parent:medium` and `codex/gpt-6.1-sol:medium`.
 
 **(c) Show the roles and confirm.** Show every role with its value as a table. Mark any value whose provider or model was not detected as needing a choice. Also list each line step 2 dropped, and one line per skipped provider. Ask whether to accept as-is or change specific roles, offering the detected models plus `parent` as the options. Use AskUserQuestion, which takes at most four options per question, so offer the most likely models and let "Other" take the rest.
 
-For panel roles (arena runners, architect runners, interrogate reviewers) the value is a list, and one subagent runs per entry, `parent` included, so the list length sets the count. A panel is for diverse review, so warn when every entry is from one provider. `arena cross-judge pool` is also a list, but Arena runs one judge. It tries only values from a provider other than the parent's (Claude), in list order, so order it by preference. A `parent` value never judges. `trail reviewer` and `pr verifier` must also be a provider other than Claude, because `show-me-your-work` and the Orchestrate playbook need a different model family to check the work. `swarm workers` is the default model for every worker unless a race or comparison assigns another model per arm.
+For panel roles (arena runners, architect runners, interrogate reviewers) the value is a list, and one subagent runs per entry, `parent` included, so the list length sets the count. A panel is for diverse review, so warn when every entry is from one provider. `arena cross-judge pool` is also a list, but Arena runs one judge. It tries only values from a provider other than the parent's (Claude), in list order, so order it by preference. A `parent` value never judges. `trail reviewer` and `pr verifier` must also be a provider other than Claude, because `show-me-your-work` and the Orchestrate playbook need a different model family to check the work. `swarm workers` runs a swarm's easy pieces and `swarm hard workers` runs the pieces that need judgment, unless a race or comparison assigns another model per arm.
 
 ### 4. Validate
 
-Every value written must use a detected provider and model, and an effort that model supports. `parent` always passes. If a chosen value is not available, stop and ask again.
+Every value written must use a detected provider and model, and an effort that model supports. `parent` always passes, and `codex/matched` passes whenever Codex is present. If a chosen value is not available, stop and ask again.
 
 ### 5. Write the file
 
@@ -59,28 +60,29 @@ Create `~/.claude/flatpaper-stack/` if needed, then write `models.md` with a `# 
 ```
 # flatpaper-stack model configuration. One line per role. Delete a line to fall back to the skill default.
 # Value: <provider>/<model>:<effort>, or parent:<effort> (leave Agent `model` unset). Entries in a panel list each count toward its fan-out.
-# budget: large (xhigh)
-feature, refactoring: parent:xhigh
-bug-fix: parent:xhigh
-perf-issue: parent:xhigh
-hillclimb: parent:xhigh
-trivial edits: claude/sonnet:xhigh
-judgment and prose: parent:xhigh
-hardest tasks: parent:xhigh
-how explorer: claude/sonnet:xhigh
-how explainer: parent:xhigh
-why investigators: claude/sonnet:xhigh
-why synthesizer: parent:xhigh
-reflect tooling: parent:xhigh
-reflect judgment, divergent, synthesizer: parent:xhigh
-history explorers: claude/sonnet:xhigh
-trail reviewer: codex/default:xhigh
-pr verifier: codex/default:xhigh
-arena runners: parent:xhigh, codex/default:xhigh
-arena cross-judge pool: codex/default:xhigh, claude/opus:xhigh
-swarm workers: parent:xhigh
-architect runners: parent:xhigh, codex/default:xhigh
-interrogate reviewers: parent:xhigh, codex/default:xhigh
+# budget: small (medium)
+feature, refactoring: parent:medium
+bug-fix: parent:medium
+perf-issue: parent:medium
+hillclimb: parent:medium
+trivial edits: claude/haiku:medium
+judgment and prose: parent:medium
+hardest tasks: parent:high
+how explorer: claude/sonnet:medium
+how explainer: parent:medium
+why investigators: claude/sonnet:medium
+why synthesizer: parent:medium
+reflect tooling: parent:medium
+reflect judgment, divergent, synthesizer: parent:medium
+history explorers: claude/sonnet:medium
+trail reviewer: codex/matched:medium
+pr verifier: codex/matched:medium
+arena runners: parent:medium, codex/matched:medium
+arena cross-judge pool: codex/matched:medium
+swarm workers: claude/sonnet:medium
+swarm hard workers: claude/opus:medium
+architect runners: parent:medium, codex/matched:medium
+interrogate reviewers: parent:medium, codex/matched:medium
 ```
 
 `history explorers` covers the chat-history fan-out in `recall` and `automate-me`. `trail reviewer` is the cross-model reviewer in `show-me-your-work`. `pr verifier` checks each PR in the Orchestrate playbook.
