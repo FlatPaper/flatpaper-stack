@@ -26,7 +26,7 @@ For each candidate, find the first line with `"type":"user"` (earlier lines are 
 
 One message, three Agent calls, `subagent_type: general-purpose`. Reviewers need every MCP tool to look up the tickets, chat threads, and observability traces the transcript references. They still shouldn't write anything.
 
-The Tooling reviewer uses the `reflect tooling` role, and the Judgment and Divergent reviewers and the synthesizer use the `reflect judgment, divergent, synthesizer` role, both default `parent`, from its line in `~/.claude/flatpaper-stack/models.md` (the default when the file or the line is missing). They need MCP tools, so a `codex` or `gemini` value falls back to the default. Pick each subagent's reasoning level for the job, per the Subagents section of `../flatpaper-mode/SKILL.md`.
+The Tooling reviewer uses the `reflect tooling` role, and the Judgment and Divergent reviewers and the synthesizer use the `reflect judgment, divergent, synthesizer` role, both default `parent`, from its line in `~/.claude/flatpaper-stack/models.md` (the default when the file or the line is missing). They need MCP tools, so a `codex` or `gemini` value falls back to the default. Before you spawn, read `../flatpaper-mode/references/spawning.md` in full and follow it for each spawn's model and effort.
 
 | Lens | Prompt template |
 |---|---|

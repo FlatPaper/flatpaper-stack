@@ -10,7 +10,7 @@ Sketch types, function signatures, class shapes, and module boundaries with `not
 
 ## Start
 
-Before starting, read `../how/SKILL.md`, `../why/SKILL.md`, and `../arena/SKILL.md` from this skill's folder in full. All three are user-only, so don't invoke them. Then open a task list with `TaskCreate`, one entry per phase, before any other work.
+Before starting, read `../how/SKILL.md`, `../why/SKILL.md`, and `../arena/SKILL.md` from this skill's folder in full. All three are user-only, so don't invoke them. Then open a task list with `TaskCreate`, one entry per phase, before any other work. Run every phase, even for a small change. The user chose architect, so don't shortcut it.
 
 1. Ground
 2. Sketch

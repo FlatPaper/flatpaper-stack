@@ -13,7 +13,7 @@ Each value is `<provider>/<model>:<effort>`, or `parent:<effort>`.
 
 - `claude/<alias>`: an Agent subagent with `model` set to the alias. The aliases are the ones the Agent tool's `model` parameter offers (today `sonnet`, `opus`, `haiku`, `fable`). Each alias runs the newest model in that family. The Agent tool does not take full model IDs, so the file stores the alias.
 - `codex/<model>`: the `codex:codex-rescue` agent, with the brief saying `--model <model> --effort <effort>`. `codex/default` means no `--model`, so Codex uses its own default.
-- `codex/matched`: the Codex model at the parent's tier: Fable → `gpt-6-astra`, Opus → `gpt-6.1-sol`, Sonnet → `gpt-6.1-terra`, Haiku → `gpt-6-luna`, per the Subagents section of `../flatpaper-mode/SKILL.md`. It is the default for every Codex seat.
+- `codex/matched`: the Codex model at the parent's tier: Fable → `gpt-6-astra`, Opus → `gpt-6.1-sol`, Sonnet → `gpt-6.1-terra`, Haiku → `gpt-6-luna`, per `../flatpaper-mode/references/spawning.md`. It is the default for every Codex seat.
 - `gemini/<name>`: the agent or MCP tool that the detected Gemini plugin or MCP provides.
 - `parent`: leave `model` unset, so the role runs on the parent chat model.
 - `<effort>` is the reasoning level: the Agent `effort` for `claude` and `parent`, the `--effort` flag for `codex`. The ladder is `max` > `xhigh` > `high` > `medium` > `low`.
