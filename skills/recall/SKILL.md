@@ -14,7 +14,7 @@ Your context lives in two records. Your own chat history holds what you did and 
 
 Transcripts live at `~/.claude/projects/<slug>/<uuid>.jsonl`, where `<slug>` is the workspace path with each character that is not a letter or digit turned into "-" (so `/Users/you/proj` becomes `-Users-you-proj`). A chat's subagent transcripts sit under `<slug>/<uuid>/subagents/`. Every line is one chat message.
 
-Before step 1, read `../why/SKILL.md` and `../unslop/SKILL.md` from this skill's folder. Both are user-only, so don't invoke them.
+Before step 1, read `../why/SKILL.md` and `../unslop/SKILL.md` from this skill's folder in full. Both are user-only, so don't invoke them.
 
 1. Classify, then route. One specific prior chat to resume is the `session-pickup` playbook, not this. Turning habits into a durable skill is `/flatpaper-stack:automate-me`. A human-readable summary of your work is a different task. Recall loads working context across recent chats before you act. If the user already gave you a full state capsule (paths, branch, the change), use it and skip the mining.
 2. Lock the scope before searching. Pin the window ("recent" is a real range, default the last 7 days), the topic if named, and the workspace (default the active one. Never read another project's transcripts without being asked). State the scope back. Never quietly turn "all" into "recent N".

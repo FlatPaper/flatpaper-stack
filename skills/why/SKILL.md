@@ -8,13 +8,13 @@ disable-model-invocation: true
 
 Investigate the motivation and intent behind code. The companion `how` skill answers what the code does and how it works. `why` answers what forces led to its shape.
 
-Each spawn below names a role and a default. Pick its model from its role's line in `~/.claude/flatpaper-stack/models.md`, or the default when the file or the line is missing. Pick its reasoning level for the job, per the Subagents section of `../flatpaper-mode/SKILL.md`.
+Each spawn below names a role and a default. Pick its model from its role's line in `~/.claude/flatpaper-stack/models.md`, or the default when the file or the line is missing. Pick its reasoning level for the job, per the Subagents section of `../flatpaper-mode/SKILL.md`, and pass it as the Agent `effort`.
 
 Every spawn is an Agent subagent with `subagent_type: general-purpose`, so the MCP-backed investigators and the synthesizer's citation spot-checks have every MCP tool. Investigators still shouldn't write anything.
 
 ## Operating Posture
 
-Operate as a **careful, cautious, and precise investigator**. Be honest about what you know vs what you're inferring. Read `references/epistemics.md` for the full confidence framework and phrasing guide. The synthesizer must follow it.
+Before Step 1, read `references/epistemics.md` in full. It holds the confidence framework and phrasing guide. You and the synthesizer both follow it, including when you answer inline. Operate as a **careful, cautious, and precise investigator**. Be honest about what you know vs what you're inferring.
 
 ## Step 1. Understand the Target and the Question
 
@@ -72,7 +72,7 @@ Only with an **explicit, written justification** that goes in the final Sources 
 - **No MCP is available for that category** in this environment. Flag it as a gap, not a choice: "Real-time team chat skipped. No matching MCP available, so the conversational record was not searchable."
 - **The source is provably irrelevant**, not just "probably irrelevant." A high bar: "Error / exception tracking skipped. Target is a build-time script with no runtime code path."
 
-If your scope assessment suggests a single-commit trivial target where the PR description already contains the complete answer, you may answer inline **only after** confirming all seven available category searches would be redundant. Say so explicitly. This should be rare.
+Always spawn at least the source-control investigator and the synthesizer, even when a PR body seems to hold the whole answer. Answer inline only when the user asks for a quick answer.
 
 ## Step 4. Synthesize
 
