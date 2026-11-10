@@ -126,9 +126,9 @@ function readLocal(root, dirs = LOCAL_DIRS) {
 }
 
 function dirtyProblems(root) {
-  const dirty = git(root, ["status", "--porcelain=v1", "-z", "--untracked-files=all", "--", ...LOCAL_DIRS, "sync"]).toString().split("\0").filter(Boolean);
+  const dirty = git(root, ["status", "--porcelain=v1", "-z", "--untracked-files=all", "--", ...LOCAL_DIRS]).toString().split("\0").filter(Boolean);
   if (!dirty.length) return [];
-  return [{ kind: "dirty", say: `${dirty.length} uncommitted change(s) under skills/, agents/, or sync/ (first: ${dirty[0].slice(3)}); commit them before a real run, so a crash is undone with git checkout.` }];
+  return [{ kind: "dirty", say: `${dirty.length} uncommitted change(s) under skills/ or agents/ (first: ${dirty[0].slice(3)}); commit them before syncing, so a crash is undone with git checkout.` }];
 }
 
 export function merge3(local, base, upstream) {
@@ -212,10 +212,9 @@ function main(argv) {
       version: config.version,
       merge3,
       resolved: args.resolved,
-      preProblems: [...neu.problems, ...(args.dryRun ? [] : dirtyProblems(ROOT))],
+      preProblems: [...neu.problems, ...dirtyProblems(ROOT)],
     });
     process.stdout.write(core.renderReport(plan, { dryRun: args.dryRun }));
-    if (args.dryRun) for (const p of dirtyProblems(ROOT)) console.log(`note: a real run would stop here: ${p.say}`);
     if (!args.dryRun && !core.blocked(plan)) apply(ROOT, plan);
     return core.exitCode(plan);
   } catch (e) {
