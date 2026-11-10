@@ -53,14 +53,14 @@ For panel roles (arena runners, architect runners, interrogate reviewers) the va
 
 ### 4. Validate
 
-Every value written must use a detected provider and model, and an effort that model supports. `parent` always passes, and `codex/matched` passes whenever Codex is present. If a chosen value is not available, stop and ask again.
+Every role value written must use a detected provider and model, and an effort that model supports. `parent` always passes, and `codex/matched` passes whenever Codex is present. If a chosen value is not available, stop and ask again.
 
 ### 5. Write the file
 
 Create `~/.claude/flatpaper-stack/` if needed, then write `models.md` with a `# budget` line holding the chosen label and its target effort, a `session hook` line, and one line per role, using the same role names the skills use. Overwrite the whole file so re-runs stay idempotent. Shape:
 
 ```
-# flatpaper-stack model configuration. One line per role. Delete a line to fall back to the skill default.
+# flatpaper-stack model configuration. One line per role, plus the `session hook` line. Delete a line to fall back to the skill default.
 # Value: <provider>/<model>:<effort>, or parent:<effort> (leave Agent `model` unset). Entries in a panel list each count toward its fan-out.
 # budget: small (medium)
 session hook: on

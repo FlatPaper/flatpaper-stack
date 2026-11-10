@@ -12,11 +12,11 @@ const context = readFileSync(join(root, "hooks/session-start-context.md"), "utf8
 function runHook(modelsFile) {
   const config = mkdtempSync(join(tmpdir(), "flatpaper-hook-"));
   if (modelsFile !== undefined) {
-    mkdirSync(join(config, "flatpaper-stack"));
-    writeFileSync(join(config, "flatpaper-stack/models.md"), modelsFile);
+    mkdirSync(join(config, ".claude/flatpaper-stack"), { recursive: true });
+    writeFileSync(join(config, ".claude/flatpaper-stack/models.md"), modelsFile);
   }
   return execFileSync(join(root, "hooks/session-start.sh"), {
-    env: { PATH: process.env.PATH, CLAUDE_PLUGIN_ROOT: root, CLAUDE_CONFIG_DIR: config },
+    env: { PATH: process.env.PATH, CLAUDE_PLUGIN_ROOT: root, HOME: config },
     encoding: "utf8",
   });
 }
@@ -37,6 +37,14 @@ test("session hook: off prints nothing", () => {
 
 test("the off switch tolerates case and spacing", () => {
   assert.equal(runHook("  Session Hook:   OFF  \n"), "");
+});
+
+test("with HOME unset, the hook still routes", () => {
+  const out = execFileSync(join(root, "hooks/session-start.sh"), {
+    env: { PATH: process.env.PATH, CLAUDE_PLUGIN_ROOT: root },
+    encoding: "utf8",
+  });
+  assert.equal(out, context);
 });
 
 test("a role line that mentions off does not turn the hook off", () => {

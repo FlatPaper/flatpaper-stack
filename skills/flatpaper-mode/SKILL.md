@@ -11,7 +11,7 @@ Bundled skills live at `../<name>/SKILL.md` from this file. When a trigger below
 
 ## Task list
 
-Claude Code defers `TaskCreate` and `TaskUpdate`, so load them with `ToolSearch` (`select:TaskCreate,TaskUpdate,TaskList`). Then open the task list per **Playbooks**. Do both before any tool call except reading the playbook, even when the user's prompt lists its own steps. Those steps become task-specific todos after the playbook's. If the tools are missing, `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` in the environment or in a project's `.claude/settings.local.json` `env` block turns them on ([task tool availability](https://code.claude.com/docs/en/tools-reference#task-tool-availability)). With no task tool at all, keep an uncommitted `todo.md` checklist in the work dir with the playbook steps verbatim and each `skip: <reason>` line.
+Claude Code defers `TaskCreate` and `TaskUpdate`, so load them with `ToolSearch` (`select:TaskCreate,TaskUpdate,TaskList`). Then open the task list per **Playbooks**. Do both before any tool call except reading the playbook or the skill it routes to, even when the user's prompt lists its own steps. Those steps become task-specific todos after the playbook's. If the tools are missing, `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` in the environment or in a project's `.claude/settings.local.json` `env` block turns them on ([task tool availability](https://code.claude.com/docs/en/tools-reference#task-tool-availability)). With no task tool at all, keep an uncommitted `todo.md` checklist in the work dir with the playbook steps verbatim and each `skip: <reason>` line.
 
 ## Non-negotiables
 
