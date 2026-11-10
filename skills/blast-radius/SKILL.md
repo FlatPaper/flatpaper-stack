@@ -30,7 +30,7 @@ Step 4 is usually one small script that imports the same library the app ships a
 
 ## Steps
 
-Before step 1, read `../why/SKILL.md` in full (you need its Step 2) and all of `../unslop/SKILL.md` from this skill's folder. Both are user-only, so don't invoke them.
+Before step 1, read `../why/SKILL.md` in full (you need its Step 2) and all of `../unslop/SKILL.md` from this skill's folder. `why` is user-only, so don't invoke it.
 
 1. Read the change. The diff, the symbols it adds, changes, and deletes, and what it now does differently, including the part the diff doesn't spell out. Use `why` step 2 to pull the PR and commits.
 2. Find the one fact it's safe because of. Most changes that look risky are safe because of a single fact, like "this call only drops already-dead cache entries and does nothing else". Find that fact. If it holds, most risky cases are cleared at once. Spend your time here, not on a long list of maybes.
@@ -47,6 +47,6 @@ Before step 1, read `../why/SKILL.md` in full (you need its Step 2) and all of `
 - **Cleared.** What you checked and why it's fine.
 - **Before you merge.** The cheapest test or repro that catches the real bug, including the script you wrote.
 
-Write it through `unslop` (user-only, so read `../unslop/SKILL.md` instead of invoking it), cite real code, and strip anything private before it goes anywhere public.
+Write it through `unslop` (read `../unslop/SKILL.md`), cite real code, and strip anything private before it goes anywhere public.
 
 **Reply:** the writeup above, with the one safety fact either proven or marked unproven.

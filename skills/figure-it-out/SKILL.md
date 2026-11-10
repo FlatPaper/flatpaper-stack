@@ -10,7 +10,7 @@ When the task matches no playbook, design one. The deliverable before any code i
 
 ## Start
 
-Before anything else, open a task list (`TaskCreate`). Then read the Principles section of `../flatpaper-mode/SKILL.md` and all of `../show-me-your-work/SKILL.md` from this skill's folder. Both are user-only, so don't invoke them. Then add the phases below as tasks.
+Before anything else, load the task tools and open a task list, per the Task list section of `../flatpaper-mode/SKILL.md`. Then read the Principles section of `../flatpaper-mode/SKILL.md` and all of `../show-me-your-work/SKILL.md` from this skill's folder. `show-me-your-work` is user-only, so don't invoke it. Then add the phases below as tasks.
 
 ## Phase A: Frame
 

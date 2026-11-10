@@ -1,7 +1,6 @@
 ---
 name: technical-writing
 description: "Layered technical-writing standard: Diátaxis structure, Google developer style sentences, STE instruction rules, Global English syntax. Use for /flatpaper-stack:technical-writing or when writing or reviewing docs, RFCs, readmes, PR descriptions, or commit messages."
-disable-model-invocation: true
 ---
 
 # Technical writing
@@ -90,7 +89,7 @@ Don't mix modes: no reference tables inside a tutorial, no tutorial hand-holding
 
 ## Voice and repo specifics
 
-- Apply the **unslop** skill (user-only, so read `../unslop/SKILL.md` instead of invoking it) to every doc this skill touches. That skill owns the slop-pattern catalog: AI vocabulary, filler, hedging, formatting tells.
+- Apply the **unslop** skill (read `../unslop/SKILL.md`) to every doc this skill touches. That skill owns the slop-pattern catalog: AI vocabulary, filler, hedging, formatting tells.
 - PR descriptions and commit messages are writing too. Every layer except Diátaxis applies to them. A PR body is a briefing that a reviewer can read in under a minute. Do not paste swarm logs, SHA lists, or metric tables. Link them.
 - Product UI strings are not documentation. Use your product's copy guidelines for those.
 - Indent code snippets with tabs. Write real paths. Make every count or tree claim true at the commit that lands it, and include the command that regenerates it.
