@@ -4,7 +4,7 @@ Follow this for every Agent call. A skill names a role, such as `how explorer`, 
 
 ## Model
 
-Use that role's line in `~/.claude/flatpaper-stack/models.md`, which `/flatpaper-stack:setup-flatpaper-stack` writes, or the default when the file or the line is missing. A value is `<provider>/<model>:<effort>`, a list of them, or `parent:<effort>`. A default written without an effort means `medium`, except `hardest tasks`, which means `high`.
+Use that role's line in `~/.claude/flatpaper-stack/models.md`, which `/flatpaper-stack:setup-flatpaper-stack` writes, or the default when the file or the line is missing. A value is `<provider>/<model>:<effort>`, a list of them, or `parent:<effort>`. A default written without an effort means `medium`.
 
 - `parent`: leave `model` unset, so the subagent runs on the parent model.
 - `claude/<alias>`: set the Agent `model` to the alias.
@@ -21,4 +21,4 @@ A model the user names (`sonnet`, `opus`, `haiku`, `fable`, or a Codex model) wi
 
 **Always pass an effort.** For a Claude subagent, set the Agent `effort` (`low`, `medium`, `high`, `xhigh`, or `max`). For a Codex subagent, put `--effort` in its brief.
 
-Use the role line's effort, or `medium` when it has none (`high` for `hardest tasks`). Never go below that. Raise it one step, up to `max`, when the user asks or the work is very hard (cross-cutting design, subtle concurrency, a bug that resisted earlier attempts), and say so. On a panel, raise every seat together, so no seat wins just by thinking longer. Change only the effort, and keep the model or agent the role names, so a diverse panel stays diverse. Verification is the exception and stays on the `swarm workers` role's model and effort.
+Use the role line's effort, or the default's effort when the line has none. Never go below that. Raise it one step, up to `max`, when the user asks or the work is very hard (cross-cutting design, subtle concurrency, a bug that resisted earlier attempts), and say so. On a panel, raise every seat together, so no seat wins just by thinking longer. Change only the effort, and keep the model or agent the role names, so a diverse panel stays diverse. Verification is the exception and stays on the `swarm workers` role's model and effort.

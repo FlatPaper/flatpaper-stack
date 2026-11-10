@@ -28,7 +28,7 @@ Skip Phase A only when the work is genuinely greenfield with no surrounding syst
 
 Run the **arena** skill (user-only, so read and follow `../arena/SKILL.md`) with the design-sketch task and the Phase A grounding artifacts. Pass the absolute path of `references/runner-prompt.md` as each runner's prompt, so its relative links resolve.
 
-Pick the runners per the **arena** skill's Phase A step 3, but from the `architect runners` role (default `parent, codex/matched`) in place of `arena runners`. Spawn each at its entry's effort, `medium` by default.
+Pick the runners per the **arena** skill's Phase A step 3, but from the `architect runners` role (default `parent, codex/matched`) in place of `arena runners`. Spawn each at its entry's effort.
 
 Design it twice. Require at least two structurally distinct candidates before synthesis, even when the first looks sufficient. This is the **exhaust-the-design-space** principle skill (`../principle-exhaust-the-design-space/SKILL.md`) made concrete. Whole-shape alternatives, not point fixes inside one shape.
 
