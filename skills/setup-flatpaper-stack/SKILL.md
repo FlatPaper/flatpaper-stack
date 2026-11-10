@@ -32,7 +32,7 @@ Never write a value you have not confirmed is available. `parent` is always vali
 
 ### 2. Load current state
 
-The default role-to-model mapping is the file shape shown in step 5 below. If `~/.claude/flatpaper-stack/models.md` already exists, read it and treat its `# budget` line and its role values as the current choices. Otherwise start from those defaults. A line whose role is not in step 5 is from a retired role. Drop it.
+The default role-to-model mapping is the file shape shown in step 5 below. If `~/.claude/flatpaper-stack/models.md` already exists, read it and treat its `# budget` line, its `session hook` line, and its role values as the current choices. Otherwise start from those defaults. A line whose role is not in step 5 is from a retired role. Drop it.
 
 ### 3. Budget, map, and confirm
 
@@ -49,18 +49,21 @@ The default role-to-model mapping is the file shape shown in step 5 below. If `~
 
 For panel roles (arena runners, architect runners, interrogate reviewers) the value is a list, and one subagent runs per entry, `parent` included, so the list length sets the count. A panel is for diverse review, so warn when every entry is from one provider. `arena cross-judge pool` is also a list, but Arena runs one judge. It tries only values from a provider other than the parent's (Claude), in list order, so order it by preference. A `parent` value never judges. `trail reviewer` and `pr verifier` must also be a provider other than Claude, because `show-me-your-work` and the Orchestrate playbook need a different model family to check the work. `swarm workers` runs a swarm's easy pieces and `swarm hard workers` runs the pieces that need judgment, unless a race or comparison assigns another model per arm.
 
+**(d) Ask about the session hook.** The plugin's `SessionStart` hook tells the agent to invoke flatpaper-mode for multi-file, design, and unknown-cause bug or perf work. It runs on startup, resume, clear, and compact. Use AskUserQuestion to ask whether to keep it. The default is on. The answer is the `session hook` line, `on` or `off`. With no file or no line, the hook runs.
+
 ### 4. Validate
 
 Every value written must use a detected provider and model, and an effort that model supports. `parent` always passes, and `codex/matched` passes whenever Codex is present. If a chosen value is not available, stop and ask again.
 
 ### 5. Write the file
 
-Create `~/.claude/flatpaper-stack/` if needed, then write `models.md` with a `# budget` line holding the chosen label and its target effort, and one line per role, using the same role names the skills use. Overwrite the whole file so re-runs stay idempotent. Shape:
+Create `~/.claude/flatpaper-stack/` if needed, then write `models.md` with a `# budget` line holding the chosen label and its target effort, a `session hook` line, and one line per role, using the same role names the skills use. Overwrite the whole file so re-runs stay idempotent. Shape:
 
 ```
 # flatpaper-stack model configuration. One line per role. Delete a line to fall back to the skill default.
 # Value: <provider>/<model>:<effort>, or parent:<effort> (leave Agent `model` unset). Entries in a panel list each count toward its fan-out.
 # budget: small (medium)
+session hook: on
 feature, refactoring: parent:medium
 bug-fix: parent:medium
 perf-issue: parent:medium

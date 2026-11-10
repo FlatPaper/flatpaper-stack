@@ -55,6 +55,8 @@ Optional: run `/flatpaper-stack:setup-flatpaper-stack` once. It checks which mod
 
 The goal is the only part you need. Adding a done check, the proof you want to see, and any limits ("no PR", "don't touch the schema") keeps the agent from quietly weakening them. flatpaper-mode picks the right playbook (investigation, bug fix, feature, refactor, and others) and calls the other skills for you.
 
+A session hook also starts flatpaper-mode on its own for work that touches more than one file, makes a design choice, or chases a bug or slowdown whose cause is unknown. To turn that off, put `session hook: off` in `~/.claude/flatpaper-stack/models.md`.
+
 **A few you'll call yourself:**
 
 | Command | When |
@@ -69,4 +71,4 @@ Run the session on Opus at `high` effort (`claude --model opus --effort high`) f
 
 ## License
 
-MIT. See [LICENSE](LICENSE). Portions are adapted from pstack and cursor-team-kit, both MIT.
+MIT. See [LICENSE](LICENSE). Portions are adapted from pstack, cursor-team-kit, and pstack-claude, all MIT.
