@@ -61,7 +61,7 @@
   },
   "skills/flatpaper-mode/SKILL.md": {
     "kind": "policy",
-    "why": "Opens the task list first, routes sessions through the SessionStart hook, and moves model and effort choice into references/spawning.md.",
+    "why": "Opens the task list first, routes sessions through the SessionStart hook, moves model and effort choice into references/spawning.md, and adds project playbooks.",
     "since": "0.9.2",
     "upstream": "not-proposed"
   },

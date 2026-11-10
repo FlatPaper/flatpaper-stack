@@ -55,6 +55,8 @@ Optional: run `/flatpaper-stack:setup-flatpaper-stack` once. It checks which mod
 
 The goal is the only part you need. Adding a done check, the proof you want to see, and any limits ("no PR", "don't touch the schema") keeps the agent from quietly weakening them. flatpaper-mode picks the right playbook (investigation, bug fix, feature, refactor, and others) and calls the other skills for you.
 
+A repo can also add its own playbooks as `.agents/playbooks/<name>.md` files that extend a bundled one. Each names the playbook it `extends`, a `when` line, and changes anchored on quoted step text. `node <plugin>/skills/flatpaper-mode/scripts/check-playbooks.mjs`, run from the repo root, fails when a quoted step no longer exists in the bundled playbook.
+
 A session hook also starts flatpaper-mode on its own for work that touches more than one file, makes a design choice, or chases a bug or slowdown whose cause is unknown. To turn that off, put `session hook: off` in `~/.claude/flatpaper-stack/models.md`.
 
 **A few you'll call yourself:**
