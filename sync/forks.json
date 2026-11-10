@@ -1,0 +1,230 @@
+{
+  "agents/comment-sicko.md": {
+    "kind": "port-feature",
+    "why": "Reads how and why from ${CLAUDE_PLUGIN_ROOT}/skills/... instead of running /how and /why, since both skills are user-only on Claude Code.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "agents/flatpaper-agent.md": {
+    "kind": "policy",
+    "why": "Renamed from poteto-agent and rewritten to read flatpaper-mode's SKILL.md and its Principles index before any work.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/architect/SKILL.md": {
+    "kind": "port-feature",
+    "why": "Reads how, why, and arena from their SKILL.md files because they are user-only here, tracks phases with TaskCreate, takes runners from the `architect runners` role in models.json, and links each principle skill by path.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/architect/references/runner-prompt.md": {
+    "kind": "port-feature",
+    "why": "Links the architect skill and each principle skill by relative path, since user-only skills are read rather than invoked.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/arena/SKILL.md": {
+    "kind": "port-feature",
+    "why": "Tracks phases with TaskCreate, takes runners and the cross-family judge from the `arena runners` and `arena cross-judge pool` roles in models.json, isolates repo-writing runners in worktrees, and links principle skills by path.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/automate-me/SKILL.md": {
+    "kind": "port-feature",
+    "why": "Authors through skill-creator, looks for mode skills one level under .claude/skills (Claude Code does not load nested ones), reads transcripts from ~/.claude/projects on the `history explorers` role, and fits AskUserQuestion's 2-4 options and multiSelect.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/benchmark-checklist/SKILL.md": {
+    "kind": "port-feature",
+    "why": "Links the Opening a PR, Perf issue, and Hillclimb playbooks by path, since playbooks are files inside flatpaper-mode, not skills.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/blast-radius/SKILL.md": {
+    "kind": "port-feature",
+    "why": "Reads why, unslop, and arena from their SKILL.md files first, since they are user-only and cannot be invoked.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/figure-it-out/SKILL.md": {
+    "kind": "port-feature",
+    "why": "Loads Claude Code's deferred task tools before opening the task list, and reads architect, show-me-your-work, and the principle skills by path because they are user-only.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/flatpaper-help/SKILL.md": {
+    "kind": "policy",
+    "why": "Rewritten as flatpaper-stack's own help: the plugin-prefixed command catalog, the Claude Code setup path through models.md, which skills load from the user's words, and what the Cursor adaptation dropped.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/flatpaper-mode/SKILL.md": {
+    "kind": "policy",
+    "why": "Opens the task list first, routes sessions through the SessionStart hook, and moves model and effort choice into references/spawning.md.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/flatpaper-mode/playbooks/autopilot-full.md": {
+    "kind": "policy",
+    "why": "Uses gh for every PR (the Origin forge is dropped), runs each owner as a local worktree Agent instead of a cloud VM, and keeps the trail store at ~/.claude/orchestrate/<program>/.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/flatpaper-mode/playbooks/babysit.md": {
+    "kind": "policy",
+    "why": "Drops the Origin forge and the routing away from Cursor's built-in babysit skill, finds watch-pr inside the flatpaper-mode folder, and triages any review bot, since bugbot-triage.md is excluded.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/flatpaper-mode/playbooks/eval.md": {
+    "kind": "port-feature",
+    "why": "Reads candidate transcripts from ~/.claude/projects/<project>/<session-id>/subagents/ instead of Cursor's agent-transcripts directory.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/flatpaper-mode/playbooks/multi-phase-plan.md": {
+    "kind": "policy",
+    "why": "Writes plans to the program store under ~/.claude/orchestrate, uses gh only, names skill files through a <plugin> placeholder instead of git show of pstack paths, and triages review bots per babysit step 8.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/flatpaper-mode/playbooks/opening-a-pr.md": {
+    "kind": "policy",
+    "why": "Uses gh only (no Origin forge), Agent calls with worktree isolation instead of Task, and the plugin-prefixed deslop, no-comments, and technical-writing commands.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/flatpaper-mode/playbooks/orchestrate.md": {
+    "kind": "policy",
+    "why": "Runs workers as local Agent subagents in their own worktrees and continues them with SendMessage instead of cloud VMs and forks, keeps program state under ~/.claude/orchestrate, and verifies each PR on the `pr verifier` role.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/flatpaper-mode/playbooks/session-pickup.md": {
+    "kind": "port-feature",
+    "why": "Finds the prior transcript under ~/.claude/projects instead of Cursor's agent-transcripts directory, and drops cloud-agent URLs, which Claude Code has no equivalent for.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/flatpaper-mode/playbooks/shipping.md": {
+    "kind": "policy",
+    "why": "Lands through gh only with fresh local worktree verifiers; the Origin forge path, including its merge-everything-below behavior, is dropped.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/flatpaper-mode/playbooks/worktree-cleanup.md": {
+    "kind": "port-feature",
+    "why": "Claude Code has no pinned chats or sidebar, so the keep set is the chats the user still uses or plans to resume; worktrees live under .claude/worktrees and the Cursor app-support reclaimer is dropped.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/flatpaper-mode/scripts/worktree-audit.sh": {
+    "kind": "port-feature",
+    "why": "Reads PR state from gh only and greps Claude Code transcripts under ~/.claude/projects/<slug>* (worktree sessions included) instead of Cursor's agent-transcripts with rg.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/interrogate/SKILL.md": {
+    "kind": "port-feature",
+    "why": "Reads in-your-own-words and arena from their SKILL.md files since they are user-only, and takes adversaries from the `interrogate reviewers` role in models.json.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/ketchup-video/SKILL.md": {
+    "kind": "port-feature",
+    "why": "Reads ketchup and bro from their files since they are user-only, and shares the rendered video instead of embedding it in a Cursor chat.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/ketchup/SKILL.md": {
+    "kind": "port-feature",
+    "why": "Reads bro from its file since it is user-only, and draws visuals as inline-SVG artifacts or ASCII art instead of Cursor's /visualize.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/maintain-verification-skill/SKILL.md": {
+    "kind": "port-feature",
+    "why": "Spawns each source-wave reader as an Explore subagent on the `how explorer` role, with model and effort per spawning.md.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/no-comments/SKILL.md": {
+    "kind": "port-feature",
+    "why": "Spawns comment-sicko through Agent with model and effort from spawning.md, and reads architect from its file since it is user-only.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/principle-explain-the-number/SKILL.md": {
+    "kind": "port-feature",
+    "why": "Reads benchmark-checklist from its file before judging any number, since that skill is user-only.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/principle-prove-it-works/SKILL.md": {
+    "kind": "port-feature",
+    "why": "Links show-me-your-work by path, since it is user-only.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/recall/SKILL.md": {
+    "kind": "port-feature",
+    "why": "Reads Claude Code transcripts at ~/.claude/projects/<slug>/<uuid>.jsonl, fans out Explore subagents on the `history explorers` role, and reads why and unslop by path since why is user-only.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/reflect/SKILL.md": {
+    "kind": "port-feature",
+    "why": "Finds the transcript at ~/.claude/projects/<project>/${CLAUDE_SESSION_ID}.jsonl, spawns general-purpose Agent reviewers so they keep every MCP tool, and takes each model from its models.json role.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/setup-flatpaper-stack/SKILL.md": {
+    "kind": "policy",
+    "why": "Writes ~/.claude/flatpaper-stack/models.md from models.json roles and budgets instead of the Cursor pstack-models.mdc rule; its template fence is generated by scripts/stamp-models.mjs.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/show-me-your-work/SKILL.md": {
+    "kind": "port-feature",
+    "why": "Reads the run's transcript from ~/.claude/projects, takes the cross-family reviewer from the `trail reviewer` role, and links unslop and itself by path.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/show-me-your-work/scripts/log.sh": {
+    "kind": "local-fix",
+    "why": "Writes the header exactly once when calls race on a new log (a hard link instead of an append), and neutralises a spreadsheet formula that follows leading spaces.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/statechart/scripts/test/cli.test.ts": {
+    "kind": "local-fix",
+    "why": "realpathSync on the mkdtemp links dir, so the test passes on macOS where os.tmpdir() is a /var -> /private/var symlink.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/swarm/SKILL.md": {
+    "kind": "policy",
+    "why": "Spawns Agent workers (general-purpose, or codex:codex-rescue) with worktree isolation instead of Cursor cloud VMs, splits easy and judgment pieces across the `swarm workers` and `swarm hard workers` roles, and respawns a dropped coverage worker once.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/teach/SKILL.md": {
+    "kind": "port-feature",
+    "why": "Reads unslop, how, and why from their files before the first reply, since how and why are user-only.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/typescript-best-practices/SKILL.md": {
+    "kind": "port-feature",
+    "why": "Reads principle-type-system-discipline from its file before any code, since that principle skill is user-only.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/why/SKILL.md": {
+    "kind": "port-feature",
+    "why": "Spawns general-purpose Agent investigators so they keep MCP tools, lists MCPs from mcp__ tool names or claude mcp list, takes models from models.json roles, and always runs the source-control investigator and the synthesizer.",
+    "since": "0.9.2",
+    "upstream": "not-proposed"
+  }
+}

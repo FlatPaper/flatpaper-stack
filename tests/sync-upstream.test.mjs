@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,6 +13,16 @@ const UPSTREAM = process.env.FLATPAPER_UPSTREAM;
 const skip = UPSTREAM ? false : "set FLATPAPER_UPSTREAM to a clone of https://github.com/cursor/plugins to run the real-tree and replay checks";
 const PIN = "2776ddd2355d6d6c8747d3964600f28daf62f049";
 const REPLAY_FROM = "519d36aa98955bf680db01bcde5fdfba686dc901";
+const REPLAY_CONFLICTS = [
+  "skills/arena/SKILL.md",
+  "skills/flatpaper-mode/SKILL.md",
+  "skills/flatpaper-mode/playbooks/autopilot-full.md",
+  "skills/flatpaper-mode/playbooks/multi-phase-plan.md",
+  "skills/flatpaper-mode/playbooks/orchestrate.md",
+  "skills/interrogate/SKILL.md",
+  "skills/ketchup-video/SKILL.md",
+  "skills/setup-flatpaper-stack/SKILL.md",
+];
 const NEVER_TOUCH = ["models.json", "scripts/", "tests/", "hooks/", ".claude-plugin/", "LICENSE", "README.md", "sync/forks.json", "sync/substitutions.json"];
 
 const git = (cwd, ...args) => execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", ...args], { cwd, encoding: "utf8", maxBuffer: 1 << 28 });
@@ -89,14 +99,23 @@ test("replay: 519d36a to 2776ddd rebuilds flatpaper's tree", { skip }, () => {
     if (cfg.forks.has(path)) continue;
     mkdirSync(dirname(join(root, path)), { recursive: true });
     writeFileSync(join(root, path), core.blobBytes(blob));
+    chmodSync(join(root, path), blob.exec ? 0o755 : 0o644);
   }
   const upstreamJson = join(root, "sync/upstream.json");
   writeFileSync(upstreamJson, readFileSync(upstreamJson, "utf8").replace(PIN, REPLAY_FROM));
   git(root, "add", "-A");
   git(root, "commit", "-q", "-m", "rewind to 519d36a");
 
-  const r = sync(root, PIN.slice(0, 7));
-  assert.ok(r.status === 0 || r.status === 1, r.out);
+  const before = snapshot(root);
+  const blocked = sync(root, PIN.slice(0, 7));
+  assert.equal(blocked.status, 2, blocked.out);
+  const section = blocked.out.slice(blocked.out.indexOf("PROBLEMS:"), blocked.out.indexOf("\n\n", blocked.out.indexOf("PROBLEMS:")));
+  const problems = [...section.matchAll(/^ {2}([a-z-]+) +(\S+) {2}/gm)];
+  assert.deepEqual(problems.map((m) => `${m[1]} ${m[2]}`), REPLAY_CONFLICTS.map((p) => `conflicted ${p}`), "only the forks flatpaper reworded conflict");
+  assert.deepEqual(snapshot(root), before, "a blocked run writes nothing");
+
+  const r = sync(root, PIN.slice(0, 7), ...REPLAY_CONFLICTS.flatMap((p) => ["--resolved", p]));
+  assert.equal(r.status, 0, r.out);
   assert.match(r.out, /0 problems/);
   const after = snapshot(root);
   for (const path of range.keys()) {
@@ -104,7 +123,7 @@ test("replay: 519d36a to 2776ddd rebuilds flatpaper's tree", { skip }, () => {
     assert.equal(after.get(path), head.get(path), `${path} is byte-identical to flatpaper HEAD`);
   }
   for (const path of forksInRange) {
-    assert.match(r.out, new RegExp(`merged\\s+[^\\n]*${path.replaceAll(".", "\\.")}`), `${path} merged`);
+    assert.match(r.out, new RegExp(`merged\\s+${path.replaceAll(".", "\\.")}`), `${path} merged`);
     assert.equal(after.get(path), head.get(path), `${path} merges back to flatpaper HEAD`);
   }
   assert.deepEqual([...after.keys()].filter((p) => !head.has(p)), [], "nothing left behind that HEAD lacks");
