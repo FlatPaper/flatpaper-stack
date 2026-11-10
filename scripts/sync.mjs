@@ -37,8 +37,32 @@ function parseArgs(argv) {
   return args;
 }
 
-export function loadConfig(root) {
-  const read = (path) => readFileSync(join(root, path), "utf8");
+const CONFIG_FILES = ["models.json", "sync/upstream.json", "sync/substitutions.json"];
+
+function fileReader(root) {
+  return (path) => {
+    try {
+      return readFileSync(join(root, path), "utf8");
+    } catch (e) {
+      if (e.code === "ENOENT") e.path = path;
+      throw e;
+    }
+  };
+}
+
+function headReader(root) {
+  const working = fileReader(root);
+  return (path) => {
+    if (!CONFIG_FILES.includes(path)) return working(path);
+    try {
+      return git(root, ["show", `HEAD:${path}`]).toString();
+    } catch {
+      return working(path);
+    }
+  };
+}
+
+export function loadConfig(root, read = fileReader(root)) {
   const problems = [];
   const attempt = (fn) => {
     try {
@@ -46,7 +70,7 @@ export function loadConfig(root) {
     } catch (e) {
       if (e instanceof CatalogError) problems.push(...e.problems.map((p) => `models.json: ${p}`));
       else if (e instanceof core.ConfigError) problems.push(...e.problems);
-      else if (e.code === "ENOENT") problems.push(`missing ${e.path.slice(root.length + 1)}`);
+      else if (e.code === "ENOENT") problems.push(`missing ${e.path}`);
       else throw e;
     }
   };
@@ -56,7 +80,8 @@ export function loadConfig(root) {
   const forks = attempt(() => core.parseForks(read("sync/forks.json")));
   const version = attempt(() => JSON.parse(read(".claude-plugin/plugin.json")).version);
   if (problems.length) throw new core.ConfigError(problems);
-  return { upstream, subs, catalog, forks, version };
+  const signature = JSON.stringify([{ ...JSON.parse(read("sync/upstream.json")), pin: null }, read("sync/substitutions.json"), read("models.json")]);
+  return { upstream, subs, catalog, forks, version, signature };
 }
 
 export function openUpstream(remote) {
@@ -210,8 +235,10 @@ function main(argv) {
       return findings.length ? 2 : 0;
     }
     const target = args.rev ? up.resolve(args.rev) : pin;
-    const old = core.deriveTree(config, up.rawTree(pin, config.upstream));
-    const neu = target === pin ? old : core.deriveTree(config, up.rawTree(target, config.upstream));
+    const base = loadConfig(ROOT, headReader(ROOT));
+    const configChanged = base.signature !== config.signature;
+    const old = core.deriveTree(base, up.rawTree(pin, base.upstream));
+    const neu = target === pin && !configChanged ? old : core.deriveTree(config, up.rawTree(target, config.upstream));
     const plan = core.plan({
       config,
       forks: config.forks,
@@ -221,6 +248,7 @@ function main(argv) {
       stampOnly: readLocal(ROOT, ["hooks"]),
       disk: diskKind(ROOT),
       target,
+      configChanged,
       version: config.version,
       merge3,
       resolved: args.resolved,

@@ -373,7 +373,7 @@ export function targetProblems(entries, localTree, disk) {
   });
 }
 
-export function plan({ config, forks, oldTree, newTree, localTree, stampOnly = new Map(), disk = diskOf(localTree), target, version, merge3, resolved = [], preProblems = [] }) {
+export function plan({ config, forks, oldTree, newTree, localTree, stampOnly = new Map(), disk = diskOf(localTree), target, configChanged = false, version, merge3, resolved = [], preProblems = [] }) {
   const { upstream, catalog } = config;
   const atPin = target === upstream.pin;
   const problems = [...preProblems];
@@ -403,7 +403,7 @@ export function plan({ config, forks, oldTree, newTree, localTree, stampOnly = n
     if (row.fork && !forks.has(e.path)) {
       problems.push({ kind: "undeclared", path: e.path, say: `${row.fork(e)}. Add a rule or a forks.json entry.` });
     }
-    if (atPin && e.write) problems.push({ kind: "at-pin-write", path: e.path, say: `at the pin the sync would ${e.write === "delete" ? "delete" : "write"} it (${e.outcome}); restore it or exclude it.` });
+    if (atPin && !configChanged && e.write) problems.push({ kind: "at-pin-write", path: e.path, say: `at the pin the sync would ${e.write === "delete" ? "delete" : "write"} it (${e.outcome}); restore it or exclude it. A config change must be run before it is committed.` });
   }
 
   for (const [path] of forks) {
@@ -467,7 +467,7 @@ export function plan({ config, forks, oldTree, newTree, localTree, stampOnly = n
   }
 
   const forkStubs = Object.fromEntries(problems.filter((p) => p.kind === "undeclared").map((p) => [p.path, { kind: "policy", why: "", since: version, upstream: "not-proposed" }]));
-  return { pin: upstream.pin, target, atPin, entries, forks, problems: problems.sort(byOrder(PROBLEM_ORDER)), followUps: followUps.sort(byOrder(FOLLOW_UP_ORDER)), forkStubs };
+  return { pin: upstream.pin, target, atPin, configChanged, entries, forks, problems: problems.sort(byOrder(PROBLEM_ORDER)), followUps: followUps.sort(byOrder(FOLLOW_UP_ORDER)), forkStubs };
 }
 
 export const blocked = (p) => p.problems.length > 0;
@@ -481,7 +481,7 @@ const pad = (s) => s.padEnd(16);
 export function renderReport(p, { dryRun }) {
   const out = [];
   const short = (sha) => sha.slice(0, 7);
-  out.push(p.atPin ? `upstream ${short(p.pin)} (at the pin)${dryRun ? ", dry run" : ""}` : `upstream ${short(p.pin)} -> ${short(p.target)}${dryRun ? ", dry run" : ""}`);
+  out.push(p.atPin ? `upstream ${short(p.pin)} (at the pin${p.configChanged ? ", config changed" : ""})${dryRun ? ", dry run" : ""}` : `upstream ${short(p.pin)} -> ${short(p.target)}${dryRun ? ", dry run" : ""}`);
   if (blocked(p)) {
     out.push("", `PROBLEMS: ${p.problems.length} (nothing ${dryRun ? "will be" : "was"} written, the pin stays)`);
     for (const f of p.problems) {
@@ -514,6 +514,9 @@ export function renderReport(p, { dryRun }) {
   if (Object.keys(p.forkStubs).length) {
     out.push("", "Paste into sync/forks.json and write each why:");
     out.push(Object.entries(p.forkStubs).map(([path, s]) => `  ${JSON.stringify(path)}: { "kind": ${JSON.stringify(s.kind)}, "why": "", "since": ${JSON.stringify(s.since)}, "upstream": "not-proposed" }`).join(",\n"));
+  }
+  if (!blocked(p) && !dryRun && p.atPin && p.configChanged) {
+    out.push("", "the pin stays", "next: review the diff, then commit the config change and these files together");
   }
   if (!blocked(p) && !dryRun && !p.atPin) {
     out.push("", `pin -> ${p.target}`, "next: review the diff, then node scripts/stamp-models.mjs --check && node --test tests/*.test.mjs, and bun test in skills/flatpaper-mode/scripts");
