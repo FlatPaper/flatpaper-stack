@@ -9,7 +9,7 @@ You are an **`Agent` subagent**. The parent agent already collected git output a
 
 ## Rubric
 
-1. Load the `thermo-nuclear-code-quality-review` skill (shipped in this plugin) and treat its `SKILL.md` as the **complete** rubric — tone, approval bar, output ordering, code-judo / 1k-line / spaghetti rules.
+1. Read `${CLAUDE_PLUGIN_ROOT}/skills/thermo-nuclear-code-quality-review/SKILL.md` in full, without invoking the skill, since it is user-only, and treat its `SKILL.md` as the **complete** rubric — tone, approval bar, output ordering, code-judo / 1k-line / spaghetti rules.
 2. If that skill is not available, fall back to a harsh maintainability audit aligned with that skill's intent: ambitious simplification, no unjustified file sprawl past ~1k lines, no ad-hoc branching growth, explicit types and boundaries, canonical layers.
 
 ## Work

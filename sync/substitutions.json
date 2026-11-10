@@ -208,13 +208,19 @@
       "rationale": "Claude Code spawns subagents through the Agent tool"
     },
     {
+      "regex": "Load the `(thermo-nuclear-[a-z-]+)` skill \\(shipped in the Thermos plugin\\)",
+      "files": "^agents/thermo-nuclear-[a-z-]+-subagent\\.md$",
+      "replacement": "Read `${CLAUDE_PLUGIN_ROOT}/skills/$1/SKILL.md` in full, without invoking the skill, since it is user-only,",
+      "rationale": "the rubric skills are user-only here, so a subagent reads them by path instead of loading them"
+    },
+    {
       "pattern": "in the Thermos plugin",
       "files": "^agents/thermo-nuclear-[a-z-]+-subagent\\.md$",
       "replacement": "in this plugin",
       "rationale": "the thermos skills ship in flatpaper-stack here"
     },
     {
-      "regex": "Typical flow: in \\*\\*one\\*\\* message, run two `Task` calls in parallel \u2014 `subagent_type: \"shell\"` and `subagent_type: \"explore\"` \u2014 to collect `git diff <base>...HEAD` output and full contents of changed files \\(default base `main`\\)\\. Then invoke this agent with `subagent_type: \"(thermo-nuclear-[a-z-]+-subagent)\"`",
+      "regex": "Typical flow: in \\*\\*one\\*\\* message, run two `Task` calls in parallel — `subagent_type: \"shell\"` and `subagent_type: \"explore\"` — to collect `git diff <base>...HEAD` output and full contents of changed files \\(default base `main`\\)\\. Then invoke this agent with `subagent_type: \"(thermo-nuclear-[a-z-]+-subagent)\"`",
       "files": "^agents/thermo-nuclear-[a-z-]+-subagent\\.md$",
       "replacement": "Typical flow: run `git diff <base>...HEAD` (default base `main`) and read the full contents of the changed files, through the `Explore` agent when the set is large. Then invoke this agent with `subagent_type: \"flatpaper-stack:$1\"`",
       "rationale": "Claude Code has no shell or explore Task types; the Explore agent reads large file sets and the plugin agent takes its namespaced name"
