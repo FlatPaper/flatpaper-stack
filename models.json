@@ -1,0 +1,35 @@
+{
+  "$comment": "The only hand-edited copy of flatpaper-stack's role defaults. Run `node scripts/stamp-models.mjs` after editing; it rewrites every `<role>` role (default `<value>`) span in skill prose and the models.md template in skills/setup-flatpaper-stack/SKILL.md. Order here is template order.",
+  "template": {
+    "head": [
+      "# flatpaper-stack model configuration. One line per role, plus the `session hook` line. Delete a line to fall back to the skill default.",
+      "# Value: <provider>/<model>:<effort>, or parent:<effort> (leave Agent `model` unset). Entries in a panel list each count toward its fan-out.",
+      "# budget: small (medium)",
+      "session hook: on"
+    ]
+  },
+  "roles": [
+    { "role": "feature, refactoring",                     "default": ["claude/sonnet:medium"] },
+    { "role": "bug-fix",                                  "default": ["parent:medium"] },
+    { "role": "perf-issue",                               "default": ["parent:medium"] },
+    { "role": "hillclimb",                                "default": ["parent:medium"] },
+    { "role": "trivial edits",                            "default": ["claude/haiku:medium"] },
+    { "role": "judgment and prose",                       "default": ["parent:medium"] },
+    { "role": "hardest tasks",                            "default": ["parent:high"] },
+    { "role": "how explorer",                             "default": ["claude/sonnet:medium"] },
+    { "role": "how explainer",                            "default": ["parent:medium"] },
+    { "role": "why investigators",                        "default": ["claude/sonnet:medium"], "family": "claude" },
+    { "role": "why synthesizer",                          "default": ["parent:medium"],        "family": "claude" },
+    { "role": "reflect tooling",                          "default": ["parent:medium"],        "family": "claude" },
+    { "role": "reflect judgment, divergent, synthesizer", "default": ["parent:medium"],        "family": "claude" },
+    { "role": "history explorers",                        "default": ["claude/sonnet:medium"] },
+    { "role": "trail reviewer",                           "default": ["codex/matched:medium"], "family": "other" },
+    { "role": "pr verifier",                              "default": ["codex/matched:medium"], "family": "other" },
+    { "role": "arena runners",                            "default": ["parent:medium", "codex/matched:medium"], "kind": "panel" },
+    { "role": "arena cross-judge pool",                   "default": ["codex/matched:medium"], "kind": "pool", "family": "other" },
+    { "role": "swarm workers",                            "default": ["claude/sonnet:medium"] },
+    { "role": "swarm hard workers",                       "default": ["claude/opus:medium"] },
+    { "role": "architect runners",                        "default": ["parent:medium", "codex/matched:medium"], "kind": "panel" },
+    { "role": "interrogate reviewers",                    "default": ["parent:medium", "codex/matched:medium"], "kind": "panel" }
+  ]
+}
