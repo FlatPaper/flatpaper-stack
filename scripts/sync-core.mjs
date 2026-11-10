@@ -403,7 +403,7 @@ export function plan({ config, forks, oldTree, newTree, localTree, stampOnly = n
   }
 
   const docs = new Map();
-  for (const [path, blob] of localTree) {
+  for (const [path, blob] of [...localTree, ...stampOnly]) {
     if (blob.kind !== "text" || !isStamped(path)) continue;
     const s = stampDoc(path, blob.text, catalog);
     docs.set(path, s);
@@ -420,7 +420,6 @@ export function plan({ config, forks, oldTree, newTree, localTree, stampOnly = n
       problems.push({ kind: "stamp", path: e.path, line: f.at?.line, say: `${findingSay(f)}; map it with a {{role:...}} rule or write "the \`<role>\` role (default \`<value>\`)".` });
     }
   }
-  for (const [path, blob] of stampOnly) if (blob.kind === "text") docs.set(path, stampDoc(path, blob.text, catalog));
   const spawning = after.get(SPAWNING);
   for (const f of checkRepo(catalog, [...docs.values()], spawning?.kind === "text" ? spawning.text : null)) {
     problems.push({ kind: "stamp-repo", say: stampRepoSay(f) });
