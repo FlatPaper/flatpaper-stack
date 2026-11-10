@@ -217,7 +217,9 @@ test("a real run refuses a dirty tree; a dry run still previews", () => {
   assert.match(r.out, /dirty/);
   assert.equal(read(root, "skills/arena/SKILL.md"), "v1\n");
   assert.equal(pin(root), shaA);
-  assert.equal(sync(root, shaB, "--dry-run").status, 0);
+  const dry = sync(root, shaB, "--dry-run");
+  assert.equal(dry.status, 0, dry.out);
+  assert.match(dry.out, /a real run would stop here: .*uncommitted/, "the dry run warns that the real run would refuse");
 });
 
 test("--remote reads a local clone in place; --check-rules fails a rule with no hit", () => {

@@ -215,6 +215,7 @@ function main(argv) {
       preProblems: [...neu.problems, ...(args.dryRun ? [] : dirtyProblems(ROOT))],
     });
     process.stdout.write(core.renderReport(plan, { dryRun: args.dryRun }));
+    if (args.dryRun) for (const p of dirtyProblems(ROOT)) console.log(`note: a real run would stop here: ${p.say}`);
     if (!args.dryRun && !core.blocked(plan)) apply(ROOT, plan);
     return core.exitCode(plan);
   } catch (e) {
