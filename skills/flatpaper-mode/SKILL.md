@@ -1,14 +1,13 @@
 ---
 name: flatpaper-mode
 description: FlatPaper's agent style for concise, detailed responses, deliberate subagents, unslopped prose, simple code, and verified work. Use for /flatpaper-stack:flatpaper-mode, or requests to work in this style.
-disable-model-invocation: true
 icon: crown
 color: yellow
 ---
 
 # Flatpaper mode
 
-Bundled skills live at `../<name>/SKILL.md` from this file. All of them are user-only: when a trigger below names one, read its SKILL.md before acting on it, and never invoke it. Put this file's absolute path in every `flatpaper-agent` prompt.
+Bundled skills live at `../<name>/SKILL.md` from this file. When a trigger below names one, read its SKILL.md before acting on it. Most are user-only, so never invoke them. The exceptions are `unslop`, `no-comments`, and `technical-writing`. Invoke those with the Skill tool, so a project hook that checks for them sees the call. Put this file's absolute path in every `flatpaper-agent` prompt.
 
 ## Non-negotiables
 
@@ -24,10 +23,10 @@ Remaining triggers:
 - Parallel fan-out → read `../swarm/SKILL.md` and follow it for coverage matrices, races, gauntlets, and exploration partitions. For design or code bakeoffs with base selection and grafting, read `../arena/SKILL.md` and follow it instead.
 - Contested design → read `../interrogate/SKILL.md` and follow it (multi-model adversarial) before shipping.
 - Nontrivial multi-step → write the throughput checkpoint (Feature step 3).
-- Any prose surface, your reply to the user included → read `../unslop/SKILL.md` and follow it. Write the reply per **Writing the reply**. Agent-facing prose also follows the **skill-creator** skill (Anthropic's skill for authoring SKILL.md files).
-- Docs, RFCs, readmes, PR descriptions, or commit messages → read `../technical-writing/SKILL.md` and follow it.
+- Any prose surface, your reply to the user included → invoke the **unslop** skill (`flatpaper-stack:unslop`) and follow it. Write the reply per **Writing the reply**. Agent-facing prose also follows the **skill-creator** skill (Anthropic's skill for authoring SKILL.md files).
+- Docs, RFCs, readmes, PR descriptions, or commit messages → invoke the **technical-writing** skill (`flatpaper-stack:technical-writing`) and follow it.
 - Before commit → the **deslop** skill (`/flatpaper-stack:deslop`).
-- Before review → read `../no-comments/SKILL.md` and follow it.
+- Before review → invoke the **no-comments** skill (`flatpaper-stack:no-comments`) and follow it.
 - Shipping UI / IDE / CLI → the matching control skill. This plugin bundles `control-cli` (CLIs and TUIs) and `control-ui` (browser / Electron / web UIs). For bug fixes, reproduce first on the same surface yourself. Hand to the user only under the narrow Bug fix step 1 exception.
 - Running a benchmark, measuring perf yourself, or reporting a speedup or regression you measured → read `../benchmark-checklist/SKILL.md` and follow it before you report or act on the number.
 - Any PR-status request ("babysit this", "get it green", "address the review comments", and most often "check on PR X" or "anything outstanding on X") → the **Babysit** playbook (`playbooks/babysit.md`). Never triggered by merely opening a PR. Declare its mode before polling. The playbook's step 1 owns the request-to-mode mapping. Reaching for `drive` inside a phase agent stops that agent finishing its turn.
@@ -101,9 +100,10 @@ You own every subagent's work. Review the diff and write your own summary, don't
 
 **Fresh subagents by default.** Give new work to a fresh subagent with consolidated scope, meaning the original brief, every later directive, and the prior agent's report and branch. This holds for a fix round, a follow-up, a retry, and the next queue item. Resume, message, or queue a follow-up on an existing subagent only when the new work strictly needs state that lives in that agent and is costly to move: its local checkout, its uncommitted changes, or a process it still runs, such as a dev server, a simulator, or a babysit watcher. A stop or hold order to a running agent is not reuse. A role such as a PR owner outlives its agent. Once that agent returns, a fresh agent takes the role's next round. Interrupt-chained resumes silently drop directives, so fire a fresh subagent with consolidated scope rather than trusting a "done" summary.
 
+
 ## Writing the reply
 
-Before you draft a reply, read `../unslop/SKILL.md` in full if you haven't this session. Write the reply clean as you draft it. A cleanup pass after drafting does not remove these patterns.
+Before you draft a reply, invoke the **unslop** skill (`flatpaper-stack:unslop`) if you haven't this session. Write the reply clean as you draft it. A cleanup pass after drafting does not remove these patterns.
 
 - **Short declarative sentences.** One thought per sentence, ended with a period.
 - **No long-dash character anywhere.** Write a file-list bullet as a sentence ("`main.js` owns persistence and the IPC handlers") and a bold section header as its own sentence ("**Verification.** End to end via CDP").
