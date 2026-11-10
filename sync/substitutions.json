@@ -164,6 +164,60 @@
       "files": "^skills/reflect/references/(divergent|judgment|tooling)-reviewer\\.md$",
       "replacement": "A skill counts as used when the transcript shows a `Skill` tool call or a `/<skill>` command naming it, a `Read` of its `SKILL.md` (under `.claude/skills/`, `~/.claude/skills/`, or `~/.claude/plugins/`), an `Agent` prompt naming its path, or a tool call (Bash, Grep, MCP, etc.)",
       "rationale": "Claude Code loads a skill through the Skill tool or a slash command, spawns through Agent, and runs shell commands through Bash; the three reviewer prompts share this sentence, and it runs after the .cursor/skills/ rule"
+    },
+    {
+      "pattern": "subagent_type: \"thermo-nuclear-review-subagent\"` for bugs",
+      "files": "^skills/thermos/SKILL\\.md$",
+      "replacement": "subagent_type: \"flatpaper-stack:thermo-nuclear-review-subagent\"` for bugs",
+      "rationale": "Claude Code dispatches plugin agents by their namespaced name"
+    },
+    {
+      "pattern": "subagent_type: \"thermo-nuclear-code-quality-review-subagent\"` for maintainability",
+      "files": "^skills/thermos/SKILL\\.md$",
+      "replacement": "subagent_type: \"flatpaper-stack:thermo-nuclear-code-quality-review-subagent\"` for maintainability",
+      "rationale": "Claude Code dispatches plugin agents by their namespaced name"
+    },
+    {
+      "pattern": "and codebase-health risks.\n4. Pass each",
+      "files": "^skills/thermos/SKILL\\.md$",
+      "replacement": "and codebase-health risks.\n\n   Both reviewers use the {{role:thermos reviewers}}. Before you spawn, read `{{skills}}/flatpaper-mode/references/spawning.md` in full and follow it for each spawn's model and effort.\n4. Pass each",
+      "rationale": "model and effort choice live in spawning.md; the role default comes from models.json through the stamp"
+    },
+    {
+      "regex": "\\bBugBot\\b",
+      "files": "^skills/thermo-nuclear-review/SKILL\\.md$",
+      "replacement": "a review bot",
+      "rationale": "BugBot is Cursor's review bot; any review bot can comment on the PR here"
+    },
+    {
+      "pattern": "Incorporate BugBot or human threads",
+      "files": "^agents/thermo-nuclear-review-subagent\\.md$",
+      "replacement": "Incorporate review-bot or human threads",
+      "rationale": "BugBot is Cursor's review bot; any review bot can comment on the PR here"
+    },
+    {
+      "pattern": "Invoked via Task after",
+      "files": "^agents/thermo-nuclear-[a-z-]+-subagent\\.md$",
+      "replacement": "Invoked through the `Agent` tool after",
+      "rationale": "Claude Code spawns subagents through the Agent tool"
+    },
+    {
+      "pattern": "You are a **Task subagent**",
+      "files": "^agents/thermo-nuclear-[a-z-]+-subagent\\.md$",
+      "replacement": "You are an **`Agent` subagent**",
+      "rationale": "Claude Code spawns subagents through the Agent tool"
+    },
+    {
+      "pattern": "in the Thermos plugin",
+      "files": "^agents/thermo-nuclear-[a-z-]+-subagent\\.md$",
+      "replacement": "in this plugin",
+      "rationale": "the thermos skills ship in flatpaper-stack here"
+    },
+    {
+      "regex": "Typical flow: in \\*\\*one\\*\\* message, run two `Task` calls in parallel \u2014 `subagent_type: \"shell\"` and `subagent_type: \"explore\"` \u2014 to collect `git diff <base>...HEAD` output and full contents of changed files \\(default base `main`\\)\\. Then invoke this agent with `subagent_type: \"(thermo-nuclear-[a-z-]+-subagent)\"`",
+      "files": "^agents/thermo-nuclear-[a-z-]+-subagent\\.md$",
+      "replacement": "Typical flow: run `git diff <base>...HEAD` (default base `main`) and read the full contents of the changed files, through the `Explore` agent when the set is large. Then invoke this agent with `subagent_type: \"flatpaper-stack:$1\"`",
+      "rationale": "Claude Code has no shell or explore Task types; the Explore agent reads large file sets and the plugin agent takes its namespaced name"
     }
   ],
   "denylist": [

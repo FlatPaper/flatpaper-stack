@@ -15,6 +15,7 @@
     { "role": "trivial edits",                            "default": ["claude/haiku:medium"] },
     { "role": "judgment and prose",                       "default": ["parent:medium"] },
     { "role": "hardest tasks",                            "default": ["parent:high"] },
+    { "role": "thermos reviewers",                        "default": ["parent:medium"] },
     { "role": "how explorer",                             "default": ["claude/sonnet:medium"] },
     { "role": "how explainer",                            "default": ["parent:medium"] },
     { "role": "why investigators",                        "default": ["claude/sonnet:medium"], "family": "claude" },

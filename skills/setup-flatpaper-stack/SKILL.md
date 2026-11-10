@@ -71,6 +71,7 @@ hillclimb: parent:medium
 trivial edits: claude/haiku:medium
 judgment and prose: parent:medium
 hardest tasks: parent:high
+thermos reviewers: parent:medium
 how explorer: claude/sonnet:medium
 how explainer: parent:medium
 why investigators: claude/sonnet:medium
