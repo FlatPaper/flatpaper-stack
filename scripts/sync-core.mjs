@@ -278,13 +278,13 @@ const OUTCOMES = {
   gone: {},
   excluded: {},
   "port-only": {},
-  forked: { fork: true },
-  "mode-only": { fork: true },
-  merged: { fork: true },
-  conflicted: { fork: true, problem: (e) => `${plural(e.hunks, "hunk")}. Make the local file take upstream's change in our words, then rerun with --resolved ${e.path} to keep it as the merge (a mechanical difference wants a rule instead).` },
+  forked: { fork: (e) => `forked, ${plural(e.changedLines ?? 0, "line")} differ from upstream` },
+  "mode-only": { fork: () => "only the exec bit differs from upstream" },
+  merged: { fork: () => "merged with upstream" },
+  conflicted: { fork: () => "conflicted with upstream", problem: (e) => `${plural(e.hunks, "hunk")}. Make the local file take upstream's change in our words, then rerun with --resolved ${e.path} to keep it as the merge (a mechanical difference wants a rule instead).` },
   "binary-conflict": { problem: (e) => `binary changed upstream and here; take one side by hand or exclude it, then rerun with --resolved ${e.path} to keep ours.` },
   symlink: { problem: () => "a symlink on some side; the sync never follows or writes links." },
-  "removed-upstream": { followUp: () => "upstream deleted it; kept because it is ours. Delete it with its forks.json entry, or keep it as port-only." },
+  "removed-upstream": { fork: () => "upstream deleted it, but it differs here", followUp: () => "upstream deleted it; kept because it is ours. Delete it with its forks.json entry, or keep it as port-only." },
 };
 const FORK_CLASS = new Set(Object.keys(OUTCOMES).filter((o) => OUTCOMES[o].fork));
 
@@ -356,15 +356,14 @@ export function plan({ config, forks, oldTree, newTree, localTree, stampOnly = n
     if (row.problem) problems.push({ kind: e.outcome, path: e.path, say: row.problem(e), conflict: e.conflict });
     if (row.followUp) followUps.push({ kind: e.outcome, path: e.path, say: row.followUp(e) });
     if (row.fork && !forks.has(e.path)) {
-      const what = e.outcome === "mode-only" ? "only the exec bit differs from upstream" : e.outcome === "forked" ? `forked, ${plural(e.changedLines ?? 0, "line")} differ from upstream` : `${e.outcome} with upstream`;
-      problems.push({ kind: "undeclared", path: e.path, say: `${what}. Add a rule or a forks.json entry.` });
+      problems.push({ kind: "undeclared", path: e.path, say: `${row.fork(e)}. Add a rule or a forks.json entry.` });
     }
     if (atPin && e.write) problems.push({ kind: "at-pin-write", path: e.path, say: `at the pin the sync would ${e.write === "delete" ? "delete" : "write"} it (${e.outcome}); restore it or exclude it.` });
   }
 
   for (const [path] of forks) {
     const outcome = byPath.get(path)?.outcome ?? "missing";
-    if (FORK_CLASS.has(outcome) || outcome === "removed-upstream") continue;
+    if (FORK_CLASS.has(outcome)) continue;
     if (atPin) problems.push({ kind: "stale-at-pin", path, say: `forks.json declares it, but it is ${outcome} at the pin. Delete the entry.` });
     else followUps.push({ kind: "stale-fork", path, say: `is ${outcome} now; upstream may have taken our change. Delete its forks.json entry.` });
   }
