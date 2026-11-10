@@ -162,10 +162,10 @@ test("invalid prose exits 2 and a write run touches no file", async (t) => {
 
 test("a role stated in no skill prose exits 2", () => {
   const root = sandbox();
-  edit(root, MODE, (t) => replaceOnce(t, "the `hillclimb` role (default `parent`)", "`hillclimb`"));
+  edit(root, "skills/show-me-your-work/SKILL.md", (t) => replaceOnce(t, "the `trail reviewer` role (default `codex/matched`)", "the trail reviewer"));
   const check = stamp(root, ["--check"]);
   assert.equal(check.status, 2);
-  assert.match(check.out, /models\.json: role `hillclimb` is stated in no skill prose/);
+  assert.match(check.out, /models\.json: role `trail reviewer` is stated in no skill prose/);
 });
 
 test("a bad catalog lists every problem, one per line, and writes nothing", () => {

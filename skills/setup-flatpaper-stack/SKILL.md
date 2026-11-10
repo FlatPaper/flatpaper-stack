@@ -64,7 +64,7 @@ Create `~/.claude/flatpaper-stack/` if needed, then write `models.md` with a `# 
 # Value: <provider>/<model>:<effort>, or parent:<effort> (leave Agent `model` unset). Entries in a panel list each count toward its fan-out.
 # budget: small (medium)
 session hook: on
-feature, refactoring: parent:medium
+feature, refactoring: claude/sonnet:medium
 bug-fix: parent:medium
 perf-issue: parent:medium
 hillclimb: parent:medium
