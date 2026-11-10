@@ -1,0 +1,22 @@
+{
+  "remote": "https://github.com/cursor/plugins",
+  "pin": "2776ddd2355d6d6c8747d3964600f28daf62f049",
+  "sources": [
+    { "from": "pstack/skills", "to": "skills" },
+    { "from": "pstack/agents", "to": "agents" },
+    { "from": "cursor-team-kit/skills/control-cli", "to": "skills/control-cli" },
+    { "from": "cursor-team-kit/skills/control-ui", "to": "skills/control-ui" },
+    { "from": "cursor-team-kit/skills/verify-this", "to": "skills/verify-this" },
+    { "from": "cursor-team-kit/skills/deslop", "to": "skills/deslop" }
+  ],
+  "renames": [
+    { "from": "skills/poteto-mode/", "to": "skills/flatpaper-mode/" },
+    { "from": "skills/poteto-help/", "to": "skills/flatpaper-help/" },
+    { "from": "skills/setup-pstack/", "to": "skills/setup-flatpaper-stack/" },
+    { "from": "agents/poteto-agent.md", "to": "agents/flatpaper-agent.md" }
+  ],
+  "excludes": [
+    { "path": "skills/make-bot-ui/", "why": "renders a Cursor-only bot canvas; Claude Code has no equivalent surface" },
+    { "path": "skills/flatpaper-mode/references/bugbot-triage.md", "why": "triages Cursor's Bugbot only; babysit routes any review bot instead" }
+  ]
+}

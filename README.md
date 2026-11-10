@@ -73,6 +73,18 @@ Run the session on Opus at `high` effort (`claude --model opus --effort high`) f
 
 Role defaults live only in `models.json`. Edit it, then run `node scripts/stamp-models.mjs` to rewrite every copy in the skills and the models.md template in `setup-flatpaper-stack`. Never edit those copies by hand. In skill prose, write a default as "the `<role>` role (default `<value>`)", the only shape the script stamps. `node --test tests/*.test.mjs` runs the script's `--check`, which fails on a stale copy or on a default written as "default `<value>`" outside that shape. It can't see a default written in plain words, such as "the parent model", so review still has to catch those.
 
+## Pull upstream pstack changes
+
+`scripts/sync.mjs` moves flatpaper-stack from the upstream pin in `sync/upstream.json` to a newer commit of cursor/plugins. It derives the old and new upstream files through the rules in `sync/substitutions.json`, compares each with the local copy, writes the clean updates, and keeps every fork listed in `sync/forks.json`. Commit your work first, then preview and run it:
+
+```bash
+node scripts/sync.mjs <rev> --dry-run
+node scripts/sync.mjs <rev>
+node scripts/stamp-models.mjs --check && node --test tests/*.test.mjs
+```
+
+Exit 0 means the tree is updated. Exit 1 means the tree is updated and the report lists follow-ups, such as a new upstream skill to review. Exit 2 means the run wrote nothing and left the pin alone. Fix each problem the report names. A mechanical difference needs a rule in `substitutions.json`, and a deliberate one needs a `forks.json` entry with its `why`. For a conflict, make the local file take upstream's change, then rerun with `--resolved <path>`. `--remote <path>` reads a local clone in place of a fresh one, and `FLATPAPER_UPSTREAM=<clone>` turns on the real-tree and replay tests.
+
 ## License
 
 MIT. See [LICENSE](LICENSE). Portions are adapted from pstack, cursor-team-kit, and pstack-claude, all MIT.

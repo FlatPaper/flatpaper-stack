@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync, existsSync, realpathSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -7,12 +7,12 @@ const EFFORTS = ["low", "medium", "high", "xhigh", "max"];
 const PROVIDERS = ["claude", "codex", "gemini"];
 const IMPLICIT_EFFORT = "medium";
 const EFFORT_RULE = "A default written without an effort means `medium`.";
-const SPAWNING = "skills/flatpaper-mode/references/spawning.md";
+export const SPAWNING = "skills/flatpaper-mode/references/spawning.md";
 const SPAN = /`([^`]+)` role \(default `([^`]+)`\)/g;
 const LOOSE_DEFAULT = new RegExp(`default \`((?:parent|${PROVIDERS.map((p) => `${p}/`).join("|")})[^\`]*)\``, "g");
 const LOOSE_EFFORT = new RegExp(`\`(${EFFORTS.join("|")})\` by default`, "g");
 const TEMPLATE_FIRST_LINE = "# flatpaper-stack model configuration.";
-const SCAN_DIRS = ["skills", "agents", "hooks"];
+export const SCAN_DIRS = ["skills", "agents", "hooks"];
 
 const KINDS = ["single", "panel", "pool"];
 const FAMILIES = {
@@ -22,7 +22,7 @@ const FAMILIES = {
 };
 const FAMILY_RULE = { claude: "needs MCP tools, so only parent or claude/*", other: "needs a family other than Claude, so no parent or claude/*" };
 
-class CatalogError extends Error {
+export class CatalogError extends Error {
   constructor(problems) {
     super(problems.join("\n"));
     this.problems = problems;
@@ -36,7 +36,7 @@ function parseRef(text) {
   return m[1] ? { provider: "parent", effort: m[4] } : { provider: m[2], model: m[3], effort: m[4] };
 }
 
-function parseCatalog(jsonText) {
+export function parseCatalog(jsonText) {
   let json;
   try {
     json = JSON.parse(jsonText);
@@ -128,7 +128,7 @@ function templateFences(lines) {
   return fences;
 }
 
-function stampDoc(file, text, c) {
+export function stampDoc(file, text, c) {
   const findings = [];
   const rolesSeen = new Set();
   const spans = [...text.matchAll(SPAN)];
@@ -166,7 +166,7 @@ function stampDoc(file, text, c) {
   return { text: lines.join("\n"), findings, rolesSeen, fences: fences.map((f) => ({ file, line: f.open + 2 })) };
 }
 
-function checkRepo(c, docs, spawningText) {
+export function checkRepo(c, docs, spawningText) {
   const findings = [];
   const seen = new Set(docs.flatMap((d) => [...d.rolesSeen]));
   for (const name of c.roles.keys()) if (!seen.has(name)) findings.push({ kind: "missing-role", role: name });
@@ -234,4 +234,4 @@ function main(argv) {
   return 0;
 }
 
-process.exitCode = main(process.argv.slice(2));
+if (process.argv[1] && fileURLToPath(import.meta.url) === realpathSync(process.argv[1])) process.exitCode = main(process.argv.slice(2));

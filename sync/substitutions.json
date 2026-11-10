@@ -1,0 +1,205 @@
+{
+  "rules": [
+    {
+      "regex": "^disable-model-invocation: true\\n",
+      "files": "^skills/(flatpaper-mode|unslop|no-comments|technical-writing|typescript-best-practices)/SKILL\\.md$",
+      "replacement": "",
+      "rationale": "flatpaper lets the model invoke these five skills on its own (PR 21 typescript-best-practices, PR 22 the rest); every other skill keeps the key"
+    },
+    {
+      "pattern": "Every spawn is a Task subagent with `subagent_type: generalPurpose` and `readonly: true`. Explorers use the `how explorer` line in the `pstack-models.mdc` rule (default `grok-4.7-xhigh-fast`), and every explainer uses the `how explainer` line (default `claude-opus-5-5-xhigh`). Set `model` to that line's value, or to the default if the rule or the line is missing. Leave `model` unset when the value is `auto` or `inherit-parent`. If the Task tool rejects a slug, use the default and say so. If it rejects the default, use the closest valid slug of the same family from its error message. Pick each subagent's reasoning level and fast or standard speed for the job, per the Subagents section of the **poteto-mode** skill.",
+      "files": "^skills/how/SKILL\\.md$",
+      "replacement": "Every spawn is an Agent subagent with `subagent_type: Explore`, which is read-only. Explorers use the {{role:how explorer}}, and every explainer uses the {{role:how explainer}}, from its line in `~/.claude/flatpaper-stack/models.md`, or the default when the file or the line is missing. Before you spawn, read `{{skills}}/flatpaper-mode/references/spawning.md` in full and follow it for each spawn's model and effort.",
+      "rationale": "Claude Code's read-only spawn is the Explore agent; role defaults come from models.json through the stamp, and model/effort choice lives in spawning.md; must precede the poteto-mode and speed rules, which match inside its pattern"
+    },
+    {
+      "pattern": "Use for poteto, /poteto-mode, or",
+      "files": "^skills/flatpaper-mode/SKILL\\.md$",
+      "replacement": "Use for /flatpaper-stack:flatpaper-mode, or",
+      "rationale": "flatpaper drops the bare 'poteto' trigger word; must precede the /poteto-mode rule, whose pattern it contains"
+    },
+    {
+      "pattern": "poteto's agent style",
+      "files": "^skills/flatpaper-mode/SKILL\\.md$",
+      "replacement": "FlatPaper's agent style",
+      "rationale": "the style is FlatPaper's in this plugin"
+    },
+    {
+      "pattern": "# Poteto mode",
+      "files": "^skills/flatpaper-mode/SKILL\\.md$",
+      "replacement": "# Flatpaper mode",
+      "rationale": "heading follows the renamed skill"
+    },
+    {
+      "pattern": "subagent_type: \"poteto-agent\"",
+      "replacement": "subagent_type: \"flatpaper-stack:flatpaper-agent\"",
+      "rationale": "Claude Code dispatches plugin agents by their namespaced name; must precede the bare poteto-agent rule"
+    },
+    {
+      "pattern": "subagent_type: \"comment-sicko\"",
+      "replacement": "subagent_type: \"flatpaper-stack:comment-sicko\"",
+      "rationale": "Claude Code dispatches plugin agents by their namespaced name"
+    },
+    {
+      "regex": "\\bpoteto-mode\\b",
+      "replacement": "flatpaper-mode",
+      "rationale": "skill rename; scoped to .md by default because byte-identical scripts (bootstrap.ts, package.json, bun.lock) still say poteto-mode"
+    },
+    {
+      "regex": "\\bpoteto-agent\\b",
+      "replacement": "flatpaper-agent",
+      "rationale": "agent rename (agents/poteto-agent.md -> agents/flatpaper-agent.md)"
+    },
+    {
+      "regex": "\\bpoteto-help\\b",
+      "replacement": "flatpaper-help",
+      "rationale": "skill rename (poteto-help/ -> flatpaper-help/)"
+    },
+    {
+      "regex": "\\bsetup-pstack\\b",
+      "replacement": "setup-flatpaper-stack",
+      "rationale": "skill rename (setup-pstack/ -> setup-flatpaper-stack/)"
+    },
+    {
+      "regex": "(?<![\\w.:/~@-])/(architect|arena|automate-me|benchmark-checklist|blast-radius|bro|control-cli|control-ui|correct|create-formal-verification-skill|create-verification-skill|deslop|figure-it-out|flatpaper-help|flatpaper-mode|how|in-your-own-words|interrogate|ketchup|ketchup-video|maintain-formal-verification-skill|maintain-verification-skill|no-comments|recall|reflect|setup-flatpaper-stack|sharpen|show-me-your-work|statechart|swarm|tdd|teach|technical-writing|typescript-best-practices|unslop|verify-this|why)(?![\\w/-])",
+      "replacement": "/flatpaper-stack:$1",
+      "rationale": "a slash command for a bundled skill takes the plugin prefix on Claude Code; the lookarounds leave paths such as ../how/SKILL.md and skills/how alone"
+    },
+    {
+      "pattern": "using your configured feature model (default `grok-4.7-xhigh-fast`) with",
+      "files": "^skills/flatpaper-mode/playbooks/feature\\.md$",
+      "replacement": "on the {{role:feature, refactoring}}, per the Subagents section, with",
+      "rationale": "upstream model phrase -> stamped role span; feature and refactoring share one role in models.json"
+    },
+    {
+      "pattern": "using your configured refactoring model (default `grok-4.7-xhigh-fast`) with",
+      "files": "^skills/flatpaper-mode/playbooks/refactoring\\.md$",
+      "replacement": "on the {{role:feature, refactoring}}, per the Subagents section, with",
+      "rationale": "upstream model phrase -> stamped role span; feature and refactoring share one role in models.json"
+    },
+    {
+      "pattern": "using your configured hillclimb model (default `grok-4.7-xhigh-fast`) with",
+      "files": "^skills/flatpaper-mode/playbooks/hillclimb\\.md$",
+      "replacement": "on the {{role:hillclimb}}, per the Subagents section, with",
+      "rationale": "upstream model phrase -> stamped role span"
+    },
+    {
+      "pattern": "using your configured bug-fix model (default `grok-4.7-xhigh-fast`) with",
+      "files": "^skills/flatpaper-mode/playbooks/bug-fix\\.md$",
+      "replacement": "on the {{role:bug-fix}}, per the Subagents section, with",
+      "rationale": "upstream model phrase -> stamped role span"
+    },
+    {
+      "pattern": "using your configured perf-issue model (default `grok-4.7-xhigh-fast`).",
+      "files": "^skills/flatpaper-mode/playbooks/perf-issue\\.md$",
+      "replacement": "on the {{role:perf-issue}}, per the Subagents section.",
+      "rationale": "upstream model phrase -> stamped role span; this site ends the sentence, so no trailing comma"
+    },
+    {
+      "pattern": "reasoning level and fast or standard speed for the job",
+      "replacement": "reasoning level for the job",
+      "rationale": "Claude Code has no per-spawn speed setting"
+    },
+    {
+      "pattern": "Cursor's `/loop` command",
+      "replacement": "Claude Code's `/loop` command",
+      "rationale": "Claude Code ships its own /loop built-in"
+    },
+    {
+      "pattern": "(a built-in, not a pstack skill)",
+      "replacement": "(a built-in, not a flatpaper-stack skill)",
+      "rationale": "the plugin is flatpaper-stack here"
+    },
+    {
+      "regex": "\\bAskQuestion\\b",
+      "replacement": "AskUserQuestion",
+      "rationale": "Claude Code's question tool is AskUserQuestion"
+    },
+    {
+      "pattern": "Apply the **unslop** skill to the reply.",
+      "files": "^skills/flatpaper-mode/playbooks/investigation\\.md$",
+      "replacement": "Apply the **unslop** skill to the reply (read `{{skills}}/unslop/SKILL.md`).",
+      "rationale": "a user-only skill cannot be invoked by the model, so the playbook names the file to read"
+    },
+    {
+      "pattern": "Apply the **unslop** skill to every doc",
+      "files": "^skills/technical-writing/SKILL\\.md$",
+      "replacement": "Apply the **unslop** skill (read `{{skills}}/unslop/SKILL.md`) to every doc",
+      "rationale": "a user-only skill cannot be invoked by the model, so the skill names the file to read"
+    },
+    {
+      "pattern": "**create-skill** skill (Cursor's built-in for authoring SKILL.md files)",
+      "replacement": "**skill-creator** skill (Anthropic's skill for authoring SKILL.md files)",
+      "rationale": "Claude Code authors skills with Anthropic's skill-creator skill; must precede the bare create-skill rule"
+    },
+    {
+      "regex": "\\bcreate-skill\\b",
+      "replacement": "skill-creator",
+      "rationale": "Cursor's create-skill built-in is skill-creator on Claude Code"
+    },
+    {
+      "pattern": ".cursor/skills/",
+      "replacement": ".claude/skills/",
+      "rationale": "project and personal skills live under .claude/skills/ on Claude Code"
+    },
+    {
+      "pattern": "It may require `mcp_auth`.",
+      "replacement": "It may require authentication (the server's `authenticate` tool, or `/mcp`).",
+      "rationale": "Claude Code authenticates an MCP server through its authenticate tool or /mcp"
+    },
+    {
+      "pattern": "\"Bugbot flagged",
+      "files": "^skills/reflect/references/synthesizer\\.md$",
+      "replacement": "\"the review bot flagged",
+      "rationale": "the example names any review bot, since Bugbot is Cursor-only"
+    },
+    {
+      "pattern": "with the pstack [",
+      "files": "^skills/create-formal-verification-skill/SKILL\\.md$",
+      "replacement": "with the flatpaper-stack [",
+      "rationale": "the statechart skill ships in flatpaper-stack here"
+    },
+    {
+      "pattern": "A skill counts as used when the transcript shows a `Read` of its `SKILL.md` (under `.claude/skills/`, `~/.claude/skills/`, or `~/.cursor/plugins/`), a `Task` prompt naming its path, or a tool call (Shell, Grep, MCP, etc.)",
+      "files": "^skills/reflect/references/(divergent|judgment|tooling)-reviewer\\.md$",
+      "replacement": "A skill counts as used when the transcript shows a `Skill` tool call or a `/<skill>` command naming it, a `Read` of its `SKILL.md` (under `.claude/skills/`, `~/.claude/skills/`, or `~/.claude/plugins/`), an `Agent` prompt naming its path, or a tool call (Bash, Grep, MCP, etc.)",
+      "rationale": "Claude Code loads a skill through the Skill tool or a slash command, spawns through Agent, and runs shell commands through Bash; the three reviewer prompts share this sentence, and it runs after the .cursor/skills/ rule"
+    }
+  ],
+  "denylist": [
+    {
+      "token": "grok-",
+      "hint": "an upstream model default leaked; add a {{role:...}} rule so stamp-models owns the value"
+    },
+    {
+      "token": "fast or standard speed",
+      "hint": "Claude Code has no speed setting; extend the speed rule or rewrite the sentence"
+    },
+    {
+      "token": ".cursor/",
+      "hint": "a Cursor path; name the Claude Code path (.claude/ or ~/.claude/projects/...)"
+    },
+    {
+      "token": "AskQuestion",
+      "hint": "the AskQuestion rule missed a spelling; Claude Code's tool is AskUserQuestion"
+    },
+    {
+      "token": "pstack-models.mdc",
+      "hint": "role lines live in ~/.claude/flatpaper-stack/models.md"
+    },
+    {
+      "token": "Bugbot",
+      "hint": "Cursor's review bot; write 'a review bot' unless the sentence is about Cursor's Bugbot itself",
+      "allow": [
+        {
+          "path": "skills/flatpaper-help/SKILL.md",
+          "why": "says Bugbot was dropped in the adaptation"
+        },
+        {
+          "path": "skills/flatpaper-mode/playbooks/babysit.md",
+          "why": "explains why watch-pr's bugbotReviewPasses reads 0 here"
+        }
+      ]
+    }
+  ]
+}
