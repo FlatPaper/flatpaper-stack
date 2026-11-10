@@ -7,7 +7,14 @@
     { "from": "cursor-team-kit/skills/control-cli", "to": "skills/control-cli" },
     { "from": "cursor-team-kit/skills/control-ui", "to": "skills/control-ui" },
     { "from": "cursor-team-kit/skills/verify-this", "to": "skills/verify-this" },
-    { "from": "cursor-team-kit/skills/deslop", "to": "skills/deslop" }
+    { "from": "cursor-team-kit/skills/deslop", "to": "skills/deslop" },
+    { "from": "cursor-team-kit/skills/fix-ci", "to": "skills/fix-ci" },
+    { "from": "cursor-team-kit/skills/fix-merge-conflicts", "to": "skills/fix-merge-conflicts" },
+    { "from": "cursor-team-kit/skills/get-pr-comments", "to": "skills/get-pr-comments" },
+    { "from": "cursor-team-kit/skills/make-pr-easy-to-review", "to": "skills/make-pr-easy-to-review" },
+    { "from": "cursor-team-kit/skills/what-did-i-get-done", "to": "skills/what-did-i-get-done" },
+    { "from": "thermos/skills", "to": "skills" },
+    { "from": "thermos/agents", "to": "agents" }
   ],
   "renames": [
     { "from": "skills/poteto-mode/", "to": "skills/flatpaper-mode/" },
