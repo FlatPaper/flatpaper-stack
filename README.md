@@ -95,6 +95,8 @@ node scripts/stamp-models.mjs --check && node --test tests/*.test.mjs
 
 Exit 0 means the tree is updated. Exit 1 means the tree is updated and the report lists follow-ups, such as a new upstream skill to review. Exit 2 means the run wrote nothing and left the pin alone. Fix each problem the report names. A mechanical difference needs a rule in `substitutions.json`, and a deliberate one needs a `forks.json` entry with its `why`. For a conflict, make the local file take upstream's change, then rerun with `--resolved <path>`. `--remote <path>` reads a local clone in place of a fresh one, and `FLATPAPER_UPSTREAM=<clone>` turns on the real-tree and replay tests.
 
+To change the config without moving the pin, such as adding a source to `sync/upstream.json` or editing a rule in `sync/substitutions.json` (a change to `models.json` counts too), edit the file and run `node scripts/sync.mjs <pin-sha>` before you commit it. The sync derives the old tree from the config at `HEAD` and the new tree from your working copy, writes the files that differ, and leaves the pin alone. The report header says `config changed`. Commit the config and the written files together. Once the config is committed, the sync derives both trees from it, so a file it would still write at the pin blocks the run as `at-pin-write`.
+
 ## License
 
 MIT. See [LICENSE](LICENSE). Portions are adapted from pstack, cursor-team-kit, and pstack-claude, all MIT.

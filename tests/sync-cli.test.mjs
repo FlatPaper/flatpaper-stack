@@ -384,3 +384,92 @@ test("bad arguments and bad config exit 2 with a reason", () => {
   assert.equal(r.status, 2);
   assert.match(r.out, /forks\.json.*why/);
 });
+
+const addSource = (root) => {
+  const u = JSON.parse(read(root, "sync/upstream.json"));
+  u.sources.push({ from: "pstack/extras/fresh", to: "skills/fresh" });
+  writeFileSync(join(root, "sync/upstream.json"), JSON.stringify(u, null, 2) + "\n");
+};
+
+const addRule = (root) => {
+  const rules = [...SUBS.rules, { regex: "\\bfoo\\b", replacement: "bar", rationale: "rename foo" }];
+  writeFileSync(join(root, "sync/substitutions.json"), JSON.stringify({ ...SUBS, rules }, null, 2) + "\n");
+};
+
+const CONFIG_FIXTURE = {
+  a: { "pstack/skills/arena/SKILL.md": "Arena says foo.\n", "pstack/skills/other/SKILL.md": "Other says foo.\n", "pstack/extras/fresh/SKILL.md": "fresh\n" },
+  b: {},
+};
+
+test("a source added to upstream.json is written at the pin before the config is committed", () => {
+  const { root, shaA } = fixture(CONFIG_FIXTURE);
+  addSource(root);
+  const before = snapshot(root);
+
+  const dry = sync(root, shaA, "--dry-run");
+  assert.equal(dry.status, 1, dry.out);
+  assert.match(dry.out, /upstream \w{7} \(at the pin, config changed\), dry run/);
+  assert.match(dry.out, /new skill\s+skills\/fresh\//);
+  assert.deepEqual(snapshot(root), before, "a dry run writes nothing");
+
+  const real = sync(root, shaA);
+  assert.equal(real.status, 1, real.out);
+  assert.equal(read(root, "skills/fresh/SKILL.md"), "fresh\n");
+  assert.equal(pin(root), shaA, "the pin stays");
+  for (const path of ["skills/arena/SKILL.md", "skills/other/SKILL.md"]) assert.equal(snapshot(root).get(path), before.get(path), `${path} untouched`);
+
+  git(root, "add", "-A");
+  git(root, "commit", "-qm", "add the fresh source");
+  const settled = snapshot(root);
+  const again = sync(root, "--dry-run");
+  assert.equal(again.status, 0, again.out);
+  assert.match(again.out, /0 problems/);
+  assert.deepEqual(snapshot(root), settled);
+});
+
+test("an edited substitution rule rewrites exactly the files it touches", () => {
+  const { root, shaA } = fixture({ ...CONFIG_FIXTURE, a: { ...CONFIG_FIXTURE.a, "pstack/skills/other/SKILL.md": "Nothing to see.\n" } });
+  addRule(root);
+  const before = snapshot(root);
+
+  const real = sync(root, shaA);
+  assert.equal(real.status, 0, real.out);
+  assert.match(real.out, /\(at the pin, config changed\)/);
+  assert.equal(read(root, "skills/arena/SKILL.md"), "Arena says bar.\n");
+  const changed = [...snapshot(root)].filter(([path, content]) => before.get(path) !== content).map(([path]) => path).sort();
+  assert.deepEqual(changed, ["skills/arena/SKILL.md"]);
+  assert.equal(pin(root), shaA);
+});
+
+test("the same edits already committed with an unchanged tree still block at the pin", () => {
+  const added = fixture(CONFIG_FIXTURE);
+  addSource(added.root);
+  git(added.root, "commit", "-qam", "add the fresh source");
+  const addedBefore = snapshot(added.root);
+  const blockedAdd = sync(added.root, added.shaA);
+  assert.equal(blockedAdd.status, 2, blockedAdd.out);
+  assert.match(blockedAdd.out, /at-pin-write\s+skills\/fresh\/SKILL\.md/);
+  assert.match(blockedAdd.out, /must be run before it is committed/);
+  assert.doesNotMatch(blockedAdd.out, /config changed/);
+  assert.deepEqual(snapshot(added.root), addedBefore, "nothing written");
+
+  const ruled = fixture(CONFIG_FIXTURE);
+  addRule(ruled.root);
+  git(ruled.root, "commit", "-qam", "add the foo rule");
+  const ruledBefore = snapshot(ruled.root);
+  const blockedRule = sync(ruled.root, ruled.shaA);
+  assert.equal(blockedRule.status, 2, blockedRule.out);
+  assert.match(blockedRule.out, /undeclared\s+skills\/arena\/SKILL\.md/);
+  assert.equal(sync(ruled.root, "--dry-run").status, 2, "the dry run returns the real run's code");
+  assert.deepEqual(snapshot(ruled.root), ruledBefore, "nothing written");
+});
+
+test("a config change still blocks on a problem and writes nothing", () => {
+  const { root, shaA } = fixture({ ...CONFIG_FIXTURE, local: { "skills/other/SKILL.md": "Our own words.\n" } });
+  addSource(root);
+  const before = snapshot(root);
+  const r = sync(root, shaA);
+  assert.equal(r.status, 2, r.out);
+  assert.match(r.out, /undeclared\s+skills\/other\/SKILL\.md/);
+  assert.deepEqual(snapshot(root), before, "the new skill was not written either");
+});
