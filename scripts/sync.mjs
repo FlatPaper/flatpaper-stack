@@ -125,6 +125,16 @@ function readLocal(root, dirs = LOCAL_DIRS) {
   return tree;
 }
 
+const diskKind = (root) => (path) => {
+  try {
+    const stat = lstatSync(join(root, path));
+    return stat.isSymbolicLink() ? "symlink" : stat.isDirectory() ? "dir" : stat.isFile() ? "file" : "other";
+  } catch (e) {
+    if (e.code === "ENOENT" || e.code === "ENOTDIR") return "missing";
+    throw e;
+  }
+};
+
 function dirtyProblems(root) {
   const dirty = git(root, ["status", "--porcelain=v1", "-z", "--untracked-files=all", "--", ...LOCAL_DIRS]).toString().split("\0").filter(Boolean);
   if (!dirty.length) return [];
@@ -154,8 +164,10 @@ function pruneEmpty(root, dir) {
 }
 
 function apply(root, plan) {
-  for (const e of core.writes(plan)) {
-    if (!LOCAL_DIRS.some((d) => e.path.startsWith(`${d}/`))) throw new Error(`refusing to write ${e.path}, outside ${LOCAL_DIRS.join(" and ")}`);
+  const planned = core.writes(plan);
+  const unsafe = core.targetProblems(planned, readLocal(root), diskKind(root));
+  if (unsafe.length) throw new Error(`nothing written; the tree changed under the run:\n${unsafe.map((p) => `  ${p.kind} ${p.path}  ${p.say}`).join("\n")}`);
+  for (const e of planned) {
     const file = join(root, e.path);
     if (e.write === "delete") {
       unlinkSync(file);
@@ -208,6 +220,7 @@ function main(argv) {
       newTree: neu.tree,
       localTree: readLocal(ROOT),
       stampOnly: readLocal(ROOT, ["hooks"]),
+      disk: diskKind(ROOT),
       target,
       version: config.version,
       merge3,

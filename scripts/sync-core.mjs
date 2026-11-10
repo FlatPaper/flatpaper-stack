@@ -311,7 +311,7 @@ function classify(old, neu, local, merge3) {
   return { outcome: "merged", write: same(merged, local) ? null : merged, changedLines: changedLines(neu.text, m.text) };
 }
 
-const PROBLEM_ORDER = ["config", "dirty", "resolved-unused", "markers", "local-unstamped", "undeclared", "stale-at-pin", "at-pin-write", "conflicted", "binary-conflict", "symlink", "path-collision", "denylist", "stamp", "stamp-repo"];
+const PROBLEM_ORDER = ["config", "dirty", "resolved-unused", "markers", "local-unstamped", "undeclared", "stale-at-pin", "at-pin-write", "conflicted", "binary-conflict", "symlink", "unsafe-path", "path-collision", "unlisted", "denylist", "stamp", "stamp-repo"];
 const FOLLOW_UP_ORDER = ["new-skill", "new-agent", "removed-skill", "removed-agent", "removed-upstream", "stale-fork", "excluded-changed", "excluded-local"];
 const byOrder = (order) => (a, b) => order.indexOf(a.kind) - order.indexOf(b.kind) || cmp(a.path ?? "", b.path ?? "");
 const groupOf = (path) => /^skills\/[^/]+\//.exec(path)?.[0] ?? /^agents\/[^/]+$/.exec(path)?.[0] ?? null;
@@ -328,7 +328,52 @@ function stampRepoSay(f) {
   return `${SPAWNING} would lose the effort rule`;
 }
 
-export function plan({ config, forks, oldTree, newTree, localTree, stampOnly = new Map(), target, version, merge3, resolved = [], preProblems = [] }) {
+function afterTree(localTree, entries) {
+  const after = new Map(localTree);
+  for (const e of entries) {
+    if (e.write === "delete") after.delete(e.path);
+    else if (e.write) after.set(e.path, e.write);
+  }
+  return after;
+}
+
+const diskOf = (tree) => {
+  const dirs = new Set([...tree.keys()].flatMap((p) => prefixes(p).slice(0, -1)));
+  return (p) => (tree.has(p) ? (tree.get(p).kind === "symlink" ? "symlink" : "file") : dirs.has(p) ? "dir" : "missing");
+};
+
+function targetProblem(e, { localTree, after, dirs, spellings, disk }) {
+  if (!isLocal(e.path)) return { kind: "unsafe-path", say: "is not a plain path under skills/ or agents/; fix sources or renames." };
+  const above = prefixes(e.path).slice(0, -1);
+  const link = above.find((p) => disk(p) === "symlink");
+  if (link) return { kind: "unsafe-path", say: `${link} is a symlink; the sync never writes through links.` };
+  if (e.write === "delete") return null;
+  const here = disk(e.path);
+  const twin = prefixes(e.path).find((p) => spellings.get(fold(p)).size > 1);
+  const fileAbove = above.find((p) => after.has(p) || !["dir", "missing"].includes(disk(p)));
+  const collision = twin ? `${[...spellings.get(fold(twin))].sort().join(" and ")} differ only in case or Unicode form`
+    : dirs.has(e.path) || here === "dir" ? "a directory where upstream has a file"
+    : fileAbove ? `${fileAbove} is a file where upstream has a directory`
+    : here === "other" ? "is not a regular file here" : null;
+  if (collision) return { kind: "path-collision", say: collision };
+  if (here === "symlink") return { kind: "unsafe-path", say: "is a symlink git does not list; the sync never writes through links." };
+  if (here === "file" && !localTree.has(e.path)) return { kind: "unlisted", say: "exists here but git does not list it (ignored?), so the sync would overwrite it. Move it away or commit it." };
+  return null;
+}
+
+export function targetProblems(entries, localTree, disk) {
+  const after = afterTree(localTree, entries);
+  const afterPaths = [...after.keys()];
+  const spellings = new Map();
+  for (const p of afterPaths.flatMap(prefixes)) spellings.set(fold(p), (spellings.get(fold(p)) ?? new Set()).add(p));
+  const dirs = new Set(afterPaths.flatMap((p) => prefixes(p).slice(0, -1)));
+  return entries.flatMap((e) => {
+    const found = e.write && targetProblem(e, { localTree, after, dirs, spellings, disk });
+    return found ? [{ ...found, path: e.path }] : [];
+  });
+}
+
+export function plan({ config, forks, oldTree, newTree, localTree, stampOnly = new Map(), disk = diskOf(localTree), target, version, merge3, resolved = [], preProblems = [] }) {
   const { upstream, catalog } = config;
   const atPin = target === upstream.pin;
   const problems = [...preProblems];
@@ -368,25 +413,9 @@ export function plan({ config, forks, oldTree, newTree, localTree, stampOnly = n
     else followUps.push({ kind: "stale-fork", path, say: `is ${outcome} now; upstream may have taken our change. Delete its forks.json entry.` });
   }
 
-  const after = new Map(localTree);
-  for (const e of entries) {
-    if (e.write === "delete") after.delete(e.path);
-    else if (e.write) after.set(e.path, e.write);
-  }
+  const after = afterTree(localTree, entries);
   const afterPaths = [...after.keys()].sort();
-
-  const spellings = new Map();
-  for (const p of afterPaths.flatMap(prefixes)) spellings.set(fold(p), (spellings.get(fold(p)) ?? new Set()).add(p));
-  const dirs = new Set(afterPaths.flatMap((p) => prefixes(p).slice(0, -1)));
-  for (const e of entries) {
-    if (!e.write || e.write === "delete") continue;
-    const twin = prefixes(e.path).find((p) => spellings.get(fold(p)).size > 1);
-    const fileAbove = prefixes(e.path).slice(0, -1).find((p) => after.has(p));
-    const reason = twin ? `${[...spellings.get(fold(twin))].sort().join(" and ")} differ only in case or Unicode form`
-      : dirs.has(e.path) ? "a directory where upstream has a file"
-      : fileAbove ? `${fileAbove} is a file where upstream has a directory` : null;
-    if (reason) problems.push({ kind: "path-collision", path: e.path, say: reason });
-  }
+  problems.push(...targetProblems(entries, localTree, disk));
 
   for (const [path, blob] of after) {
     if (blob.kind !== "text") continue;
