@@ -3,17 +3,14 @@ import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
-/** @typedef {{ provider: "parent", effort: string } | { provider: "claude"|"codex"|"gemini", model: string, effort: string }} ModelRef */
-/** @typedef {{ name: string, value: readonly ModelRef[] }} Role */
-/** @typedef {{ roles: ReadonlyMap<string, Role>, templateHead: readonly string[] }} Catalog */
-
 const EFFORTS = ["low", "medium", "high", "xhigh", "max"];
+const PROVIDERS = ["claude", "codex", "gemini"];
 const IMPLICIT_EFFORT = "medium";
 const EFFORT_RULE = "A default written without an effort means `medium`.";
 const SPAWNING = "skills/flatpaper-mode/references/spawning.md";
 const SPAN = /`([^`]+)` role \(default `([^`]+)`\)/g;
-const LOOSE_DEFAULT = /default `((?:parent|claude\/|codex\/|gemini\/)[^`]*)`/g;
-const LOOSE_EFFORT = /`(low|medium|high|xhigh|max)` by default/g;
+const LOOSE_DEFAULT = new RegExp(`default \`((?:parent|${PROVIDERS.map((p) => `${p}/`).join("|")})[^\`]*)\``, "g");
+const LOOSE_EFFORT = new RegExp(`\`(${EFFORTS.join("|")})\` by default`, "g");
 const TEMPLATE_FIRST_LINE = "# flatpaper-stack model configuration.";
 const SCAN_DIRS = ["skills", "agents", "hooks"];
 
@@ -33,7 +30,7 @@ class CatalogError extends Error {
 }
 
 function parseRef(text) {
-  const m = /^(?:(parent)|(claude|codex|gemini)\/([^\s:,`]+)):([a-z]+)$/.exec(text);
+  const m = new RegExp(`^(?:(parent)|(${PROVIDERS.join("|")})/([^\\s:,\`]+)):([a-z]+)$`).exec(text);
   if (!m) return `\`${text}\` is not provider/model:effort or parent:effort`;
   if (!EFFORTS.includes(m[4])) return `\`${text}\` has effort \`${m[4]}\`, not one of ${EFFORTS.join(", ")}`;
   return m[1] ? { provider: "parent", effort: m[4] } : { provider: m[2], model: m[3], effort: m[4] };
@@ -54,7 +51,7 @@ function parseCatalog(jsonText) {
   const isStrings = (v) => Array.isArray(v) && v.length > 0 && v.every((s) => typeof s === "string");
 
   if (!isObject(json)) throw new CatalogError(["top level must be an object"]);
-  unknownKeys(json, ["$comment", "template", "roles"], "top level");
+  unknownKeys(json, ["template", "roles"], "top level");
 
   const head = json.template?.head;
   if (!isObject(json.template) || !isStrings(head)) problems.push("template.head must be a non-empty array of strings");

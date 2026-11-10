@@ -1,5 +1,4 @@
 {
-  "$comment": "The only hand-edited copy of flatpaper-stack's role defaults. Run `node scripts/stamp-models.mjs` after editing; it rewrites every `<role>` role (default `<value>`) span in skill prose and the models.md template in skills/setup-flatpaper-stack/SKILL.md. Order here is template order.",
   "template": {
     "head": [
       "# flatpaper-stack model configuration. One line per role, plus the `session hook` line. Delete a line to fall back to the skill default.",
