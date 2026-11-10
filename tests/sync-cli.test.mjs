@@ -315,6 +315,22 @@ test("upstream turning a folder into a file blocks before any write", () => {
   assert.deepEqual(snapshot(root), before);
 });
 
+test("a remote holding paths that differ only in case blocks before any write", () => {
+  const { root, remote, shaA } = fixture({
+    a: { "pstack/skills/arena/SKILL.md": "arena\n" },
+    b: { "pstack/skills/arena/SKILL.md": "arena\n" },
+  });
+  const twin = execFileSync("git", ["hash-object", "-w", "--stdin"], { cwd: remote, input: "twin\n", encoding: "utf8" }).trim();
+  git(remote, "update-index", "--add", "--cacheinfo", `100644,${twin},pstack/skills/Arena/SKILL.md`);
+  git(remote, "commit", "-q", "-m", "case twin");
+  const shaC = git(remote, "rev-parse", "HEAD");
+  const before = snapshot(root);
+  const r = sync(root, shaC);
+  assertBlocked(root, shaA, r, /path-collision.*differ only in case or Unicode form/);
+  assert.equal(read(root, "skills/arena/SKILL.md"), "arena\n");
+  assert.deepEqual(snapshot(root), before);
+});
+
 test("upstream deleting a file we changed is undeclared unless forks.json keeps it", () => {
   const F = "skills/arena/SKILL.md";
   const files = { a: { [`pstack/${F}`]: "upstream\n" }, b: { "pstack/skills/other/data.txt": "new\n" }, local: { [F]: "local fork\n" } };
