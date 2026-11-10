@@ -68,6 +68,14 @@ A session hook also starts flatpaper-mode on its own for work that touches more 
 | `/flatpaper-stack:bro` | The last reply was too dense |
 | `/flatpaper-stack:recall` | You're starting a session and want your recent context back |
 | `/flatpaper-stack:teach` | You want a change or subsystem explained so you understand it |
+| `/flatpaper-stack:thermos` | You want a bug and security review and a code quality review of a branch, run in parallel and merged into one verdict |
+| `/flatpaper-stack:thermo-nuclear-review` | You want only the bug, breakage, and security audit of a diff |
+| `/flatpaper-stack:thermo-nuclear-code-quality-review` | You want only the code quality audit of a diff |
+| `/flatpaper-stack:fix-ci` | A PR has failing checks and you want them found and fixed |
+| `/flatpaper-stack:fix-merge-conflicts` | A merge or rebase hit conflicts and you want them resolved |
+| `/flatpaper-stack:get-pr-comments` | You want the review comments on a PR fetched and summarized |
+| `/flatpaper-stack:make-pr-easy-to-review` | A PR is hard to read and you want it reshaped for the reviewer |
+| `/flatpaper-stack:what-did-i-get-done` | You want your commits over a period summarized as a short update |
 
 Run the session on Opus at `high` effort (`claude --model opus --effort high`) for the best code. Helpers pick their own models from the settings above.
 
