@@ -41,7 +41,7 @@ function config({ rules = [], denylist = [], excludes = [], renames = [] } = {})
 
 const forksOf = (obj) => core.parseForks(JSON.stringify(Object.fromEntries(Object.entries(obj).map(([p, kind]) => [p, { kind, why: "Kept on purpose for this test.", since: "0.9.2", upstream: "not-proposed" }]))));
 
-function run({ old = {}, neu = old, local = {}, forks = {}, target = NEXT, cfg = config(), preProblems = [] }) {
+function run({ old = {}, neu = old, local = {}, forks = {}, target = NEXT, cfg = config(), preProblems = [], resolved = [] }) {
   return core.plan({
     config: cfg,
     forks: forksOf(forks),
@@ -53,6 +53,7 @@ function run({ old = {}, neu = old, local = {}, forks = {}, target = NEXT, cfg =
     version: "0.9.2",
     merge3,
     preProblems,
+    resolved,
   });
 }
 
@@ -85,7 +86,7 @@ test("outcome table: each row decides the write and the class", async (t) => {
   ];
   for (const [name, c, outcome, write] of rows) {
     await t.test(name, () => {
-      const p = run(c);
+      const p = run({ ...c, local: { "skills/a/keep.md": text("a sibling keeps the folder\n"), ...c.local } });
       assert.deepEqual(p.problems, [], "no problems");
       assert.equal(entry(p, F).outcome, outcome);
       assert.deepEqual(entry(p, F).write, write);
@@ -142,6 +143,7 @@ test("every problem blocks every write, including an unrelated clean update", as
     ["markers", { local: { "skills/b/SKILL.md": text("a\n<<<<<<< local\nb\n=======\nc\n>>>>>>> upstream\n") } }],
     ["at-pin-write", { target: PIN, old: { [F]: text("x\n") }, neu: { [F]: text("x\n") } }],
     ["dirty", { preProblems: [{ kind: "dirty", say: "uncommitted changes under skills/" }] }],
+    ["resolved-unused", { resolved: ["skills/clean/SKILL.md"] }],
   ];
   for (const [kind, c] of cases) {
     await t.test(kind, () => {
@@ -160,6 +162,17 @@ test("every problem blocks every write, including an unrelated clean update", as
     assert.match(report, /conflicted\s+skills\/a\/SKILL\.md\s+1 hunk/);
     for (const part of ["<<<<<<< local", "LOCAL", "||||||| base", "four", "=======", "UPSTREAM", ">>>>>>> upstream"]) assert.ok(report.includes(part), `report shows ${part}`);
     assert.match(report, /nothing was written/);
+    assert.match(report, /--resolved skills\/a\/SKILL\.md/, "the report names the way out");
+  });
+
+  await t.test("a conflict marked --resolved keeps the local file and lets the clean update through", () => {
+    const local = text(BODY.replace("four", "LOCAL, with upstream's point in our words"));
+    const p = run(withClean({ old: { [F]: text(BODY) }, neu: { [F]: text(BODY.replace("four", "UPSTREAM")) }, local: { [F]: local }, forks: { [F]: "policy" }, resolved: [F] }));
+    assert.deepEqual(p.problems, []);
+    assert.equal(entry(p, F).outcome, "merged");
+    assert.equal(entry(p, F).write, null, "the local file stays as it is");
+    assert.deepEqual(written(p), [CLEAN]);
+    assert.match(core.renderReport(p, { dryRun: false }), /merged\s+skills\/a\/SKILL\.md\s+policy.*resolved by hand/);
   });
 
   await t.test("two upstream paths that derive to one local path collide", () => {
@@ -272,7 +285,7 @@ test("rules", async (t) => {
       denylist: [{ token: "Bugbot", hint: "h", allow: [{ path: "skills/a/SKILL.md", why: "w" }] }],
       renames: [{ from: "skills/missing/", to: "skills/m/" }],
     });
-    const findings = core.checkRules(cfg, tree({ [`pstack/${F}`]: text("hello\n") }));
+    const findings = core.checkRules(cfg, tree({ [`pstack/${F}`]: text("hello\n") }), tree({ [F]: text("hi\n") }));
     assert.deepEqual(findings.map((f) => f.kind).sort(), ["allow-no-hit", "rename-missing", "rule-no-hit"]);
     assert.match(findings.find((f) => f.kind === "rule-no-hit").say, /never appears/);
   });

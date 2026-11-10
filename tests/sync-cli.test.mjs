@@ -138,6 +138,18 @@ test("a conflict writes nothing, keeps the pin, and shows the three inputs", () 
   assert.match(r.out, /conflicted\s+skills\/arena\/SKILL\.md\s+1 hunk/);
   for (const part of ["<<<<<<< local", "LOCAL", "||||||| base", "=======", "UPSTREAM", ">>>>>>> upstream"]) assert.ok(r.out.includes(part), `shows ${part}`);
   assert.equal(sync(root, shaB, "--dry-run").status, 2, "the dry run returns the real run's code");
+
+  writeFileSync(join(root, F), BODY.replace("four", "LOCAL, now saying UPSTREAM in our words"));
+  git(root, "commit", "-qam", "take upstream's point by hand");
+  const again = sync(root, shaB);
+  assert.equal(again.status, 2, "a hand edit that still differs still conflicts");
+  const done = sync(root, shaB, "--resolved", F);
+  assert.equal(done.status, 0, done.out);
+  assert.equal(read(root, F), BODY.replace("four", "LOCAL, now saying UPSTREAM in our words"), "the resolved file is kept");
+  assert.equal(read(root, "skills/clean/SKILL.md"), "v2\n", "the clean update lands");
+  assert.equal(pin(root), shaB);
+  git(root, "commit", "-qam", "sync");
+  assert.equal(sync(root, "--dry-run").status, 0, "at the new pin the fork is settled");
 });
 
 test("a binary changed on both sides blocks the run", () => {
