@@ -11,6 +11,9 @@ export class ConfigError extends Error {
 const isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const nonEmpty = (v) => typeof v === "string" && v !== "";
 const LOCAL_ROOT = /^(skills|agents)(\/|$)/;
+const isPlain = (p, { dir = false } = {}) => (dir && p.endsWith("/") ? p.slice(0, -1) : p).split("/").every((s) => s !== "" && s !== "." && s !== "..");
+const isLocal = (p, opts) => isPlain(p, opts) && LOCAL_ROOT.test(p);
+const notLocal = (where, p) => `${where}: \`${p}\` is not a plain path under skills/ or agents/`;
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const byKey = ([a], [b]) => cmp(a, b);
 const reject = (problems, message) => {
@@ -56,8 +59,12 @@ export function parseUpstream(jsonText) {
   const sources = records(json, "sources", ["from", "to"], file, problems);
   const renames = records(json, "renames", ["from", "to"], file, problems);
   const excludes = records(json, "excludes", ["path", "why"], file, problems);
-  for (const p of [...sources.map((s) => s.to), ...renames.flatMap((r) => [r.from, r.to]), ...excludes.map((e) => e.path)]) {
-    if (!LOCAL_ROOT.test(p)) problems.push(`${file}: \`${p}\` is not under skills/ or agents/`);
+  for (const s of sources) {
+    if (!isPlain(s.from)) problems.push(`${file}: \`${s.from}\` is not a plain path`);
+    if (!isLocal(s.to)) problems.push(notLocal(file, s.to));
+  }
+  for (const p of [...renames.flatMap((r) => [r.from, r.to]), ...excludes.map((e) => e.path)]) {
+    if (!isLocal(p, { dir: true })) problems.push(notLocal(file, p));
   }
   if (problems.length) throw new ConfigError(problems);
   return { remote: json.remote, pin: json.pin, sources, renames, excludes };
@@ -99,6 +106,7 @@ export function parseSubstitutions(jsonText, catalog) {
     const allow = new Map();
     for (const [j, a] of (d.allow ?? []).entries()) {
       if (!isObject(a) || !nonEmpty(a.path) || !nonEmpty(a.why)) problems.push(`${where}.allow[${j}] needs \`path\` and \`why\``);
+      else if (!isLocal(a.path)) problems.push(notLocal(`${where}.allow[${j}]`, a.path));
       else allow.set(a.path, a.why);
     }
     return [{ token: d.token, regex: d.regex ? new RegExp(d.regex) : undefined, files: new RegExp(d.files ?? "\\.md$"), hint: d.hint, allow, label: d.token ?? d.regex }];
@@ -156,7 +164,7 @@ export function parseForks(jsonText) {
   const forks = new Map();
   for (const [path, e] of Object.entries(json)) {
     const where = `${file}: ${path}`;
-    if (!/^(skills|agents)\//.test(path)) { problems.push(`${where} is not under skills/ or agents/`); continue; }
+    if (!isLocal(path) || !path.includes("/")) { problems.push(`${where} is not a plain path under skills/ or agents/`); continue; }
     if (!isObject(e)) { problems.push(`${where} must be an object`); continue; }
     unknownKeys(e, ["kind", "why", "since", "upstream"], where, problems);
     if (!FORK_KINDS.includes(e.kind)) problems.push(`${where} has kind ${JSON.stringify(e.kind)}, not one of ${FORK_KINDS.join(", ")}`);
