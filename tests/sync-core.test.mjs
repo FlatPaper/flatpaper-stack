@@ -41,14 +41,15 @@ function config({ rules = [], denylist = [], excludes = [], renames = [] } = {})
 
 const forksOf = (obj) => core.parseForks(JSON.stringify(Object.fromEntries(Object.entries(obj).map(([p, kind]) => [p, { kind, why: "Kept on purpose for this test.", since: "0.9.2", upstream: "not-proposed" }]))));
 
-function run({ old = {}, neu = old, local = {}, forks = {}, target = NEXT, cfg = config(), preProblems = [], resolved = [] }) {
+function run({ old = {}, neu = old, local = {}, forks = {}, target = NEXT, cfg = config(), preProblems = [], resolved = [], stampOnly = {}, disk }) {
   return core.plan({
     config: cfg,
     forks: forksOf(forks),
     oldTree: tree(old),
     newTree: tree(neu),
     localTree: tree({ ...STAMPED, ...local }),
-    stampOnly: new Map(),
+    stampOnly: tree(stampOnly),
+    disk,
     target,
     version: "0.9.2",
     merge3,
@@ -130,6 +131,13 @@ test("outcome table: each row decides the write and the class", async (t) => {
 test("every problem blocks every write, including an unrelated clean update", async (t) => {
   const cases = [
     ["undeclared", { old: { [F]: text(BODY) }, local: { [F]: text("ours\n") } }],
+    ["undeclared", { old: { [F]: text(BODY) }, neu: { [CLEAN]: text("new clean\n") }, local: { [F]: text("ours\n") } }],
+    ["unsafe-path", { old: {}, neu: { "skills/link/x.md": text("y\n") }, disk: (p) => (p === "skills/link" ? "symlink" : "missing") }],
+    ["unsafe-path", { old: {}, neu: { "skills/a/x.md": text("y\n") }, disk: (p) => (p === "skills/a/x.md" ? "symlink" : p === "skills" || p === "skills/a" ? "dir" : "missing") }],
+    ["unlisted", { old: {}, neu: { "skills/a/PLAN.md": text("y\n") }, disk: (p) => (p === "skills/a/PLAN.md" ? "file" : p === "skills" || p === "skills/a" ? "dir" : "missing") }],
+    ["path-collision", { old: {}, neu: { "skills/a/node_modules": text("y\n") }, disk: (p) => (p === "skills/a/node_modules" || p === "skills" || p === "skills/a" ? "dir" : "missing") }],
+    ["path-collision", { old: {}, neu: { "skills/a/x/y.md": text("y\n") }, disk: (p) => (p === "skills/a/x" ? "file" : p === "skills" || p === "skills/a" ? "dir" : "missing") }],
+    ["local-unstamped", { stampOnly: { "hooks/policy.md": text("Use default `claude/sonnet`.\n") } }],
     ["stale-at-pin", { target: PIN, old: { [F]: text("x\n") }, neu: { [F]: text("x\n") }, local: { [F]: text("x\n") }, forks: { [F]: "policy" } }],
     ["conflicted", { old: { [F]: text(BODY) }, neu: { [F]: text(BODY.replace("four", "UPSTREAM")) }, local: { [F]: text(BODY.replace("four", "LOCAL")) }, forks: { [F]: "policy" } }],
     ["binary-conflict", { old: { "skills/a/x.png": binary([1, 0, 1]) }, neu: { "skills/a/x.png": binary([1, 0, 2]) }, local: { "skills/a/x.png": binary([1, 0, 3]) }, forks: { "skills/a/x.png": "policy" } }],
@@ -277,6 +285,19 @@ test("rules", async (t) => {
   await t.test("an abbreviated pin or an unknown key is rejected", () => {
     assert.throws(() => core.parseUpstream(JSON.stringify({ remote: "x", pin: "2776ddd", sources: [], renames: [], excludes: [] })), /pin/);
     assert.throws(() => core.parseUpstream(JSON.stringify({ remote: "x", pin: PIN, sources: [], renames: [], excludes: [], extra: 1 })), /extra/);
+  });
+
+  await t.test("a path with a dot, dot-dot, empty, or absolute segment is rejected wherever config names one", () => {
+    const upstream = (over) => JSON.stringify({ remote: "x", pin: PIN, sources: [{ from: "pstack/skills", to: "skills" }], renames: [], excludes: [], ...over });
+    for (const p of ["skills/../hooks", "skills/./a", "skills//a", "/skills/a", "skills/a/.."]) {
+      assert.throws(() => core.parseUpstream(upstream({ sources: [{ from: "pstack/skills", to: p }] })), /not a plain path/, `source to ${p}`);
+      assert.throws(() => core.parseUpstream(upstream({ excludes: [{ path: p, why: "w" }] })), /not a plain path/, `exclude ${p}`);
+      assert.throws(() => core.parseUpstream(upstream({ renames: [{ from: "skills/a/", to: p }] })), /not a plain path/, `rename to ${p}`);
+      assert.throws(() => core.parseForks(JSON.stringify({ [p]: { kind: "policy", why: "w", since: "0.9.2", upstream: "not-proposed" } })), /not a plain path/, `fork ${p}`);
+      assert.throws(() => config({ denylist: [{ token: "x", hint: "h", allow: [{ path: p, why: "w" }] }] }), /not a plain path/, `allow ${p}`);
+    }
+    assert.throws(() => core.parseUpstream(upstream({ sources: [{ from: "pstack/../x", to: "skills" }] })), /not a plain path/);
+    assert.doesNotThrow(() => core.parseUpstream(upstream({ renames: [{ from: "skills/a/", to: "skills/b/" }], excludes: [{ path: "skills/c/", why: "w" }] })));
   });
 
   await t.test("--check-rules names a rule with no hit, an allow entry with no hit, and a missing rename", () => {

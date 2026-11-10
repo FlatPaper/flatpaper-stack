@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -43,7 +43,8 @@ function snapshot(root) {
     for (const e of readdirSync(dir, { withFileTypes: true })) {
       if (e.name === ".git") continue;
       const p = join(dir, e.name);
-      if (e.isDirectory()) walk(p);
+      if (e.isSymbolicLink()) files.set(relative(root, p), `link:${readlinkSync(p)}`);
+      else if (e.isDirectory()) walk(p);
       else files.set(relative(root, p), readFileSync(p).toString("base64"));
     }
   };
@@ -206,20 +207,141 @@ test("a new upstream skill is written and a removed one deleted, each as a follo
   assert.equal(pin(root), shaB);
 });
 
-test("a real run refuses a dirty tree; a dry run still previews", () => {
+test("an uncommitted file under skills/ blocks the dry run and the real run alike", () => {
   const { root, shaA, shaB } = fixture({
     a: { "pstack/skills/arena/SKILL.md": "v1\n" },
     b: { "pstack/skills/arena/SKILL.md": "v2\n" },
   });
   writeFileSync(join(root, "skills/arena/notes.md"), "scratch\n");
+  const dry = sync(root, shaB, "--dry-run");
   const r = sync(root, shaB);
   assert.equal(r.status, 2, r.out);
-  assert.match(r.out, /dirty/);
+  assert.equal(dry.status, r.status, "the dry run returns the real run's code");
+  assert.match(dry.out, /dirty\s+-\s+1 uncommitted/);
   assert.equal(read(root, "skills/arena/SKILL.md"), "v1\n");
   assert.equal(pin(root), shaA);
+});
+
+test("an uncommitted edit under sync/ does not block, so bootstrap can iterate on config", () => {
+  const { root, shaB } = fixture({
+    a: { "pstack/skills/arena/SKILL.md": "v1\n" },
+    b: { "pstack/skills/arena/SKILL.md": "v2\n" },
+  });
+  writeFileSync(join(root, "sync/forks.json"), "{ }\n");
+  const r = sync(root, shaB);
+  assert.equal(r.status, 0, r.out);
+  assert.equal(read(root, "skills/arena/SKILL.md"), "v2\n");
+  assert.equal(pin(root), shaB);
+});
+
+function assertBlocked(root, shaA, r, pattern) {
+  assert.equal(r.status, 2, r.out);
+  assert.match(r.out, pattern);
+  assert.equal(pin(root), shaA, "the pin stays");
+}
+
+test("a symlinked folder under skills/ never lets a write escape", () => {
+  const { root, shaA, shaB } = fixture({
+    a: { "pstack/skills/arena/SKILL.md": "v1\n" },
+    b: { "pstack/skills/arena/SKILL.md": "v2\n", "pstack/skills/escape/proof.txt": "upstream wrote scripts\n" },
+    local: { ".gitignore": "skills/escape\n" },
+  });
+  symlinkSync("../scripts", join(root, "skills/escape"));
+  const before = snapshot(root);
   const dry = sync(root, shaB, "--dry-run");
-  assert.equal(dry.status, 0, dry.out);
-  assert.match(dry.out, /a real run would stop here: .*uncommitted/, "the dry run warns that the real run would refuse");
+  const r = sync(root, shaB);
+  assertBlocked(root, shaA, r, /unsafe-path\s+skills\/escape\/proof\.txt\s+skills\/escape is a symlink/);
+  assert.equal(dry.status, 2, dry.out);
+  assert.ok(!existsSync(join(root, "scripts/proof.txt")), "nothing written into scripts/");
+  assert.deepEqual(snapshot(root), before);
+});
+
+test("a source that climbs out of skills/ is a config error", () => {
+  const { root, shaA, shaB } = fixture({
+    a: { "pstack/skills/arena/SKILL.md": "v1\n" },
+    b: { "pstack/skills/arena/SKILL.md": "v1\n", "pstack/hooks/hooks.json": "{\"pwned\":true}\n" },
+  });
+  const u = JSON.parse(read(root, "sync/upstream.json"));
+  u.sources.push({ from: "pstack/hooks", to: "skills/../hooks" });
+  writeFileSync(join(root, "sync/upstream.json"), JSON.stringify(u, null, 2) + "\n");
+  git(root, "commit", "-qam", "add hooks source");
+  const before = snapshot(root);
+  const r = sync(root, shaB);
+  assertBlocked(root, shaA, r, /upstream\.json: `skills\/\.\.\/hooks`/);
+  assert.equal(read(root, "hooks/hooks.json"), "{}\n");
+  assert.deepEqual(snapshot(root), before);
+});
+
+test("an ignored local file where upstream adds one blocks instead of being overwritten", () => {
+  const { root, shaA, shaB } = fixture({
+    a: { "pstack/skills/arena/SKILL.md": "Arena v1\n" },
+    b: { "pstack/skills/arena/SKILL.md": "Arena v1\n", "pstack/skills/arena/PLAN.md": "upstream plan\n" },
+    local: { ".gitignore": "PLAN.md\n" },
+  });
+  writeFileSync(join(root, "skills/arena/PLAN.md"), "MY PRIVATE LOCAL PLAN\n");
+  const before = snapshot(root);
+  const dry = sync(root, shaB, "--dry-run");
+  const r = sync(root, shaB);
+  assertBlocked(root, shaA, r, /unlisted\s+skills\/arena\/PLAN\.md/);
+  assert.equal(dry.status, 2, dry.out);
+  assert.equal(read(root, "skills/arena/PLAN.md"), "MY PRIVATE LOCAL PLAN\n");
+  assert.deepEqual(snapshot(root), before);
+});
+
+test("an ignored local folder where upstream adds a file blocks before any write", () => {
+  const { root, shaA, shaB } = fixture({
+    a: { "pstack/skills/arena/SKILL.md": "Arena v1\n", "pstack/skills/zeta/SKILL.md": "z\n" },
+    b: { "pstack/skills/arena/SKILL.md": "Arena v2\n", "pstack/skills/zeta/SKILL.md": "z\n", "pstack/skills/zeta/node_modules": "upstream file\n" },
+    local: { ".gitignore": "node_modules/\n" },
+  });
+  writeTree(root, { "skills/zeta/node_modules/commander/index.js": "x\n" });
+  const before = snapshot(root);
+  const r = sync(root, shaB);
+  assertBlocked(root, shaA, r, /path-collision\s+skills\/zeta\/node_modules\s+a directory where upstream has a file/);
+  assert.doesNotMatch(r.out, /EISDIR/);
+  assert.deepEqual(snapshot(root), before, "the clean update to arena was not written either");
+});
+
+test("upstream turning a folder into a file blocks before any write", () => {
+  const { root, remote, shaA } = fixture({
+    a: { "pstack/skills/aaa/data.txt": "old\n", "pstack/skills/zzz/data.txt": "child\n" },
+    b: { "pstack/skills/aaa/data.txt": "old\n", "pstack/skills/zzz/data.txt": "child\n" },
+  });
+  rmSync(join(remote, "pstack/skills/zzz"), { recursive: true });
+  const shaC = commit(remote, { "pstack/skills/aaa/data.txt": "new\n", "pstack/skills/zzz": "replacement\n" }, "folder becomes file");
+  const before = snapshot(root);
+  const r = sync(root, shaC);
+  assertBlocked(root, shaA, r, /path-collision\s+skills\/zzz\s/);
+  assert.deepEqual(snapshot(root), before);
+});
+
+test("upstream deleting a file we changed is undeclared unless forks.json keeps it", () => {
+  const F = "skills/arena/SKILL.md";
+  const files = { a: { [`pstack/${F}`]: "upstream\n" }, b: { "pstack/skills/other/data.txt": "new\n" }, local: { [F]: "local fork\n" } };
+  const { root, shaA, shaB } = fixture(files);
+  const before = snapshot(root);
+  const r = sync(root, shaB);
+  assertBlocked(root, shaA, r, /undeclared\s+skills\/arena\/SKILL\.md/);
+  assert.deepEqual(snapshot(root), before);
+
+  const declared = fixture({ ...files, forks: { [F]: "policy" } });
+  const kept = sync(declared.root, declared.shaB);
+  assert.equal(kept.status, 1, kept.out);
+  assert.match(kept.out, /removed upstream\s+skills\/arena\/SKILL\.md/);
+  assert.equal(read(declared.root, F), "local fork\n");
+  assert.equal(pin(declared.root), declared.shaB);
+});
+
+test("a loose model default under hooks/ blocks like one under skills/", () => {
+  const { root, shaA, shaB } = fixture({
+    a: { "pstack/skills/arena/SKILL.md": "v1\n" },
+    b: { "pstack/skills/arena/SKILL.md": "v2\n" },
+    local: { "hooks/policy.md": "Use default `claude/sonnet`.\n" },
+  });
+  const before = snapshot(root);
+  const r = sync(root, shaB);
+  assertBlocked(root, shaA, r, /local-unstamped\s+hooks\/policy\.md:1\s+loose default/);
+  assert.deepEqual(snapshot(root), before);
 });
 
 test("--remote reads a local clone in place; --check-rules fails a rule with no hit", () => {
