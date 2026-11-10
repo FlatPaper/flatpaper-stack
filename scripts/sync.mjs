@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// Adapted from pstack-claude's tools/sync.mjs (MIT, Michael Denyer).
 import { execFileSync, spawnSync } from "node:child_process";
 import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, realpathSync, rmdirSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
