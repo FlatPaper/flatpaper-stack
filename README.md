@@ -71,7 +71,7 @@ Run the session on Opus at `high` effort (`claude --model opus --effort high`) f
 
 ## Changing a model default
 
-Role defaults live only in `models.json`. Edit it, then run `node scripts/stamp-models.mjs` to rewrite every copy in the skills and the models.md template in `setup-flatpaper-stack`. Never edit those copies by hand. In skill prose, write a default as "the `<role>` role (default `<value>`)", the only shape the script stamps. `node --test tests/*.test.mjs` runs the script's `--check`, which fails on a stale copy or a default written in any other shape.
+Role defaults live only in `models.json`. Edit it, then run `node scripts/stamp-models.mjs` to rewrite every copy in the skills and the models.md template in `setup-flatpaper-stack`. Never edit those copies by hand. In skill prose, write a default as "the `<role>` role (default `<value>`)", the only shape the script stamps. `node --test tests/*.test.mjs` runs the script's `--check`, which fails on a stale copy or on a default written as "default `<value>`" outside that shape. It can't see a default written in plain words, such as "the parent model", so review still has to catch those.
 
 ## License
 
