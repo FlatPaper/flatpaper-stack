@@ -43,7 +43,7 @@ claude plugin marketplace add ~/Documents/GitHub/flatpaper-stack
 claude plugin install flatpaper-stack@flatpaper-stack --scope user
 ```
 
-Optional: run `/flatpaper-stack:setup-flatpaper-stack` once. It checks which models you have, including Codex, and writes `~/.claude/flatpaper-stack/models.md`. Without the file, every skill uses its built-in defaults: each helper at `medium` effort, Sonnet for search and easy work, the session's model for judgment, and the matching GPT model for second opinions.
+Optional: run `/flatpaper-stack:setup-flatpaper-stack` once. It checks which models you have, including Codex, and writes `~/.claude/flatpaper-stack/models.md`. Without the file, every skill uses the defaults in [`models.json`](models.json). Helpers run at `medium` effort. Sonnet handles search, easy work, and feature and refactoring code. The session's model handles judgment and bug fixes, and the matching GPT model gives second opinions.
 
 ## How to use it
 
@@ -68,6 +68,10 @@ A session hook also starts flatpaper-mode on its own for work that touches more 
 | `/flatpaper-stack:teach` | You want a change or subsystem explained so you understand it |
 
 Run the session on Opus at `high` effort (`claude --model opus --effort high`) for the best code. Helpers pick their own models from the settings above.
+
+## Changing a model default
+
+Role defaults live only in `models.json`. Edit it, then run `node scripts/stamp-models.mjs` to rewrite every copy in the skills and the models.md template in `setup-flatpaper-stack`. Never edit those copies by hand. In skill prose, write a default as "the `<role>` role (default `<value>`)", the only shape the script stamps. `node --test tests/*.test.mjs` runs the script's `--check`, which fails on a stale copy or a default written in any other shape.
 
 ## License
 
