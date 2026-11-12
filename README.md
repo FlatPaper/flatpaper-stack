@@ -1,6 +1,6 @@
 # flatpaper-stack
 
-A Claude Code plugin for agent work you can check and review later. Adapted from poteto's [pstack](https://github.com/cursor/plugins/tree/main/pstack).
+A Claude Code plugin for agent work you can check and review later. Ported from poteto's [pstack](https://github.com/cursor/plugins/tree/main/pstack) for my developer environment, with features from [pstack-claude](https://github.com/michael-denyer/pstack-claude).
 
 Three ideas carry it:
 
@@ -32,70 +32,47 @@ Three ideas carry it:
 Load it from a local clone with a shell alias. Edits take effect on the next session.
 
 ```bash
-git clone https://github.com/FlatPaper/flatpaper-stack ~/Documents/GitHub/flatpaper-stack
-alias claude='claude --plugin-dir ~/Documents/GitHub/flatpaper-stack'
+git clone https://github.com/FlatPaper/flatpaper-stack ~/flatpaper-stack
+alias claude='claude --plugin-dir ~/flatpaper-stack'
 ```
 
 To use it in the IDE extension or the desktop app too, install it from the clone:
 
 ```bash
-claude plugin marketplace add ~/Documents/GitHub/flatpaper-stack
+claude plugin marketplace add ~/flatpaper-stack
 claude plugin install flatpaper-stack@flatpaper-stack --scope user
 ```
 
-Optional: run `/flatpaper-stack:setup-flatpaper-stack` once. It checks which models you have, including Codex, and writes `~/.claude/flatpaper-stack/models.md`. Without the file, every skill uses the defaults in [`models.json`](models.json). Helpers run at `medium` effort. Sonnet handles search, easy work, and feature and refactoring code. The session's model handles judgment and bug fixes, and the matching GPT model gives second opinions.
+Optional: run `/flatpaper-stack:setup-flatpaper-stack` once to pick a model for each role. Without it, skills use the defaults in [`models.json`](models.json).
 
 ## How to use it
-
-**Most of the time, use one command.** Start real work with flatpaper-mode and say what done looks like:
 
 ```
 /flatpaper-stack:flatpaper-mode fix the csv export dropping its last row. done means the 60k-row fixture exports every row. show me row counts before and after. no PR.
 ```
 
-The goal is the only part you need. Adding a done check, the proof you want to see, and any limits ("no PR", "don't touch the schema") keeps the agent from quietly weakening them. flatpaper-mode picks the right playbook (investigation, bug fix, feature, refactor, and others) and calls the other skills for you.
+- [ ] Goal
+- [ ] Done check
+- [ ] Proof to show
+- [ ] Constraints
 
-A repo can also add its own playbooks as `.agents/playbooks/<name>.md` files that extend a bundled one. Each names the playbook it `extends`, a `when` line, and changes anchored on quoted step text. `node <plugin>/skills/flatpaper-mode/scripts/check-playbooks.mjs`, run from the repo root, fails when a quoted step no longer exists in the bundled playbook.
+More: [commands](docs/commands.md), [principles](docs/principles.md).
 
-A session hook also starts flatpaper-mode on its own for work that touches more than one file, makes a design choice, or chases a bug or slowdown whose cause is unknown. To turn that off, put `session hook: off` in `~/.claude/flatpaper-stack/models.md`.
+## Change a model default
 
-**A few you'll call yourself:**
+To pick your own models, run `/flatpaper-stack:setup-flatpaper-stack`.
 
-| Command | When |
-|---|---|
-| `/flatpaper-stack:flatpaper-help` | You're not sure how to word a request or which skill fits |
-| `/flatpaper-stack:ketchup` | You stepped away and want a short catch-up |
-| `/flatpaper-stack:bro` | The last reply was too dense |
-| `/flatpaper-stack:recall` | You're starting a session and want your recent context back |
-| `/flatpaper-stack:teach` | You want a change or subsystem explained so you understand it |
-| `/flatpaper-stack:thermos` | You want a bug and security review and a code quality review of a branch, run in parallel and merged into one verdict |
-| `/flatpaper-stack:thermo-nuclear-review` | You want only the bug, breakage, and security audit of a diff |
-| `/flatpaper-stack:thermo-nuclear-code-quality-review` | You want only the code quality audit of a diff |
-| `/flatpaper-stack:fix-ci` | A PR has failing checks and you want them found and fixed |
-| `/flatpaper-stack:fix-merge-conflicts` | A merge or rebase hit conflicts and you want them resolved |
-| `/flatpaper-stack:get-pr-comments` | You want the review comments on a PR fetched and summarized |
-| `/flatpaper-stack:make-pr-easy-to-review` | A PR is hard to read and you want it reshaped for the reviewer |
-| `/flatpaper-stack:what-did-i-get-done` | You want your commits over a period summarized as a short update |
-
-Run the session on Opus at `high` effort (`claude --model opus --effort high`) for the best code. Helpers pick their own models from the settings above.
-
-## Changing a model default
-
-Role defaults live only in `models.json`. Edit it, then run `node scripts/stamp-models.mjs` to rewrite every copy in the skills and the models.md template in `setup-flatpaper-stack`. Never edit those copies by hand. In skill prose, write a default as "the `<role>` role (default `<value>`)", the only shape the script stamps. `node --test tests/*.test.mjs` runs the script's `--check`, which fails on a stale copy or on a default written as "default `<value>`" outside that shape. It can't see a default written in plain words, such as "the parent model", so review still has to catch those.
+To change the shipped defaults, edit `models.json`, then run `node scripts/stamp-models.mjs` to rewrite every copy in the skills.
 
 ## Pull upstream pstack changes
 
-`scripts/sync.mjs` moves flatpaper-stack from the upstream pin in `sync/upstream.json` to a newer commit of cursor/plugins. It derives the old and new upstream files through the rules in `sync/substitutions.json`, compares each with the local copy, writes the clean updates, and keeps every fork listed in `sync/forks.json`. Commit your work first, then preview and run it:
+Commit your work first. Preview with `--dry-run`, run the sync, then run the tests. Fix anything the report lists. Details are in [docs/maintaining.md](docs/maintaining.md).
 
 ```bash
 node scripts/sync.mjs <rev> --dry-run
 node scripts/sync.mjs <rev>
-node scripts/stamp-models.mjs --check && node --test tests/*.test.mjs
+node --test tests/*.test.mjs
 ```
-
-Exit 0 means the tree is updated. Exit 1 means the tree is updated and the report lists follow-ups, such as a new upstream skill to review. Exit 2 means the run wrote nothing and left the pin alone. Fix each problem the report names. A mechanical difference needs a rule in `substitutions.json`, and a deliberate one needs a `forks.json` entry with its `why`. For a conflict, make the local file take upstream's change, then rerun with `--resolved <path>`. `--remote <path>` reads a local clone in place of a fresh one, and `FLATPAPER_UPSTREAM=<clone>` turns on the real-tree and replay tests.
-
-To change the config without moving the pin, such as adding a source to `sync/upstream.json` or editing a rule in `sync/substitutions.json` (a change to `models.json` counts too), edit the file and run `node scripts/sync.mjs <pin-sha>` before you commit it. The sync derives the old tree from the config at `HEAD` and the new tree from your working copy, writes the files that differ, and leaves the pin alone. The report header says `config changed`. Commit the config and the written files together. Once the config is committed, the sync derives both trees from it, so a file it would still write at the pin blocks the run as `at-pin-write`.
 
 ## License
 
