@@ -61,7 +61,7 @@
   },
   "skills/flatpaper-mode/SKILL.md": {
     "kind": "policy",
-    "why": "Opens the task list first, routes sessions through the SessionStart hook, moves model and effort choice into references/spawning.md, and adds project playbooks.",
+    "why": "Opens the task list first, routes sessions through the SessionStart hook, moves model and effort choice into references/spawning.md, and adds project playbooks, and requires a reviewer who agrees before a reply says \"fixed\".",
     "since": "0.9.2",
     "upstream": "not-proposed"
   },
@@ -81,6 +81,12 @@
     "kind": "port-feature",
     "why": "Reads candidate transcripts from ~/.claude/projects/<project>/<session-id>/subagents/ instead of Cursor's agent-transcripts directory.",
     "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/flatpaper-mode/playbooks/feature.md": {
+    "kind": "policy",
+    "why": "Step 5 wires the local run like the production environment and names what the evidence leaves out, and a short path skips steps 1, 2, 3 and 7 for user-decided changes to a feature already built.",
+    "since": "0.9.6",
     "upstream": "not-proposed"
   },
   "skills/flatpaper-mode/playbooks/multi-phase-plan.md": {
