@@ -176,6 +176,16 @@ const rules = [
     phrase: "the `how`, `architect`, `interrogate` and throughput-checkpoint triggers above yield to its skips",
   },
   {
+    source: "#29 a Codex reviewer runs with --write in a throwaway worktree",
+    file: "skills/flatpaper-mode/references/spawning.md",
+    phrase: "set its working directory to a throwaway detached worktree at the head under review",
+  },
+  {
+    source: "#29 localhost and network reviews go to a Claude reviewer",
+    file: "skills/flatpaper-mode/references/spawning.md",
+    phrase: "`--write` still refuses localhost servers and the network, so a review that must run those uses a Claude reviewer",
+  },
+  {
     source: "#21 shipping uses gh and never requires Graphite",
     file: "skills/flatpaper-mode/playbooks/shipping.md",
     phrase: "Use the GitHub CLI (`gh`) for every PR operation. Never require Graphite (`gt`).",
