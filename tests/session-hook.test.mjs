@@ -9,13 +9,13 @@ import { fileURLToPath } from "node:url";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const context = readFileSync(join(root, "hooks/session-start-context.md"), "utf8");
 
-function runHook(modelsFile) {
+function runHook(modelsFile, args = []) {
   const config = mkdtempSync(join(tmpdir(), "flatpaper-hook-"));
   if (modelsFile !== undefined) {
     mkdirSync(join(config, ".claude/flatpaper-stack"), { recursive: true });
     writeFileSync(join(config, ".claude/flatpaper-stack/models.md"), modelsFile);
   }
-  return execFileSync(join(root, "hooks/session-start.sh"), {
+  return execFileSync(join(root, "hooks/session-start.sh"), args, {
     env: { PATH: process.env.PATH, CLAUDE_PLUGIN_ROOT: root, HOME: config },
     encoding: "utf8",
   });
@@ -45,6 +45,28 @@ test("with HOME unset, the hook still routes", () => {
     encoding: "utf8",
   });
   assert.equal(out, context);
+});
+
+test("after a compaction, the hook also tells a flatpaper-mode session to re-invoke it and rebuild its task list", () => {
+  const out = runHook(undefined, ["compact"]);
+  assert.ok(out.startsWith(context));
+  assert.match(out.slice(context.length), /flatpaper-stack:flatpaper-mode/);
+  assert.match(out.slice(context.length), /TaskList/);
+});
+
+test("only the compact source gets the re-invoke line", () => {
+  assert.equal(runHook(undefined, ["startup"]), context);
+});
+
+test("session hook: off silences the compact line too", () => {
+  assert.equal(runHook("session hook: off\n", ["compact"]), "");
+});
+
+test("hooks.json passes compact to the hook only on compaction", () => {
+  const entries = JSON.parse(readFileSync(join(root, "hooks/hooks.json"), "utf8")).hooks.SessionStart;
+  const commandFor = (source) => entries.find((e) => new RegExp(`^(?:${e.matcher})$`).test(source)).hooks[0].command;
+  assert.match(commandFor("compact"), /session-start\.sh" compact$/);
+  for (const source of ["startup", "resume", "clear"]) assert.match(commandFor(source), /session-start\.sh"$/);
 });
 
 test("a role line that mentions off does not turn the hook off", () => {
