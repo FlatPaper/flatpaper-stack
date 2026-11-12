@@ -27,6 +27,7 @@ Remaining triggers:
 - Parallel fan-out → read `../swarm/SKILL.md` and follow it for coverage matrices, races, gauntlets, and exploration partitions. For design or code bakeoffs with base selection and grafting, read `../arena/SKILL.md` and follow it instead.
 - Contested design → read `../interrogate/SKILL.md` and follow it (multi-model adversarial) before shipping.
 - Nontrivial multi-step → write the throughput checkpoint (Feature step 3).
+- Feature's **Short path** applies → the `how`, `architect`, `interrogate` and throughput-checkpoint triggers above yield to its skips.
 - Any prose surface, your reply to the user included → invoke the **unslop** skill (`flatpaper-stack:unslop`) and follow it. Write the reply per **Writing the reply**. Agent-facing prose also follows the **skill-creator** skill (Anthropic's skill for authoring SKILL.md files).
 - Docs, RFCs, readmes, PR descriptions, or commit messages → invoke the **technical-writing** skill (`flatpaper-stack:technical-writing`) and follow it.
 - Before commit → the **deslop** skill (`/flatpaper-stack:deslop`).
@@ -117,6 +118,7 @@ Before you draft a reply, invoke the **unslop** skill (`flatpaper-stack:unslop`)
 - **Frame impact for the consumer and the maintainer.** Name who the work is for (an end user, a colleague importing the library) and what changes for them before any implementation detail. Then what the next engineer who owns this code inherits. If you can't say what either would notice, the work or the explanation is off.
 - **Never fabricate a link, citation, or transcript reference.** Link only artifacts you produced or read this session.
 - **Every claim carries its evidence or its label in the same sentence.** Measured, inferred, or guess. A prediction or an unseen cause is a guess. Never hand the human a check you could run.
+- **"Fixed" needs a reviewer who agrees.** When the reviewer says a window remains, write "narrowed" and name what is left.
 
 Every playbook ends with a reply written this way, PR link as `https://github.com/<owner>/<repo>/pull/<number>`. Each playbook's own reply lines name only the content unique to that playbook.
 

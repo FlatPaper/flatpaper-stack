@@ -151,6 +151,41 @@ const rules = [
     phrase: "If none from another family is available, say so instead of substituting a Claude model.",
   },
   {
+    source: "#29 a fix claim needs a reviewer who agrees",
+    file: "skills/flatpaper-mode/SKILL.md",
+    phrase: "When the reviewer says a window remains, write \"narrowed\" and name what is left.",
+  },
+  {
+    source: "#29 verify with the production environment's wiring",
+    file: "skills/flatpaper-mode/playbooks/feature.md",
+    phrase: "Wire the local run the way the production environment (if one exists) wires it",
+  },
+  {
+    source: "#29 the report names what the evidence does not cover",
+    file: "skills/flatpaper-mode/playbooks/feature.md",
+    phrase: "say what the evidence covers and what it doesn't",
+  },
+  {
+    source: "#29 a user-decided change to a built feature takes the short path",
+    file: "skills/flatpaper-mode/playbooks/feature.md",
+    phrase: "steps 1, 2, 3 and 7 default to `skip: <reason>`",
+  },
+  {
+    source: "#29 the short path waives the matching triggers",
+    file: "skills/flatpaper-mode/SKILL.md",
+    phrase: "the `how`, `architect`, `interrogate` and throughput-checkpoint triggers above yield to its skips",
+  },
+  {
+    source: "#29 a Codex reviewer runs with --write in a throwaway worktree",
+    file: "skills/flatpaper-mode/references/spawning.md",
+    phrase: "set its working directory to a throwaway detached worktree at the head under review",
+  },
+  {
+    source: "#29 localhost and network reviews go to a Claude reviewer",
+    file: "skills/flatpaper-mode/references/spawning.md",
+    phrase: "`--write` still refuses localhost servers and the network, so a review that must run those uses a Claude reviewer",
+  },
+  {
     source: "#21 shipping uses gh and never requires Graphite",
     file: "skills/flatpaper-mode/playbooks/shipping.md",
     phrase: "Use the GitHub CLI (`gh`) for every PR operation. Never require Graphite (`gt`).",

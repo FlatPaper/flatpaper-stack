@@ -6,3 +6,6 @@ if [ -r "$models" ] && grep -qiE '^[[:space:]]*session hook:[[:space:]]*off[[:sp
   exit 0
 fi
 cat "${CLAUDE_PLUGIN_ROOT}/hooks/session-start-context.md"
+if [ "${1:-}" = compact ]; then
+  cat "${CLAUDE_PLUGIN_ROOT}/hooks/session-compact-context.md"
+fi

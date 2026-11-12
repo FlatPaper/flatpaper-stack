@@ -22,3 +22,7 @@ A model the user names (`sonnet`, `opus`, `haiku`, `fable`, or a Codex model) wi
 **Always pass an effort.** For a Claude subagent, set the Agent `effort` (`low`, `medium`, `high`, `xhigh`, or `max`). For a Codex subagent, put `--effort` in its brief.
 
 Use the role line's effort, or the default's effort when the line has none. Never go below that. Raise it one step, up to `max`, when the user asks or the work is very hard (cross-cutting design, subtle concurrency, a bug that resisted earlier attempts), and say so. On a panel, raise every seat together, so no seat wins just by thinking longer. Change only the effort, and keep the model or agent the role names, so a diverse panel stays diverse. Verification is the exception and stays on the `swarm workers` role's model and effort.
+
+## Codex sandbox
+
+The Codex plugin runs read-only by default, which refuses git on macOS and any temp-file write. Give a Codex reviewer `--write` in its brief, and set its working directory to a throwaway detached worktree at the head under review, so its writes stay out of the real worktree. `--write` still refuses localhost servers and the network, so a review that must run those uses a Claude reviewer in place of the role's Codex model. If the user named Codex for that review, report that the sandbox blocks it and keep the review gate closed until they choose. Never run Codex with full access.
