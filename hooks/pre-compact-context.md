@@ -1,0 +1,1 @@
+Start the summary with a resume section for a cold-start agent. Include the intent, what was in progress, progress and what is verified, the current state (branch and uncommitted work), next steps, key files, and gotchas.
