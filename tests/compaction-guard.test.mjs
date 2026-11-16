@@ -152,12 +152,12 @@ test("a session that never used flatpaper-mode is not blocked", () => {
   assert.equal(s.exec("session-start-resume").status, 0);
 });
 
-test("a pause older than 30 minutes is forgotten so the next /compact pauses again", () => {
+test("a pause older than 5 minutes is forgotten so the next /compact pauses again", () => {
   const s = session();
   assert.equal(s.exec("pre-compact-gate", manual).status, 2);
   const file = join(s.home, "flatpaper-stack", `${s.id}.json`);
   const state = JSON.parse(readFileSync(file, "utf8"));
-  writeFileSync(file, JSON.stringify({ ...state, phaseAt: Date.now() - 31 * 60 * 1000 }));
+  writeFileSync(file, JSON.stringify({ ...state, phaseAt: Date.now() - 6 * 60 * 1000 }));
   assert.equal(s.exec("pre-compact-gate", manual).status, 2);
 });
 

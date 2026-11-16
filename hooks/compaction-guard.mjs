@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const FULL_MARGIN = 40000;
 const DEFAULT_WINDOW = 967000;
-const PHASE_STALE_MS = 30 * 60 * 1000;
+const PHASE_STALE_MS = 5 * 60 * 1000;
 const WAKE_POLL_MS = 200;
 const WAKE_WAIT_MS = 5000;
 const MODE_SKILL = "flatpaper-stack:flatpaper-mode";
