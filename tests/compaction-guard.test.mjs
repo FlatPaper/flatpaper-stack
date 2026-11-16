@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -97,16 +97,10 @@ test("the slash command counts as using flatpaper-mode", () => {
 test("session hook: off silences every mode", () => {
   const s = session({ models: "session hook: off\n", lines: [skillCall, assistant(190000)] });
   assert.equal(s.run("post-tool-use"), "");
-  assert.equal(s.run("pre-compact"), "");
   for (const event of ["pre-compact-gate", "pre-compact-wake", "session-start-resume"]) {
     const r = s.exec(event, { trigger: "manual" });
     assert.deepEqual([r.status, r.stdout, r.stderr], [0, "", ""]);
   }
-});
-
-test("pre-compact prints the context file", () => {
-  const s = session();
-  assert.equal(s.run("pre-compact"), readFileSync(join(root, "hooks/pre-compact-context.md"), "utf8"));
 });
 
 const context = readFileSync(join(root, "hooks/pre-compact-context.md"), "utf8");
@@ -172,6 +166,58 @@ test("a compaction that never resumed does not stop the next /compact from pausi
   assert.equal(s.exec("pre-compact-gate", manual).status, 2);
   assert.equal(s.exec("pre-compact-gate", manual).status, 0);
   assert.equal(s.exec("pre-compact-gate", manual).status, 2);
+});
+
+test("a new pause deletes the previous resume note", () => {
+  const s = session();
+  const note = join(s.home, "flatpaper-stack", `${s.id}-resume.md`);
+  assert.equal(s.exec("pre-compact-gate", manual).status, 2);
+  writeFileSync(note, "old note");
+  assert.equal(s.exec("pre-compact-gate", manual).status, 0);
+  assert.equal(s.exec("session-start-resume").status, 2);
+  assert.equal(s.exec("pre-compact-gate", manual).status, 2);
+  assert.equal(existsSync(note), false);
+});
+
+test("an auto compaction after an unfinished manual one does not trigger a resume", () => {
+  const s = session();
+  assert.equal(s.exec("pre-compact-gate", manual).status, 2);
+  assert.equal(s.exec("pre-compact-gate", manual).status, 0);
+  assert.equal(s.exec("pre-compact-gate", { trigger: "auto" }).status, 0);
+  assert.deepEqual([s.exec("session-start-resume").status, s.exec("session-start-resume").stderr], [0, ""]);
+});
+
+test("the wake waits for a gate that has not written its state yet", async () => {
+  const s = session();
+  const { spawn } = await import("node:child_process");
+  const wake = spawn("node", [script, "pre-compact-wake"], { env: { PATH: process.env.PATH, HOME: s.home, TMPDIR: s.home } });
+  let stderr = "";
+  wake.stderr.on("data", (d) => (stderr += d));
+  wake.stdin.end(JSON.stringify({ session_id: s.id, transcript_path: join(s.home, "t.jsonl"), cwd: s.home, ...manual }));
+  await new Promise((r) => setTimeout(r, 1500));
+  assert.equal(s.exec("pre-compact-gate", manual).status, 2);
+  const code = await new Promise((r) => wake.on("exit", r));
+  assert.equal(code, 2);
+  assert.match(stderr, /Pause safely/);
+});
+
+test("the near-full warning names the resume note path", () => {
+  const s = session({ env: { CLAUDE_CODE_AUTO_COMPACT_WINDOW: "200000" }, lines: [skillCall, assistant(170000)] });
+  const out = JSON.parse(s.run("post-tool-use"));
+  assert.match(out.hookSpecificOutput.additionalContext, new RegExp(`${s.id}-resume\\.md`));
+});
+
+test("hooks.json gates manual /compact without swallowing its exit code and wakes asynchronously", () => {
+  const { hooks } = JSON.parse(readFileSync(join(root, "hooks/hooks.json"), "utf8"));
+  const manualHooks = hooks.PreCompact.find((g) => g.matcher === "manual").hooks;
+  const gate = manualHooks.find((h) => h.command.endsWith("pre-compact-gate"));
+  const wake = manualHooks.find((h) => h.command.endsWith("pre-compact-wake"));
+  assert.ok(gate && !gate.async);
+  assert.deepEqual([wake.async, wake.asyncRewake], [true, true]);
+  assert.ok(hooks.PreCompact.find((g) => g.matcher === "auto").hooks.some((h) => h.command.endsWith("pre-compact-gate")));
+  const resume = hooks.SessionStart.find((g) => g.matcher === "compact").hooks.find((h) => h.command.endsWith("session-start-resume"));
+  assert.deepEqual([resume.async, resume.asyncRewake], [true, true]);
+  assert.equal(hooks.Stop, undefined);
 });
 
 test("a missing transcript or bad stdin exits 0 silently", () => {
