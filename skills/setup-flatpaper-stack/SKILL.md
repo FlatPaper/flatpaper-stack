@@ -74,8 +74,6 @@ hardest tasks: parent:high
 thermos reviewers: parent:medium
 how explorer: claude/sonnet:medium
 how explainer: parent:medium
-why investigators: claude/sonnet:medium
-why synthesizer: parent:medium
 reflect tooling: parent:medium
 reflect judgment, divergent, synthesizer: parent:medium
 history explorers: claude/sonnet:medium

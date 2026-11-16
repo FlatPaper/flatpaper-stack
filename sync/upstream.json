@@ -1,6 +1,6 @@
 {
   "remote": "https://github.com/cursor/plugins",
-  "pin": "2776ddd2355d6d6c8747d3964600f28daf62f049",
+  "pin": "bf0c7cd80abdbf7fe47b634978a7d1b4071f71a7",
   "sources": [
     { "from": "pstack/skills", "to": "skills" },
     { "from": "pstack/agents", "to": "agents" },

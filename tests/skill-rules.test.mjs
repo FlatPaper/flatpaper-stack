@@ -101,14 +101,14 @@ const rules = [
     phrase: "Before you hand back, read `${CLAUDE_PLUGIN_ROOT}/skills/unslop/SKILL.md` in full",
   },
   {
-    source: "#21 comment-sicko reads how and why by path",
+    source: "#21 comment-sicko reads why by path",
     file: "agents/comment-sicko.md",
-    phrase: "I read all of `${CLAUDE_PLUGIN_ROOT}/skills/how/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/skills/why/SKILL.md`, or both",
+    phrase: "read all of `${CLAUDE_PLUGIN_ROOT}/skills/why/SKILL.md` and follow it on that symbol or call",
   },
   {
-    source: "#21 how and why are user-only, so comment-sicko never invokes them",
+    source: "#21 why is user-only, so comment-sicko never invokes it",
     file: "agents/comment-sicko.md",
-    phrase: "They are user-only, so I never invoke them.",
+    phrase: "It is user-only, so I never invoke it.",
   },
   {
     source: "#21 architect opens a task list with TaskCreate",
@@ -173,7 +173,7 @@ const rules = [
   {
     source: "#29 the short path waives the matching triggers",
     file: "skills/flatpaper-mode/SKILL.md",
-    phrase: "the `how`, `architect`, `interrogate` and throughput-checkpoint triggers above yield to its skips",
+    phrase: "the `architect`, `interrogate` and throughput-checkpoint triggers above yield to its skips",
   },
   {
     source: "#29 a Codex reviewer runs with --write in a throwaway worktree",

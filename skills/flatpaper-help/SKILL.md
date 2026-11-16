@@ -45,7 +45,7 @@ If cost is the worry, say where the tokens go and how to spend fewer. flatpaper-
 
 flatpaper-stack adapts poteto's pstack, which is built for Cursor, to Claude Code. Each command takes a `flatpaper-stack:` prefix, such as `/flatpaper-stack:flatpaper-mode`. Steps that needed a Cursor-only feature, such as Bugbot, cloud agents, or Automations, were dropped or swapped for a Claude Code equivalent.
 
-Other tools can read the skills, because they use the Agent Skills format. But most workflow skills, including `/flatpaper-stack:flatpaper-mode`, `/flatpaper-stack:how`, `/flatpaper-stack:why`, and `/flatpaper-stack:teach`, spawn Claude Code subagents, and `/loop` is a Claude Code feature, so those parts may not work there.
+Other tools can read the skills, because they use the Agent Skills format. But most workflow skills, including `/flatpaper-stack:flatpaper-mode`, `/flatpaper-stack:how`, and `/flatpaper-stack:teach`, spawn Claude Code subagents, and `/loop` is a Claude Code feature, so those parts may not work there.
 
 ## Start a task with `/flatpaper-stack:flatpaper-mode`
 

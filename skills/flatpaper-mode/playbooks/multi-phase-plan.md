@@ -150,7 +150,7 @@ Each live lane runs in its own worktree at the PR head, with its own ports and d
 
 ## Appendix D. Links and reading list
 
-<Docs to read before editing. Which PRs get `<plugin>/skills/how/SKILL.md` and `<plugin>/skills/interrogate/SKILL.md`. The trail per `<plugin>/skills/show-me-your-work/SKILL.md`.>
+<Docs to read before editing. Which PRs get `<plugin>/skills/interrogate/SKILL.md`. The trail per `<plugin>/skills/show-me-your-work/SKILL.md`.>
 ````
 
 **Reply:** the plan path, the PR ids with their dependencies and the review-gated set, what the prototypes proved and what stays unproven, and the check script's output.

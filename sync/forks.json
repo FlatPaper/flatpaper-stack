@@ -1,7 +1,7 @@
 {
   "agents/comment-sicko.md": {
     "kind": "port-feature",
-    "why": "Reads how and why from ${CLAUDE_PLUGIN_ROOT}/skills/... instead of running /how and /why, since both skills are user-only on Claude Code.",
+    "why": "Reads why from ${CLAUDE_PLUGIN_ROOT}/skills/... instead of running /why, since that skill is user-only on Claude Code.",
     "since": "0.9.2",
     "upstream": "not-proposed"
   },
@@ -13,7 +13,7 @@
   },
   "skills/architect/SKILL.md": {
     "kind": "port-feature",
-    "why": "Reads how, why, and arena from their SKILL.md files because they are user-only here, tracks phases with TaskCreate, takes runners from the `architect runners` role in models.json, and links each principle skill by path.",
+    "why": "Reads why and arena from their SKILL.md files because they are user-only here, tracks phases with TaskCreate, takes runners from the `architect runners` role in models.json, and links each principle skill by path.",
     "since": "0.9.2",
     "upstream": "not-proposed"
   },
@@ -43,7 +43,7 @@
   },
   "skills/blast-radius/SKILL.md": {
     "kind": "port-feature",
-    "why": "Reads why, unslop, and arena from their SKILL.md files first, since they are user-only and cannot be invoked.",
+    "why": "Reads unslop and arena from their SKILL.md files first, since they are user-only and cannot be invoked.",
     "since": "0.9.2",
     "upstream": "not-proposed"
   },
@@ -105,6 +105,12 @@
     "kind": "policy",
     "why": "Runs workers as local Agent subagents in their own worktrees and continues them with SendMessage instead of cloud VMs and forks, keeps program state under ~/.claude/orchestrate, and verifies each PR on the `pr verifier` role.",
     "since": "0.9.2",
+    "upstream": "not-proposed"
+  },
+  "skills/flatpaper-mode/playbooks/pause-safely.md": {
+    "kind": "policy",
+    "why": "Runs on a flatpaper-stack compaction notice as well as an explicit request, and still pauses under keep-going; upstream has no compaction hook.",
+    "since": "0.9.8",
     "upstream": "not-proposed"
   },
   "skills/flatpaper-mode/playbooks/session-pickup.md": {
@@ -175,7 +181,7 @@
   },
   "skills/recall/SKILL.md": {
     "kind": "port-feature",
-    "why": "Reads Claude Code transcripts at ~/.claude/projects/<slug>/<uuid>.jsonl, fans out Explore subagents on the `history explorers` role, and reads why and unslop by path since why is user-only.",
+    "why": "Reads Claude Code transcripts at ~/.claude/projects/<slug>/<uuid>.jsonl, fans out Explore subagents on the `history explorers` role, and reads unslop by path.",
     "since": "0.9.2",
     "upstream": "not-proposed"
   },
@@ -224,12 +230,6 @@
   "skills/typescript-best-practices/SKILL.md": {
     "kind": "port-feature",
     "why": "Reads principle-type-system-discipline from its file before any code, since that principle skill is user-only.",
-    "since": "0.9.2",
-    "upstream": "not-proposed"
-  },
-  "skills/why/SKILL.md": {
-    "kind": "port-feature",
-    "why": "Spawns general-purpose Agent investigators so they keep MCP tools, lists MCPs from mcp__ tool names or claude mcp list, takes models from models.json roles, and always runs the source-control investigator and the synthesizer.",
     "since": "0.9.2",
     "upstream": "not-proposed"
   }
