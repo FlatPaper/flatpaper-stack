@@ -164,7 +164,7 @@ function saveState(id, state) {
 const contextText = () => readFileSync(join(dirname(fileURLToPath(import.meta.url)), "pre-compact-context.md"), "utf8");
 
 const TRANSITIONS = {
-  "pre-compact-gate": { none: ["pausing", 2], pausing: ["compacting", 0] },
+  "pre-compact-gate": { none: ["pausing", 2], pausing: ["compacting", 0], compacting: ["pausing", 2] },
   "pre-compact-wake": { pausing: ["pausing", 2] },
   "session-start-resume": { compacting: ["none", 2] },
 };

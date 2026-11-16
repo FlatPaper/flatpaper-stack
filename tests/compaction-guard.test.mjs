@@ -167,6 +167,13 @@ test("a pause older than 30 minutes is forgotten so the next /compact pauses aga
   assert.equal(s.exec("pre-compact-gate", manual).status, 2);
 });
 
+test("a compaction that never resumed does not stop the next /compact from pausing", () => {
+  const s = session();
+  assert.equal(s.exec("pre-compact-gate", manual).status, 2);
+  assert.equal(s.exec("pre-compact-gate", manual).status, 0);
+  assert.equal(s.exec("pre-compact-gate", manual).status, 2);
+});
+
 test("a missing transcript or bad stdin exits 0 silently", () => {
   const home = mkdtempSync(join(tmpdir(), "flatpaper-guard-"));
   const env = { PATH: process.env.PATH, HOME: home };
