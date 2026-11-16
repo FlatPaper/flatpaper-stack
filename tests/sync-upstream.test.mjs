@@ -11,17 +11,25 @@ import { loadConfig, openUpstream } from "../scripts/sync.mjs";
 const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
 const UPSTREAM = process.env.FLATPAPER_UPSTREAM;
 const skip = UPSTREAM ? false : "set FLATPAPER_UPSTREAM to a clone of https://github.com/cursor/plugins to run the real-tree and replay checks";
-const PIN = "2776ddd2355d6d6c8747d3964600f28daf62f049";
+const PIN = "bf0c7cd80abdbf7fe47b634978a7d1b4071f71a7";
 const REPLAY_FROM = "519d36aa98955bf680db01bcde5fdfba686dc901";
 const REPLAY_CONFLICTS = [
+  "agents/comment-sicko.md",
+  "skills/architect/SKILL.md",
   "skills/arena/SKILL.md",
+  "skills/blast-radius/SKILL.md",
+  "skills/flatpaper-help/SKILL.md",
   "skills/flatpaper-mode/SKILL.md",
   "skills/flatpaper-mode/playbooks/autopilot-full.md",
   "skills/flatpaper-mode/playbooks/multi-phase-plan.md",
   "skills/flatpaper-mode/playbooks/orchestrate.md",
   "skills/interrogate/SKILL.md",
   "skills/ketchup-video/SKILL.md",
+  "skills/no-comments/SKILL.md",
+  "skills/recall/SKILL.md",
+  "skills/reflect/SKILL.md",
   "skills/setup-flatpaper-stack/SKILL.md",
+  "skills/swarm/SKILL.md",
 ];
 const NEVER_TOUCH = ["models.json", "scripts/", "tests/", "hooks/", ".claude-plugin/", "LICENSE", "README.md", "sync/forks.json", "sync/substitutions.json"];
 
@@ -78,7 +86,7 @@ test("a real run at the pin writes nothing", { skip }, () => {
   assert.deepEqual(snapshot(root), before);
 });
 
-test("replay: 519d36a to 2776ddd rebuilds flatpaper's tree", { skip }, () => {
+test("replay: 519d36a to bf0c7cd rebuilds flatpaper's tree", { skip }, () => {
   const root = copyRepo();
   const head = snapshot(root);
   const cfg = loadConfig(root);
@@ -93,10 +101,14 @@ test("replay: 519d36a to 2776ddd rebuilds flatpaper's tree", { skip }, () => {
   } finally {
     up.close();
   }
-  assert.equal(range.size, 23, "the range touches 23 carried files");
+  assert.equal(range.size, 64, "the range touches 64 carried files");
   const forksInRange = [...range.keys()].filter((p) => cfg.forks.has(p));
   for (const [path, blob] of range) {
     if (cfg.forks.has(path)) continue;
+    if (!blob) {
+      rmSync(join(root, path), { force: true });
+      continue;
+    }
     mkdirSync(dirname(join(root, path)), { recursive: true });
     writeFileSync(join(root, path), core.blobBytes(blob));
     chmodSync(join(root, path), blob.exec ? 0o755 : 0o644);

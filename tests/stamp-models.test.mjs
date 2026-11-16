@@ -74,13 +74,13 @@ test("one models.json edit reaches every prose copy and the template", () => {
 
   const check = stamp(root, ["--check"]);
   assert.equal(check.status, 1, "stale copies exit 1");
-  for (const file of ["skills/how/SKILL.md", "skills/maintain-verification-skill/SKILL.md"]) {
+  for (const file of ["skills/maintain-verification-skill/SKILL.md"]) {
     assert.match(check.out, new RegExp(`${file}:\\d+:\\d+ stale \`how explorer\` default: found \`claude/sonnet\`, models.json says \`claude/opus\``), `names ${file}`);
   }
   assert.match(check.out, new RegExp(`${SETUP}:\\d+ template fence is stale`), "names the setup template");
 
   assert.equal(stamp(root).status, 0, "write run succeeds");
-  for (const file of ["skills/how/SKILL.md", "skills/maintain-verification-skill/SKILL.md"]) {
+  for (const file of ["skills/maintain-verification-skill/SKILL.md"]) {
     assert.ok(read(root, file).includes("the `how explorer` role (default `claude/opus`)"), `${file} carries the new value`);
     assert.ok(!read(root, file).includes("`how explorer` role (default `claude/sonnet`)"), `${file} lost the old value`);
   }
@@ -171,7 +171,7 @@ test("a role stated in no skill prose exits 2", () => {
 test("a bad catalog lists every problem, one per line, and writes nothing", () => {
   const root = sandbox();
   setDefault(root, "trail reviewer", ["claude/opus:medium"]);
-  setDefault(root, "why investigators", ["codex/matched:medium"]);
+  setDefault(root, "reflect tooling", ["codex/matched:medium"]);
   setDefault(root, "bug-fix", ["parent:medium", "claude/opus:medium"]);
   setDefault(root, "swarm workers", ["claude/haiku"]);
   edit(root, "models.json", (t) => replaceOnce(t, '"role": "how explainer"', '"role": "how: explainer"'));
@@ -180,7 +180,7 @@ test("a bad catalog lists every problem, one per line, and writes nothing", () =
   const r = stamp(root);
   assert.equal(r.status, 2);
   const lines = r.out.trim().split("\n");
-  for (const role of ["trail reviewer", "why investigators", "bug-fix", "swarm workers", "how: explainer"]) {
+  for (const role of ["trail reviewer", "reflect tooling", "bug-fix", "swarm workers", "how: explainer"]) {
     assert.equal(lines.filter((l) => l.startsWith("models.json:") && l.includes(role)).length, 1, `one line names ${role}`);
   }
   assert.deepEqual(snapshot(root), before);

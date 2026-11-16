@@ -10,7 +10,7 @@ Sketch types, function signatures, class shapes, and module boundaries with `not
 
 ## Start
 
-Before starting, read `../how/SKILL.md`, `../why/SKILL.md`, and `../arena/SKILL.md` from this skill's folder in full. All three are user-only, so don't invoke them. Then open a task list with `TaskCreate`, one entry per phase, before any other work. Run every phase, even for a small change. The user chose architect, so don't shortcut it.
+Before starting, read `../why/SKILL.md` and `../arena/SKILL.md` from this skill's folder in full. Both are user-only, so don't invoke them. Then open a task list with `TaskCreate`, one entry per phase, before any other work. Run every phase, even for a small change. The user chose architect, so don't shortcut it.
 
 1. Ground
 2. Sketch
@@ -20,7 +20,7 @@ Before starting, read `../how/SKILL.md`, `../why/SKILL.md`, and `../arena/SKILL.
 
 ## Phase A: Ground the problem
 
-Build a real mental model of every system the new code touches. Run the **how** skill over the relevant subsystems. `how` and `why` are user-only skills, so don't invoke them. Read `../how/SKILL.md` and `../why/SKILL.md` from this skill's folder and follow them. Paths inside each file are relative to that file's folder. Naming a file isn't grounding. Produce the architectural explanation `how` prescribes. If the design redefines ownership or layering, also run the **why** skill on the existing shape so the rationale becomes a constraint, not a guess.
+Build a real mental model of every system the new code touches. Trace the relevant subsystems. Naming a file isn't grounding. Write an architectural explanation of each. If the design redefines ownership or layering, also run the **why** skill on the existing shape so the rationale becomes a constraint, not a guess. `why` is user-only, so don't invoke it. Read `../why/SKILL.md` from this skill's folder and follow it.
 
 Skip Phase A only when the work is genuinely greenfield with no surrounding system to integrate.
 
@@ -69,7 +69,7 @@ Use judgment. A few edge cases don't condemn an architecture. Some problems are 
 
 When you scrap:
 
-1. Re-run the **how** skill (`../how/SKILL.md`) over what's been built.
+1. Trace what's been built.
 2. Redesign as if the new constraints had been day-one assumptions, per redesign-from-first-principles.
 3. Subtract before adding, per the **subtract-before-you-add** principle skill (`../principle-subtract-before-you-add/SKILL.md`). The new sketch should be smaller than the old one before it grows.
 4. Return to Phase B and re-run arena.

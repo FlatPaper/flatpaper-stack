@@ -18,8 +18,6 @@
     { "role": "thermos reviewers",                        "default": ["parent:medium"] },
     { "role": "how explorer",                             "default": ["claude/sonnet:medium"] },
     { "role": "how explainer",                            "default": ["parent:medium"] },
-    { "role": "why investigators",                        "default": ["claude/sonnet:medium"], "family": "claude" },
-    { "role": "why synthesizer",                          "default": ["parent:medium"],        "family": "claude" },
     { "role": "reflect tooling",                          "default": ["parent:medium"],        "family": "claude" },
     { "role": "reflect judgment, divergent, synthesizer", "default": ["parent:medium"],        "family": "claude" },
     { "role": "history explorers",                        "default": ["claude/sonnet:medium"] },
