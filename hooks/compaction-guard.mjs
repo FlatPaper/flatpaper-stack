@@ -1,26 +1,17 @@
 #!/usr/bin/env node
-import { closeSync, existsSync, fstatSync, mkdirSync, openSync, readFileSync, readSync, writeFileSync } from "node:fs";
+import { closeSync, existsSync, fstatSync, mkdirSync, openSync, readFileSync, readSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const FULL_MARGIN = 40000;
 const DEFAULT_WINDOW = 967000;
-const DEFAULT_IDLE_MIN = 200000;
+const PHASE_STALE_MS = 5 * 60 * 1000;
+const WAKE_POLL_MS = 200;
+const WAKE_WAIT_MS = 5000;
 const MODE_SKILL = "flatpaper-stack:flatpaper-mode";
 
 const checks = [
-  {
-    id: "idle",
-    event: "stop",
-    threshold: (settings, env) => {
-      if (compactionOff(settings, env) || settings.idleCompaction === false) return null;
-      return positive(env.CLAUDE_CODE_IDLE_COMPACT_MIN_TOKENS) ?? DEFAULT_IDLE_MIN;
-    },
-    message:
-      "Context is over the idle-compaction minimum, so Claude Code will likely compact this session if it sits idle for an hour. " +
-      "Run flatpaper-mode's Pause safely playbook now (playbooks/pause-safely.md), then stop.",
-  },
   {
     id: "full",
     event: "post-tool-use",
@@ -31,9 +22,10 @@ const checks = [
       const effective = pct >= 1 && pct <= 100 ? window * (pct / 100) : window;
       return effective - FULL_MARGIN;
     },
-    message:
+    message: (id) =>
       "Context is nearly full and auto-compaction will run soon. " +
-      "Finish the current atomic step, then run flatpaper-mode's Pause safely playbook (playbooks/pause-safely.md) before starting anything new.",
+      "Finish the current atomic step, then run flatpaper-mode's Pause safely playbook (playbooks/pause-safely.md) before starting anything new. " +
+      `Write the resume note to ${notePath(id)}.`,
   },
 ];
 
@@ -132,15 +124,13 @@ function sessionHookOff() {
 }
 
 function guard(event, input) {
-  if (event === "stop" && input.stop_hook_active) return;
   if (event === "post-tool-use" && input.agent_id) return;
   const tokens = currentTokens(input.transcript_path);
   if (tokens === null) return;
 
   const settings = loadSettings(input.cwd);
   const env = { ...settings.env, ...process.env };
-  const stateFile = join(tmpdir(), "flatpaper-stack", `${input.session_id}.json`);
-  const state = existsSync(stateFile) ? readJson(stateFile) : {};
+  const state = loadState(input.session_id);
   const notified = new Set(state.notified ?? []);
 
   let message = null;
@@ -150,32 +140,102 @@ function guard(event, input) {
       notified.delete(check.id);
     } else if (!notified.has(check.id) && advanceModeScan(input.transcript_path, state)) {
       notified.add(check.id);
-      message = check.message;
+      message = check.message(input.session_id);
     }
   }
 
-  mkdirSync(dirname(stateFile), { recursive: true });
-  writeFileSync(stateFile, JSON.stringify({ ...state, notified: [...notified] }));
-  if (!message) return;
-  if (event === "stop") {
-    console.log(JSON.stringify({ decision: "block", reason: message }));
-  } else {
-    console.log(JSON.stringify({ hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: message } }));
+  saveState(input.session_id, { ...state, notified: [...notified] });
+  if (message) console.log(JSON.stringify({ hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: message } }));
+}
+
+const stateDir = () => join(tmpdir(), "flatpaper-stack");
+const notePath = (id) => join(stateDir(), `${id}-resume.md`);
+
+function loadState(id) {
+  const file = join(stateDir(), `${id}.json`);
+  const state = existsSync(file) ? readJson(file) : {};
+  if (state.phase !== "none" && Date.now() - state.phaseAt > PHASE_STALE_MS) return { ...state, phase: "none", woken: false };
+  return state;
+}
+
+function saveState(id, state) {
+  mkdirSync(stateDir(), { recursive: true });
+  writeFileSync(join(stateDir(), `${id}.json`), JSON.stringify(state));
+}
+
+const contextText = () => readFileSync(join(dirname(fileURLToPath(import.meta.url)), "pre-compact-context.md"), "utf8");
+
+const TRANSITIONS = {
+  "pre-compact-gate": { none: ["pausing", 2], pausing: ["compacting", 0], compacting: ["pausing", 2] },
+  "pre-compact-wake": { pausing: ["pausing", 2] },
+  "session-start-resume": { compacting: ["none", 2] },
+};
+
+function advance(event, input) {
+  const state = loadState(input.session_id);
+  const phase = state.phase ?? "none";
+  const row = TRANSITIONS[event][phase];
+  if (!row) return { code: 0 };
+  if (event === "pre-compact-wake" && state.woken) return { code: 0 };
+  const [next, code] = row;
+  if (next === "pausing" && phase !== "pausing") rmSync(notePath(input.session_id), { force: true });
+  saveState(input.session_id, { ...state, phase: next, phaseAt: Date.now(), woken: event === "pre-compact-wake" });
+  return { code, phase: next };
+}
+
+const PROMPTS = {
+  "pre-compact-gate": "flatpaper-stack: pausing safely before compaction. Run /compact again once Claude says it's ready, and repeat any instructions you gave it.",
+  "pre-compact-wake": (id) =>
+    "The user requested compaction. Run flatpaper-mode's Pause safely playbook (playbooks/pause-safely.md). " +
+    `Write the resume note to ${notePath(id)}, then tell the user it is ready for /compact.`,
+  "session-start-resume": (id) =>
+    "Compaction finished. Invoke flatpaper-stack:flatpaper-mode, then read " +
+    `${notePath(id)} (or the resume section of the summary if that file is missing). Where the summary records work newer than the note, trust the summary. ` +
+    "Rebuild the task list with TaskList and continue from the first next step without waiting for the user, unless the user had asked you to stop there.",
+};
+
+function announced(event, input) {
+  if (event === "pre-compact-gate") {
+    const state = loadState(input.session_id);
+    const auto = input.trigger !== "manual";
+    const usedMode = !auto && advanceModeScan(input.transcript_path, state);
+    saveState(input.session_id, auto ? { ...state, phase: "none", woken: false } : state);
+    if (auto || !usedMode) {
+      process.stdout.write(contextText());
+      return 0;
+    }
+  }
+  const { code, phase } = advance(event, input);
+  if (code === 2) {
+    const prompt = PROMPTS[event];
+    process.stderr.write(typeof prompt === "function" ? prompt(input.session_id) : prompt);
+  } else if (event === "pre-compact-gate" && phase === "compacting") {
+    process.stdout.write(contextText());
+  }
+  return code;
+}
+
+async function gateSettled(id) {
+  for (let waited = 0; waited < WAKE_WAIT_MS; waited += WAKE_POLL_MS) {
+    const state = loadState(id);
+    if (state.phase === "pausing" && !state.woken && Date.now() - state.phaseAt < WAKE_WAIT_MS * 2) return;
+    await new Promise((resolve) => setTimeout(resolve, WAKE_POLL_MS));
   }
 }
 
-function runSilently(fn) {
-  try {
-    fn();
-  } catch {}
-}
-
-runSilently(() => {
+async function main() {
   const event = process.argv[2];
-  if (sessionHookOff()) return;
-  if (event === "pre-compact") {
-    process.stdout.write(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "pre-compact-context.md"), "utf8"));
-  } else if (event === "stop" || event === "post-tool-use") {
-    guard(event, JSON.parse(readFileSync(0, "utf8")));
+  if (sessionHookOff()) return 0;
+  const input = event === "post-tool-use" || event in TRANSITIONS ? JSON.parse(readFileSync(0, "utf8")) : null;
+  if (event === "post-tool-use") {
+    guard(event, input);
+    return 0;
   }
-});
+  if (event === "pre-compact-wake") await gateSettled(input.session_id);
+  return event in TRANSITIONS ? announced(event, input) : 0;
+}
+
+main().then(
+  (code) => process.exit(code),
+  () => process.exit(0),
+);

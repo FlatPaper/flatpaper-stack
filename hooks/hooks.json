@@ -18,16 +18,12 @@
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh\" compact",
             "statusMessage": "Loading flatpaper-stack routing"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
+          },
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/compaction-guard.mjs\" stop 2>/dev/null || true"
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/compaction-guard.mjs\" session-start-resume",
+            "async": true,
+            "asyncRewake": true
           }
         ]
       }
@@ -44,10 +40,26 @@
     ],
     "PreCompact": [
       {
+        "matcher": "manual",
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/compaction-guard.mjs\" pre-compact 2>/dev/null || true"
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/compaction-guard.mjs\" pre-compact-gate"
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/compaction-guard.mjs\" pre-compact-wake",
+            "async": true,
+            "asyncRewake": true
+          }
+        ]
+      },
+      {
+        "matcher": "auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/compaction-guard.mjs\" pre-compact-gate"
           }
         ]
       }
