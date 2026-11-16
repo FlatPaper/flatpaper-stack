@@ -188,7 +188,7 @@ const PROMPTS = {
   "session-start-resume": (id) =>
     "Compaction finished. Invoke flatpaper-stack:flatpaper-mode, then read " +
     `${notePath(id)} (or the resume section of the summary if that file is missing). ` +
-    "Rebuild the task list with TaskList and continue the work from the first next step without waiting for the user.",
+    "Rebuild the task list with TaskList and continue from the first next step without waiting for the user, unless the user had asked you to stop there.",
 };
 
 function announced(event, input) {
