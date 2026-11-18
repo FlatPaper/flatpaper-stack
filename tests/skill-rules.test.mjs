@@ -181,9 +181,9 @@ const rules = [
     phrase: "set its working directory to a throwaway detached worktree at the head under review",
   },
   {
-    source: "#29 localhost and network reviews go to a Claude reviewer",
+    source: "#29 localhost and network reviews go to a Claude reviewer unless Codex has network_access",
     file: "skills/flatpaper-mode/references/spawning.md",
-    phrase: "`--write` still refuses localhost servers and the network, so a review that must run those uses a Claude reviewer",
+    phrase: "Without that setting, a review that must run those uses a Claude reviewer",
   },
   {
     source: "#21 shipping uses gh and never requires Graphite",
