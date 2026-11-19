@@ -14,18 +14,18 @@ Every candidate gets the same prompt, so the prompt is the contract.
 
 1. State the artifact each candidate is producing.
 2. Derive the rubric, 3-6 concrete gradeable criteria for what success looks like on *this* task. It is the picker's tool in Phase D. Candidates only see the task.
-3. Pick the runners. Unless the user names models, use the `arena runners` role (default `parent, codex/matched`) from its line in `~/.claude/flatpaper-stack/models.md` (the default when the file or the line is missing). Run one runner per entry. A `parent` or `claude` entry is a `general-purpose` Agent subagent, and a `codex` entry is the `codex:codex-rescue` agent, which hands the task to Codex, a non-Claude family. If an entry's provider isn't available, run that seat on the parent model and say so. Spawn more runners when the arena covers multiple design directions. Use the same model N times when the work is generation-bound rather than judgment-sensitive. Before you spawn, read `../flatpaper-mode/references/spawning.md` in full and follow it for each spawn's model and effort.
+3. Pick the runners. Unless the user names models, use the `arena runners` role (default `parent, codex/matched`) from its line in `~/.claude/flatpaper-stack/models.md` (the default when the file or the line is missing). Run one runner per entry. A `parent` or `claude` entry is a `general-purpose` Agent subagent, and a `codex` entry is a Codex seat, per **Run a Codex seat** in spawning.md, which hands the task to Codex, a non-Claude family. If an entry's provider isn't available, run that seat on the parent model and say so. Spawn more runners when the arena covers multiple design directions. Use the same model N times when the work is generation-bound rather than judgment-sensitive. Before you spawn, read `../flatpaper-mode/references/spawning.md` in full and follow it for each spawn's model and effort.
 4. Give each candidate its own output location (a git worktree where possible, otherwise `/tmp/arena-<slug>/candidate-<n>/`), per the **separate-before-serializing-shared-state** principle skill (`../principle-separate-before-serializing-shared-state/SKILL.md`).
 
 ## Phase B: Fan out
 
-Spawn all N subagents in one message, with `isolation: "worktree"` when the output lives in the repo, each with the task, the path to the shared grounding, its own output path, and instructions to produce the artifact and a short rationale naming the alternatives it considered and what it rejected.
+Spawn all N subagents in one message, with `isolation: "worktree"` when the output lives in the repo (a Codex runner gets its candidate's worktree as `<cwd>` instead), each with the task, the path to the shared grounding, its own output path, and instructions to produce the artifact and a short rationale naming the alternatives it considered and what it rejected.
 
 If a candidate produces no output, proceed with N-1 and note the dropout.
 
 ## Phase C: Cross-judge
 
-After all Phase B candidates complete, spawn one judge subagent. The judge is never from the parent's family. Take the first available entry from another family in the `arena cross-judge pool` role (default `codex/matched`), from the models file. A `parent` entry never judges. A `codex` judge is the `codex:codex-rescue` agent, told to read and score only and never edit a file. If no entry from another family is available, skip the judge, pick the base alone in Phase D, and say so. The judge sees the rubric and the candidates by path label, scores each criterion, and recommends a base with rationale. It runs in parallel with your reading in Phase D. Don't spawn it while candidates are still writing.
+After all Phase B candidates complete, spawn one judge subagent. The judge is never from the parent's family. Take the first available entry from another family in the `arena cross-judge pool` role (default `codex/matched`), from the models file. A `parent` entry never judges. A `codex` judge is a Codex seat run with `read-only`, told to read and score only. If no entry from another family is available, skip the judge, pick the base alone in Phase D, and say so. The judge sees the rubric and the candidates by path label, scores each criterion, and recommends a base with rationale. It runs in parallel with your reading in Phase D. Don't spawn it while candidates are still writing.
 
 ## Phase D: Pick a base
 
@@ -35,7 +35,7 @@ Pick the base a future maintainer can extend most easily without breaking invari
 
 ## Phase E: Graft
 
-Walk each losing candidate once more for what is worth porting into the base, usually one or two things per candidate, not most of it. Fold each graft in by hand, per the **redesign-from-first-principles** principle skill (`../principle-redesign-from-first-principles/SKILL.md`), so the result stays coherent under one mental model. Don't paste mechanically.
+Walk each losing candidate once more for what is worth porting into the base, usually one or two things per candidate, not most of it. When the arena runs inside a playbook step that delegates implementation, a fresh delegate on that step's role folds the grafts into the base's worktree, briefed with the base and the graft list. Otherwise, you fold them in. Either way, fold each graft in by hand, per the **redesign-from-first-principles** principle skill (`../principle-redesign-from-first-principles/SKILL.md`), so the result stays coherent under one mental model. Don't paste mechanically.
 
 If the candidates converge on one shape, that is strong agreement. Note it and ship the consensus shape. No graft is needed. If they wildly diverge, Phase A was under-specified. Reframe and re-run rather than averaging the divergence.
 

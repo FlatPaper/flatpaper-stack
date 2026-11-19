@@ -7,7 +7,7 @@ Invoke the `flatpaper-stack:flatpaper-mode` skill and follow its instructions wh
 - it involves a design or architecture choice
 - it is a bug whose cause is not yet known, or a performance issue
 
-It routes to the right flatpaper-stack skill from there. For smaller tasks, such as a contained change to one file with an obvious test, a question, or a one-line edit, work directly and verify on the real artifact.
+It routes to the right flatpaper-stack skill from there. For smaller tasks outside a flatpaper-mode run, such as a contained change to one file with an obvious test, a question, or a one-line edit, work directly and verify on the real artifact. While flatpaper-mode runs, its playbook decides who writes code.
 
 User instructions (CLAUDE.md, AGENTS.md, direct requests) take precedence.
 </EXTREMELY_IMPORTANT>

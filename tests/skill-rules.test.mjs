@@ -4,8 +4,9 @@
 // around it, and that reads as a successful sync. Each rule is pinned here by
 // the sentence that carries it, with the PR that earned it. Rules a
 // substitutions.json rule carries are guarded by `sync.mjs --check-rules`, so
-// they are not repeated here. references/spawning.md is port-only, so only an
-// edit can drop a rule there, and it is pinned for the same reason.
+// they are not repeated here. references/spawning.md and
+// hooks/session-start-context.md are port-only, so only an edit can drop a rule
+// there, and they are pinned for the same reason.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -178,7 +179,7 @@ const rules = [
   {
     source: "#29 a Codex reviewer runs with --write in a throwaway worktree",
     file: "skills/flatpaper-mode/references/spawning.md",
-    phrase: "set its working directory to a throwaway detached worktree at the head under review",
+    phrase: "Pass a throwaway detached worktree at the head under review as the reviewer's `<cwd>`",
   },
   {
     source: "#29 localhost and network reviews go to a Claude reviewer unless Codex has network_access",
@@ -194,6 +195,61 @@ const rules = [
     source: "#21 the trail log writes its header once when calls race",
     file: "skills/show-me-your-work/scripts/log.sh",
     phrase: "ln \"$tmp\" \"$logfile\" 2>/dev/null || true",
+  },
+  {
+    source: "#38 the session hook's work-directly advice stops at a flatpaper-mode run",
+    file: "hooks/session-start-context.md",
+    phrase: "While flatpaper-mode runs, its playbook decides who writes code.",
+  },
+  {
+    source: "#38 read the role line and spawning.md before a delegated step's first edit",
+    file: "skills/flatpaper-mode/SKILL.md",
+    phrase: "Before the first edit of a playbook step that delegates implementation, read the step's role line",
+  },
+  {
+    source: "#38 the chat running the playbook writes no product file",
+    file: "skills/flatpaper-mode/SKILL.md",
+    phrase: "In those steps, the chat running the playbook changes no product file by any route, Bash heredocs and scripts included.",
+  },
+  {
+    source: "#38 a Codex role runs codex-run.sh",
+    file: "skills/flatpaper-mode/SKILL.md",
+    phrase: "A role that calls for a Codex model runs `scripts/codex-run.sh` in the background",
+  },
+  {
+    source: "#38 the pause resume note records the work split",
+    file: "skills/flatpaper-mode/playbooks/pause-safely.md",
+    phrase: "Record the work split too: each open piece of work with its role, model, and effort",
+  },
+  {
+    source: "#38 a Codex seat is a background command, not an Agent call",
+    file: "skills/flatpaper-mode/references/spawning.md",
+    phrase: "A Codex seat is a background Bash command, not an `Agent` call.",
+  },
+  {
+    source: "#38 a Codex seat runs in the background with a Codex description",
+    file: "skills/flatpaper-mode/references/spawning.md",
+    phrase: "with Bash `run_in_background: true` and the description `Codex: <task>`",
+  },
+  {
+    source: "#38 codex-run.sh writes unless told read-only",
+    file: "skills/flatpaper-mode/references/spawning.md",
+    phrase: "`codex-run.sh` runs Codex with `--write` unless you pass `read-only`.",
+  },
+  {
+    source: "#38 a Codex swarm worker is a codex-run.sh command",
+    file: "skills/swarm/SKILL.md",
+    phrase: "A Codex worker is a background `codex-run.sh` command",
+  },
+  {
+    source: "#38 a Codex arena judge runs read-only",
+    file: "skills/arena/SKILL.md",
+    phrase: "A `codex` judge is a Codex seat run with `read-only`",
+  },
+  {
+    source: "#38 a delegated step's arena grafts are folded by a fresh delegate",
+    file: "skills/arena/SKILL.md",
+    phrase: "a fresh delegate on that step's role folds the grafts into the base's worktree",
   },
 ];
 
