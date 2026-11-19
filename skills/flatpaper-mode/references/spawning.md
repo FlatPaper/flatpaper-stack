@@ -23,10 +23,11 @@ A Codex seat is a background Bash command, not an `Agent` call. The `Agent` defa
 
 1. Write the brief to a file, such as `<scratchpad>/codex-<task>.md`.
 2. Run `<plugin>/skills/flatpaper-mode/scripts/codex-run.sh <cwd> <model> <effort> <prompt-file>` with Bash `run_in_background: true` and the description `Codex: <task>`. `<cwd>` is the directory Codex works in. Add `read-only` as a fifth argument for a seat that must not write. A writing seat that runs beside other writers gets a worktree of its own as `<cwd>`.
-3. For a list of N Codex seats, send N background commands in one message.
-4. End your turn. When the completion notification arrives, read the command's output file. Stdout holds only Codex's final answer.
-5. To watch progress, read `<prompt-file without its extension>.codex.log`. The script prints that path on stderr when it starts.
-6. To stop a seat, call `TaskStop` on its command.
+3. Pass `--agent flatpaper-agent` whenever the same step on Claude would use `subagent_type: "flatpaper-stack:flatpaper-agent"`. This covers code-writing delegates and helpers inside a playbook step. Panel reviewers, judges, and workers whose skill sets its own agent type pass no `--agent`. Those skills include `arena`, `interrogate`, `architect`, `swarm`, `reflect`, and `thermos`.
+4. For a list of N Codex seats, send N background commands in one message.
+5. End your turn. When the completion notification arrives, read the command's output file. Stdout holds only Codex's final answer.
+6. To watch progress, read `<prompt-file without its extension>.codex.log`. The script prints that path on stderr when it starts.
+7. To stop a seat, call `TaskStop` on its command.
 
 ## Effort
 
