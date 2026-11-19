@@ -246,6 +246,11 @@ const rules = [
     file: "skills/arena/SKILL.md",
     phrase: "A `codex` judge is a Codex seat run with `read-only`",
   },
+  {
+    source: "#38 a delegated step's arena grafts are folded by a fresh delegate",
+    file: "skills/arena/SKILL.md",
+    phrase: "a fresh delegate on that step's role folds the grafts into the base's worktree",
+  },
 ];
 
 test("every pinned phrase is distinctive enough to pin a rule", () => {

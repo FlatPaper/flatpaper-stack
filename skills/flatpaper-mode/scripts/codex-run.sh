@@ -16,7 +16,13 @@ if [ "${#companions[@]}" -eq 0 ]; then
 fi
 companion=$(node -e 'console.log(process.argv.slice(1).sort((a, b) => a.localeCompare(b, "en", { numeric: true })).pop())' "${companions[@]}") || exit 1
 
-args=(node "$companion" task --cwd "$1" --effort "$3" --prompt-file "$4")
+prompt=$4
+case "$prompt" in
+  /*) ;;
+  *) prompt="$PWD/$prompt" ;;
+esac
+
+args=(node "$companion" task --cwd "$1" --effort "$3" --prompt-file "$prompt")
 if [ "$2" != default ]; then
   args+=(--model "$2")
 fi
@@ -24,7 +30,7 @@ if [ "${5:-}" != read-only ]; then
   args+=(--write)
 fi
 
-log="$4"
+log=$prompt
 case "${log##*/}" in
   *.*) log="${log%.*}" ;;
 esac

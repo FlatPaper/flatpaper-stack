@@ -25,7 +25,7 @@
   },
   "skills/arena/SKILL.md": {
     "kind": "port-feature",
-    "why": "Tracks phases with TaskCreate, takes runners and the cross-family judge from the `arena runners` and `arena cross-judge pool` roles in models.json, runs Codex seats through codex-run.sh with the judge read-only, isolates repo-writing runners in worktrees, and links principle skills by path.",
+    "why": "Tracks phases with TaskCreate, takes runners and the cross-family judge from the `arena runners` and `arena cross-judge pool` roles in models.json, runs Codex seats through codex-run.sh with the judge read-only, isolates repo-writing runners in worktrees, hands the graft fold to a fresh delegate when the arena runs inside a step that delegates implementation, and links principle skills by path.",
     "since": "0.9.2",
     "upstream": "not-proposed"
   },

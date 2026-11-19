@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -139,4 +139,20 @@ test("a missing companion names the path pattern and exits 1", (t) => {
   const result = f.run();
   assert.deepEqual([result.status, result.stdout, result.stderr], [1, "",
     `error: no companion found at ${f.home}/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs\n`]);
+});
+
+test("a relative prompt path resolves against the caller's directory, not the cwd argument", (t) => {
+  const f = fixture(t);
+  mkdirSync(join(f.home, "caller dir"));
+  const caller = realpathSync(join(f.home, "caller dir"));
+  const prompt = join(caller, "relative brief.md");
+  writeFileSync(prompt, "Inspect the project.\n");
+  const log = join(caller, "relative brief.codex.log");
+  const result = spawnSync(script, [f.cwd, "gpt-5.4", "high", "relative brief.md"], { ...f.options, cwd: caller });
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(JSON.parse(result.stdout).argv,
+    ["task", "--cwd", f.cwd, "--effort", "high", "--prompt-file", prompt, "--model", "gpt-5.4", "--write"]);
+  assert.equal(result.stderr, `codex progress log: ${log}\n`);
+  assert.equal(readFileSync(log, "utf8"), "companion progress\n");
 });
