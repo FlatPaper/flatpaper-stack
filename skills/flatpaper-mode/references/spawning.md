@@ -15,6 +15,14 @@ Use that role's line in `~/.claude/flatpaper-stack/models.md`, which `/flatpaper
 
 If a value's provider is missing or the spawn rejects it, use the role's default and say so. If the default's provider is missing too, use `parent` and say so, unless the skill says to skip the seat. A role that needs MCP tools, which only Claude subagents have, treats a `codex` or `gemini` value as missing.
 
+## Cross-family reviewer
+
+A role that checks other agents' work lists its reviewers in order of preference. The author is every model family that wrote any of the work under review. `parent` and `claude/*` are Claude, `codex/*` is Codex, and `gemini/*` is Gemini.
+
+1. Take the first available entry from a family that is not an author.
+2. If there is none, take the first available entry from an author family, preferring a model that did not write the work. With no such entry in the list, use `parent`. Report it as a same-family review and name the model.
+3. The reviewer is always a fresh subagent. A review by the agent that wrote the work never counts.
+
 A model the user names (`sonnet`, `opus`, `haiku`, `fable`, or a Codex model) wins over all of this.
 
 ## Run a Codex seat
