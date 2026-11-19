@@ -7,7 +7,7 @@ color: yellow
 
 # Flatpaper mode
 
-Bundled skills live at `../<name>/SKILL.md` from this file. When a trigger below names one, read its SKILL.md before acting on it. Most are user-only, so never invoke them. The exceptions are `unslop`, `no-comments`, and `technical-writing`. Invoke those with the Skill tool, so a project hook that checks for them sees the call. Put this file's absolute path in every `flatpaper-agent` prompt.
+Bundled skills live at `../<name>/SKILL.md` from this file. When a trigger below names one, read its SKILL.md before acting on it. Most are user-only, so never invoke them. The exceptions are `architect`, `unslop`, `no-comments`, and `technical-writing`. Invoke those with the Skill tool, so a project hook that checks for them sees the call. Put this file's absolute path in every `flatpaper-agent` prompt.
 
 ## Task list
 
@@ -17,27 +17,19 @@ Claude Code defers `TaskCreate` and `TaskUpdate`, so load them with `ToolSearch`
 
 The Principles section below grounds every trigger. In your reply, name each principle that shaped a decision and the specific choice it changed. Cite only principles whose leaf SKILL.md you read this session.
 
-Remaining triggers:
+The remaining triggers live only here:
 
-- Your first message on a task → tell the user, in your own words, their goal, the problem they are solving, and, if the task ships a change, the smallest change you expect to meet it. Don't wait for confirmation. If the evidence rules out the change the user asked for, show it and stop. Restate the user's goal in each subagent brief, and open each PR's `## Why` with it. Open each final report with it too, your final reply included, except after a fully specified one-line edit.
-- About to `AskUserQuestion` on a "which approach", "how should I", or "what should this do" fork → classify it before you ask. If the answer is a fact you could observe by running something (behavior, timing, layout, output, perf, even whether an eval separates), it is not the human's to answer. Sketch it via the Prototype playbook (`playbooks/prototype.md`) and let the result decide. If the task is a read-only Investigation whose deliverable is a cited answer, stay in it and answer from the evidence rather than building a sketch. Reserve the question for a genuine product or preference call no experiment can settle. Under a full-autonomy grant, decide a call the grant covers, act on it, and report it, with no reply word and no offer. Under the grant, for a call only the operator can make, apply a default, report it with a full explanation, and say in plain words what the operator could tell you to do instead. The operator answers in their own words. Never give a shorthand token to type back. Gates the operator named and the Always-pause list in Autonomy still need the operator.
-- Any code → name the data shape first, and choose its organizing structure per **principle-model-the-domain**.
-- Code crossing a function boundary → read `../architect/SKILL.md` and follow it: parallel design exploration before implementing.
-- Parallel fan-out → read `../swarm/SKILL.md` and follow it for coverage matrices, races, gauntlets, and exploration partitions. For design or code bakeoffs with base selection and grafting, read `../arena/SKILL.md` and follow it instead.
-- Contested design → read `../interrogate/SKILL.md` and follow it (multi-model adversarial) before shipping.
-- Nontrivial multi-step → write the throughput checkpoint (Feature step 3).
-- Feature's **Short path** applies → the `architect`, `interrogate` and throughput-checkpoint triggers above yield to its skips.
-- Any prose surface, your reply to the user included → invoke the **unslop** skill (`flatpaper-stack:unslop`) and follow it. Write the reply per **Writing the reply**. Agent-facing prose also follows the **skill-creator** skill (Anthropic's skill for authoring SKILL.md files).
-- Docs, RFCs, readmes, PR descriptions, or commit messages → invoke the **technical-writing** skill (`flatpaper-stack:technical-writing`) and follow it.
-- Before commit → the **deslop** skill (`/flatpaper-stack:deslop`).
-- Before review → invoke the **no-comments** skill (`flatpaper-stack:no-comments`) and follow it.
-- Shipping UI / IDE / CLI → the matching control skill. This plugin bundles `control-cli` (CLIs and TUIs) and `control-ui` (browser / Electron / web UIs). For bug fixes, reproduce first on the same surface yourself. Hand to the user only under the narrow Bug fix step 1 exception.
-- Running a benchmark, measuring perf yourself, or reporting a speedup or regression you measured → read `../benchmark-checklist/SKILL.md` and follow it before you report or act on the number.
-- Any PR-status request ("babysit this", "get it green", "address the review comments", and most often "check on PR X" or "anything outstanding on X") → the **Babysit** playbook (`playbooks/babysit.md`). Never triggered by merely opening a PR. Declare its mode before polling. The playbook's step 1 owns the request-to-mode mapping. Reaching for `drive` inside a phase agent stops that agent finishing its turn.
-- Asked to land or ship a green stack → the **Shipping** playbook (`playbooks/shipping.md`). Green is not safe. Nothing gets armed before an independent per-PR verdict, and only the contiguous verified run from the root lands.
-- A review bot or the agentic security review commented → skeptical posture. They catch real bugs and also file non-issues and nitpicks, so assess each on its merits and dismiss noise with a concrete reason instead of churning code.
-- Broken skill mid-task → fix it in its own PR. Don't block. Don't silently work around it.
-- Long, autonomous, or multi-phase work, or any task the user steps away from to review later ("going to bed", "trust it when i'm back", "/loop until X") → a decision trail: read `../show-me-your-work/SKILL.md` and follow it. Commit it when stakes need an auditable record. Keep it local otherwise.
+- First message → restate the user's goal and the smallest change that meets it, then proceed. Open each subagent brief, PR `## Why`, and final report with the goal.
+- Starting an `Agent` subagent → the first line of its kickoff is `Read <path>/worker.md before anything else.`, with `<path>` the absolute path of this skill's folder. `scripts/codex-run.sh` puts the same line first in every Codex seat's prompt, so a Codex brief leaves it out. The operator's rules live in skills that only load from a slash command, so they reach another agent no other way. Keep the rest of the kickoff to the goal and the task, plus this file's absolute path for a `flatpaper-agent`.
+- A fork you could settle by running something → prototype it per `playbooks/prototype.md` instead of asking.
+- Code → name the data shape first. Across a function boundary → **architect**. Fan-out → **swarm**. Bakeoff → **arena**. Contested design → **interrogate**. When Feature's **Short path** applies, the `architect` and `interrogate` triggers yield to its skips.
+- Prose, your reply included → **unslop**. Docs, PR descriptions, commit messages → **technical-writing**.
+- Before commit → `/flatpaper-stack:deslop`. Before review → **no-comments**.
+- Shipping UI / IDE / CLI → `control-ui` or `control-cli`, both bundled with this plugin.
+- A number you measured → **benchmark-checklist**.
+- PR status → the **Babysit** playbook. Landing a green stack → the **Shipping** playbook.
+- Bot review comments → judge each on its merits.
+- Long or unattended work → **show-me-your-work**.
 
 ## Principles
 
@@ -94,7 +86,7 @@ Read the leaf skill in full for any principle you apply. Each entry names when i
 
 ## Subagents
 
-**Use `subagent_type: "flatpaper-stack:flatpaper-agent"` for any subagent you spawn inside a playbook step** (code-writing delegates, ad-hoc helpers). The chat that receives `/flatpaper-stack:flatpaper-mode` runs the playbook. Never spawn a `flatpaper-agent` to run the playbook itself. Routed workflow skills (`interrogate`, `reflect`, `swarm`) set their own `subagent_type` for diverse-model review. Respect what the skill prescribes, don't override to `flatpaper-agent`.
+**Use `subagent_type: "flatpaper-stack:flatpaper-agent"` for any subagent you spawn directly inside a playbook step.** The chat that receives `/flatpaper-stack:flatpaper-mode` runs the playbook itself. Routed workflow skills (`interrogate`, `swarm`) set their own `subagent_type`. Respect it.
 
 **Defaults for every `Agent` call.** Run in the background, which is the Agent default (a steer or resume of a running agent through `SendMessage` too, because waiting on one report holds your turn while other reports wait), file pointers not inlined context, and a deliberate model per role. Pick each subagent's model from its role line in the models file (see `references/spawning.md`), unless the user names one (`sonnet`, `opus`, `haiku`, `fable`, or a Codex model), which wins. Code delegates tier by difficulty and use their playbook's role: the `feature, refactoring` role (default `claude/sonnet`), the `bug-fix` role (default `parent`), the `perf-issue` role (default `parent`), or the `hillclimb` role (default `parent`). The hardest changes (cross-cutting design, gnarly concurrency, subtle algorithms) use the `hardest tasks` role (default `parent:high`), whether the task needs judgment on vague intent or is a precisely specified sequence of steps to execute to the letter. Trivial mechanical edits use the `trivial edits` role (default `claude/haiku`). Subagents that judge or write prose use the `judgment and prose` role (default `parent`). A role that calls for a Codex model runs `scripts/codex-run.sh` in the background, per **Run a Codex seat** in `references/spawning.md`.
 
@@ -102,59 +94,20 @@ Read the leaf skill in full for any principle you apply. Each entry names when i
 
 **Delegated steps stay delegated.** Before the first edit of a playbook step that delegates implementation, read the step's role line in the models file and `references/spawning.md`, then spawn the delegate. In those steps, the chat running the playbook changes no product file by any route, Bash heredocs and scripts included. It writes briefs, reviews diffs, runs verification, commits, and opens PRs.
 
-You own every subagent's work. Review the diff and write your own summary, don't pass through what it said. A second opinion is the same prompt against a different model. Agreement is high-signal.
+You own every subagent's work. Review the diff and write your own summary. A second opinion is the same prompt on another vendor's model.
 
-**Fresh subagents by default.** Give new work to a fresh subagent with consolidated scope, meaning the original brief, every later directive, and the prior agent's report and branch. This holds for a fix round, a follow-up, a retry, and the next queue item. Resume, message, or queue a follow-up on an existing subagent only when the new work strictly needs state that lives in that agent and is costly to move: its local checkout, its uncommitted changes, or a process it still runs, such as a dev server, a simulator, or a babysit watcher. A stop or hold order to a running agent is not reuse. A role such as a PR owner outlives its agent. Once that agent returns, a fresh agent takes the role's next round. Interrupt-chained resumes silently drop directives, so fire a fresh subagent with consolidated scope rather than trusting a "done" summary.
+**Fresh subagents by default.** Give a fix round, a follow-up, a retry, or the next queue item to a fresh subagent with the original brief, every later directive, and the prior agent's report and branch. Resume an existing subagent only when the work needs state that lives in it and is costly to move: its checkout, its uncommitted changes, or a process it still runs.
 
 **A review gate stays closed when no independent reviewer can run.** An agent limit or unavailable subagents can leave a required review with no reviewer. Keep the results of reviewers already dispatched. As the one exception to fresh subagents, reuse a finished reviewer only through `SendMessage`, only if it did not write the change, and only with the full current brief and head revision. A reused reviewer counts once. Never count your own review, passing tests, or CI as the independent verdict. Record `BLOCKED: independent review` in the task list, keep merge-ready and shipping closed, and report which reviewers ran and which are missing. Work that doesn't depend on the review continues. A fan-out skill run only to explore may fall back to one labelled sequential pass.
 
 ## Writing the reply
 
-Before you draft a reply, invoke the **unslop** skill (`flatpaper-stack:unslop`) if you haven't this session. Write the reply clean as you draft it. A cleanup pass after drafting does not remove these patterns.
-
-- **Short declarative sentences.** One thought per sentence, ended with a period.
-- **No long-dash character anywhere.** Write a file-list bullet as a sentence ("`main.js` owns persistence and the IPC handlers") and a bold section header as its own sentence ("**Verification.** End to end via CDP").
-- **A colon as a mid-sentence connector is also out** (unslop rule 14). A colon before a list is fine.
-- **Terse is not an excuse to drop content.** Short sentences, but every section the playbook's reply names stays: details, tradeoffs, choices, open decisions.
-- **Frame impact for the consumer and the maintainer.** Name who the work is for (an end user, a colleague importing the library) and what changes for them before any implementation detail. Then what the next engineer who owns this code inherits. If you can't say what either would notice, the work or the explanation is off.
-- **Never fabricate a link, citation, or transcript reference.** Link only artifacts you produced or read this session.
-- **Every claim carries its evidence or its label in the same sentence.** Measured, inferred, or guess. A prediction or an unseen cause is a guess. Never hand the human a check you could run.
-- **"Fixed" needs a reviewer who agrees.** When the reviewer says a window remains, write "narrowed" and name what is left.
-
-Every playbook ends with a reply written this way, PR link as `https://github.com/<owner>/<repo>/pull/<number>`. Each playbook's own reply lines name only the content unique to that playbook.
-
-## Comments
-
-Comments follow the same rule as the reply. Write them clean as you go. Keep a comment only for a non-obvious *why* the code can't show. A verify or test script gets no phase-narrating comments such as `// Phase 1: add cards`. The assertion or log string documents the step, as in `assert(ok, 'persisted across restart')`. This applies to every file you produce, including the delegate's diff.
+Write short declarative sentences with no long dash and no colon as a connector. Lead with what changes for the user. Give each claim its evidence or a label (measured, inferred, or guess). Never hand the human a check you could run. Keep every item the playbook's reply names. Say "fixed" only when a reviewer agrees. When the reviewer says a window remains, write "narrowed" and name what is left.
 
 ## Playbooks
 
-Open a task list with `TaskCreate` whose first items are the matched playbook's steps, copied in verbatim, before any task-specific todos. A step you choose not to do stays in the list with a one-line `skip: <reason>`. Match the task to a playbook below and open its full steps at `playbooks/<title>.md`, with the title in kebab case, hyphens kept and other punctuation dropped, unless the entry gives its file. Copy its steps in verbatim.
+Match the task to a playbook and open its steps at `playbooks/<title>.md`, with the title in kebab case. Copy its steps into the task list first. A step you choose not to do stays in the list with a one-line `skip: <reason>`. Large, cross-cutting, or unattended work, or a task no playbook fits, routes to the **figure-it-out** skill.
 
-A large or cross-cutting effort (a migration across many call sites, an ambitious multi-part change), or work the user steps away from to trust later, routes to the **figure-it-out** skill (read `../figure-it-out/SKILL.md` and follow it) even when a narrower playbook like Feature fits. Use **figure-it-out** whenever no bundled playbook fits. It designs a bespoke, rigorous playbook for the task. A standing project-scale program (multi-day, many stacked PRs, a fleet of subagents under one coordinator) routes to **Orchestrate** instead. figure-it-out designs one bespoke run, orchestrate runs the program.
-
-- **Investigation.** Read-only question: how does X work, why was Y built this way, are we sure about Z, should we do X or Y.
-- **Bug fix.** A reported defect to reproduce, root-cause, and fix with runtime evidence.
-- **Perf issue.** A measured slowness to trace and improve against a baseline.
-- **Hillclimb.** Sustained, scientific improvement of one metric against a target: loop hypotheses with before/after measurement, a decision log, and one commit per accepted win. Distinct from Perf issue, which is a one-off fix.
-- **Runtime forensics.** Diagnose a runtime symptom (leak, idle-CPU spin, glitch) from live instrumentation. The deliverable is a diagnosis, not a fix.
-- **Trace forensics.** Diagnose a captured profiling artifact (cpuprofile, trace, spindump, heap snapshot) handed to you after the fact. The deliverable is a diagnosis, not a fix.
-- **Feature.** New or changed behavior, built from a named data shape.
-- **Refactoring.** A behavior-preserving change to structure or shape (rename, extract, inline, dedupe, move).
-- **Prototype.** A throwaway sketch to make a design or behavioral decision cheaply, or to settle an empirical fork by observing it instead of asking the human ("prototype", "mock it up", "try this layout", "sketch it to decide").
-- **Visual parity.** Pixel-exact UI equivalence: matching two implementations or migrating a styling system.
-- **Authoring or modifying a skill.** Writing or editing a SKILL.md. File: `playbooks/authoring-a-skill.md`.
-- **Eval.** Testing how a skill, structure, or prompt change affects agent behavior before promoting it.
-- **Babysit.** Driving a PR or a stack to merge-ready: conflicts, review threads, CI.
-- **Shipping.** The half after Babysit. Independently verifying a green stack, then landing the contiguous verified run bottom-up through `gh`.
-- **Autonomous run.** A long task to drive to completion without stopping ("run until done", "/loop until X").
-- **Orchestrate.** A standing project handed to one coordinator chat: multi-day, many stacked PRs, dozens to hundreds of subagents, minimal human turns ("run this whole project", "own this migration until it lands"). Distinct from Autonomous run, which drives one task to a predicate. Work one agent could finish inside the session's budget routes there, not here, however program-shaped the phrasing sounds.
-- **Autopilot-full.** A queue of independent PRs run to merged with full autonomy. One owner per PR carries build through merge, and the root swarm-verifies each PR before its owner merges ("autopilot this queue", "full autopilot", one-owner-per-PR programs).
-- **Autopilot-stack.** Autopilot-full without the merge. A queue of PRs built and verified with full autonomy, then handed to the operator to land. A PR stacks only on a PR it builds on ("autopilot-stack", "autopilot, don't merge", "stack them, don't ship", "build the stack, I'll land it").
-- **Session pickup.** Resuming or taking over a prior agent's in-flight work from a transcript or pushed branch.
-- **Pause safely.** Suspending in-flight work cleanly so it can be resumed, on an explicit pause, going offline, or a Claude Code restart. It also runs when the user types `/compact` in a flatpaper-mode session. The complement to Session pickup.
-- **Multi-phase or multi-PR plan.** Work that spans phases or stacked PRs. File: `playbooks/multi-phase-plan.md`.
-- **Worktree and simulator cleanup.** Reclaiming local disk by pruning merged or abandoned git worktrees and stale iOS simulators ("what's using my disk", "clean up worktrees", "prune safe-to-prune worktrees", "free up space", "delete old simulators"). File: `playbooks/worktree-cleanup.md`.
-- **Opening a PR.** Invoked at the end of every other playbook.
+Investigation, Bug fix, Perf issue, Hillclimb, Runtime forensics, Trace forensics, Feature, Refactoring, Prototype, Visual parity, Authoring a skill, Eval, Babysit, Shipping, Autonomous run, Autopilot-full, Autopilot-stack, Session pickup, Pause safely, Multi-phase plan, Worktree cleanup, Opening a PR.
 
 **Project playbooks.** A repository can add playbooks of its own under `.agents/playbooks/`, one Markdown file each. Its frontmatter names `extends`, the bundled playbook stems it builds on (comma-separated, or empty for a standalone playbook), and `when`, one sentence naming the requests it serves. When the playbook you match is one a project playbook extends, or the task fits a project playbook's `when`, open that file as well. Copy the bundled steps into the task list verbatim, then apply each change at the step its quoted text names, and stop where the project playbook says to stop. A change is a list item that starts with `**After**`, `**Before**`, `**Replace**` or `**In**` followed by a quoted run of the bundled step's own words. Before you apply a project playbook, run `node <plugin>/skills/flatpaper-mode/scripts/check-playbooks.mjs` from the repository root. It fails when a project playbook extends a playbook this version lacks, or quotes step text this version no longer has, which happens when a flatpaper-stack upgrade rewrites a step. Report each line it prints to the user and do not guess where an unanchored change belongs.

@@ -17,6 +17,11 @@ const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 const rules = [
   {
+    source: "e58dd04 sync: codex-run.sh carries the worker.md line",
+    file: "skills/flatpaper-mode/SKILL.md",
+    phrase: "`scripts/codex-run.sh` puts the same line first in every Codex seat's prompt, so a Codex brief leaves it out.",
+  },
+  {
     source: "#40 Codex delegates select flatpaper-agent like Claude delegates",
     file: "skills/flatpaper-mode/references/spawning.md",
     phrase: 'Pass `--agent flatpaper-agent` whenever the same step on Claude would use `subagent_type: "flatpaper-stack:flatpaper-agent"`.',
@@ -122,11 +127,6 @@ const rules = [
     phrase: "It is user-only, so I never invoke it.",
   },
   {
-    source: "#21 architect opens a task list with TaskCreate",
-    file: "skills/architect/SKILL.md",
-    phrase: "Then open a task list with `TaskCreate`, one entry per phase, before any other work.",
-  },
-  {
     source: "#22 figure-it-out loads the task tools first",
     file: "skills/figure-it-out/SKILL.md",
     phrase: "load the task tools and open a task list, per the Task list section of `../flatpaper-mode/SKILL.md`",
@@ -184,7 +184,7 @@ const rules = [
   {
     source: "#29 the short path waives the matching triggers",
     file: "skills/flatpaper-mode/SKILL.md",
-    phrase: "the `architect`, `interrogate` and throughput-checkpoint triggers above yield to its skips",
+    phrase: "When Feature's **Short path** applies, the `architect` and `interrogate` triggers yield to its skips.",
   },
   {
     source: "#29 a Codex reviewer runs with --write in a throwaway worktree",

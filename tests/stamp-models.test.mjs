@@ -61,7 +61,6 @@ function templateFence(text) {
 const catalog = JSON.parse(readFileSync(join(repo, "models.json"), "utf8"));
 const SETUP = "skills/setup-flatpaper-stack/SKILL.md";
 const MODE = "skills/flatpaper-mode/SKILL.md";
-const PLAN = "skills/flatpaper-mode/playbooks/multi-phase-plan.md";
 const SPAWNING = "skills/flatpaper-mode/references/spawning.md";
 
 test("the checked-in tree is in sync with models.json", () => {
@@ -125,12 +124,6 @@ test("the new and unchanged defaults read correctly in prose and template", () =
   }
 });
 
-test("multi-phase-plan states the swarm workers default instead of the parent model", () => {
-  const plan = read(repo, PLAN);
-  assert.ok(plan.includes("the `swarm workers` role (default `claude/sonnet`)"));
-  assert.ok(!plan.includes("the parent model unless"));
-});
-
 test("architect no longer restates the implicit effort", () => {
   assert.ok(!read(repo, "skills/architect/SKILL.md").includes("`medium` by default"));
   assert.ok(read(repo, SPAWNING).includes("A default written without an effort means `medium`."));
@@ -140,7 +133,7 @@ test("architect no longer restates the implicit effort", () => {
 test("invalid prose exits 2 and a write run touches no file", async (t) => {
   const cases = [
     ["unknown role", "Use the `how explorers` role (default `parent`).", /unknown role `how explorers`/],
-    ["loose default", "Verify it (the `pr verifier` role, default `codex/matched`, per the models file).", /loose default `codex\/matched`/],
+    ["loose default", "Verify it (the `trail reviewer` role, default `codex/matched`, per the models file).", /loose default `codex\/matched`/],
     ["loose effort", "Spawn each at `high` by default.", /loose effort `high`/],
   ];
   for (const [name, sentence, expected] of cases) {
@@ -171,7 +164,6 @@ test("a role stated in no skill prose exits 2", () => {
 test("a bad catalog lists every problem, one per line, and writes nothing", () => {
   const root = sandbox();
   setDefault(root, "arena cross-judge pool", ["claude/opus:medium"]);
-  setDefault(root, "reflect tooling", ["codex/matched:medium"]);
   setDefault(root, "bug-fix", ["parent:medium", "claude/opus:medium"]);
   setDefault(root, "swarm workers", ["claude/haiku"]);
   edit(root, "models.json", (t) => replaceOnce(t, '"role": "how explainer"', '"role": "how: explainer"'));
@@ -180,7 +172,7 @@ test("a bad catalog lists every problem, one per line, and writes nothing", () =
   const r = stamp(root);
   assert.equal(r.status, 2);
   const lines = r.out.trim().split("\n");
-  for (const role of ["arena cross-judge pool", "reflect tooling", "bug-fix", "swarm workers", "how: explainer"]) {
+  for (const role of ["arena cross-judge pool", "bug-fix", "swarm workers", "how: explainer"]) {
     assert.equal(lines.filter((l) => l.startsWith("models.json:") && l.includes(role)).length, 1, `one line names ${role}`);
   }
   assert.deepEqual(snapshot(root), before);
@@ -225,9 +217,8 @@ test("an unknown flag exits 2", () => {
 test("text that is not a default span survives a stamping write byte for byte", () => {
   const root = sandbox();
   const keep = [
-    [PLAN, "Ten lanes on `<swarm workers model>` at the PR head"],
     [SPAWNING, "A skill names a role, such as `how explorer`, and a default for it."],
-    [SETUP, "For panel roles (arena runners, architect runners, interrogate reviewers) the value is a list"],
+    [SETUP, "For panel roles (arena runners, interrogate reviewers) the value is a list"],
     ["skills/no-comments/SKILL.md", "default `main`"],
   ];
   for (const [file, text] of keep) assert.ok(read(root, file).includes(text), `fixture text present in ${file}`);
@@ -235,7 +226,6 @@ test("text that is not a default span survives a stamping write byte for byte", 
 
   assert.equal(stamp(root).status, 0);
   for (const [file, text] of keep) assert.ok(read(root, file).includes(text), `${file} keeps: ${text}`);
-  assert.ok(read(root, PLAN).includes("the `swarm workers` role (default `claude/haiku`)"), "the plan's span was stamped");
   assert.ok(read(root, "skills/swarm/SKILL.md").includes("the `swarm workers` role (default `claude/haiku`)"), "the swarm span was stamped");
 });
 

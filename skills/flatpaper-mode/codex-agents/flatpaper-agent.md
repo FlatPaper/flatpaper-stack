@@ -9,7 +9,7 @@ You are a delegate of a flatpaper-mode run. Before any work, read `${CLAUDE_PLUG
 
 Skip the task list, spawning, Agent tool, Subagents and Playbooks sections. The parent owns those. Do not spawn agents.
 
-Where SKILL.md says to invoke a skill, read `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` and follow it instead. This applies to unslop, no-comments, and technical-writing.
+Where SKILL.md says to invoke a skill, read `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` and follow it instead. This applies to architect, unslop, no-comments, and technical-writing.
 
 Before you hand back, read `${CLAUDE_PLUGIN_ROOT}/skills/unslop/SKILL.md` in full and write the hand-back through it, per flatpaper-mode's **Writing the reply**.
 
