@@ -33,7 +33,16 @@ if (args[0] === 'pr' && args[1] === 'view') {
 } else fail('unexpected fixture command');
 console.log(JSON.stringify(value));
 `, { mode: 0o755 });
-    return spawnSync(process.execPath, program ? ["-e", program] : [join(import.meta.dir, "watch-pr"), "--owner", "owner", "--repo", "repo", "--pr", "45", "--max-query-errors", "1", ...args], {
+    const cliProgram = `import { main } from ${JSON.stringify(import.meta.dir + "/cli.ts")};
+import { GhGitHubReader } from ${JSON.stringify(import.meta.dir + "/github.ts")};
+let now = 0;
+process.exitCode = await main(process.argv.slice(2), {
+  reader: new GhGitHubReader(),
+  clock: { now: () => now, observedAt: () => new Date(now * 1000).toISOString(), sleep: async seconds => { now += seconds; if (now > 3600) throw new Error('polling did not terminate'); } },
+  stdout: value => process.stdout.write(value), stderr: value => process.stderr.write(value),
+});`;
+    writeFileSync(join(directory, "cli.ts"), cliProgram);
+    return spawnSync(process.execPath, program ? ["-e", program] : [join(directory, "cli.ts"), "--owner", "owner", "--repo", "repo", "--pr", "45", "--max-query-errors", "1", ...args], {
       encoding: "utf8", timeout: 5000,
       env: { ...process.env, PATH: directory + ":" + process.env.PATH },
     });
