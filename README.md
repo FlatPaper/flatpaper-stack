@@ -1,6 +1,6 @@
 # flatpaper-stack
 
-A Claude Code plugin for agent work you can check and review later. Ported from poteto's [pstack](https://github.com/cursor/plugins/tree/main/pstack) for my developer environment, with features from [pstack-claude](https://github.com/michael-denyer/pstack-claude).
+A Claude Code plugin for agent work you can check and review later. It is FlatPaper's taste on poteto's [pstack](https://github.com/cursor/plugins/tree/main/pstack). I ported it to my developer environment, added features from [pstack-claude](https://github.com/michael-denyer/pstack-claude), and changed the parts I'd do differently.
 
 Three ideas carry it:
 
