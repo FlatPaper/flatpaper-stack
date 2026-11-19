@@ -170,7 +170,7 @@ test("a role stated in no skill prose exits 2", () => {
 
 test("a bad catalog lists every problem, one per line, and writes nothing", () => {
   const root = sandbox();
-  setDefault(root, "trail reviewer", ["claude/opus:medium"]);
+  setDefault(root, "arena cross-judge pool", ["claude/opus:medium"]);
   setDefault(root, "reflect tooling", ["codex/matched:medium"]);
   setDefault(root, "bug-fix", ["parent:medium", "claude/opus:medium"]);
   setDefault(root, "swarm workers", ["claude/haiku"]);
@@ -180,7 +180,7 @@ test("a bad catalog lists every problem, one per line, and writes nothing", () =
   const r = stamp(root);
   assert.equal(r.status, 2);
   const lines = r.out.trim().split("\n");
-  for (const role of ["trail reviewer", "reflect tooling", "bug-fix", "swarm workers", "how: explainer"]) {
+  for (const role of ["arena cross-judge pool", "reflect tooling", "bug-fix", "swarm workers", "how: explainer"]) {
     assert.equal(lines.filter((l) => l.startsWith("models.json:") && l.includes(role)).length, 1, `one line names ${role}`);
   }
   assert.deepEqual(snapshot(root), before);

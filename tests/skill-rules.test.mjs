@@ -157,9 +157,9 @@ const rules = [
     phrase: "with `isolation: \"worktree\"` when the output lives in the repo",
   },
   {
-    source: "#23 a verifier from the author's family does not count",
-    file: "skills/flatpaper-mode/playbooks/orchestrate.md",
-    phrase: "If none from another family is available, say so instead of substituting a Claude model.",
+    source: "reviewers prefer a family that did not write the work, and label a same-family fallback",
+    file: "skills/flatpaper-mode/references/spawning.md",
+    phrase: "Report it as a same-family review and name the model.",
   },
   {
     source: "#29 a fix claim needs a reviewer who agrees",
