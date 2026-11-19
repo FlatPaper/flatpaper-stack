@@ -11,24 +11,32 @@ import { loadConfig, openUpstream } from "../scripts/sync.mjs";
 const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
 const UPSTREAM = process.env.FLATPAPER_UPSTREAM;
 const skip = UPSTREAM ? false : "set FLATPAPER_UPSTREAM to a clone of https://github.com/cursor/plugins to run the real-tree and replay checks";
-const PIN = "bf0c7cd80abdbf7fe47b634978a7d1b4071f71a7";
+const PIN = "e58dd043600587dbaf58ba315e7f2b38373eeb43";
 const REPLAY_FROM = "519d36aa98955bf680db01bcde5fdfba686dc901";
 const REPLAY_CONFLICTS = [
   "agents/comment-sicko.md",
+  "agents/flatpaper-agent.md",
   "skills/architect/SKILL.md",
   "skills/arena/SKILL.md",
+  "skills/automate-me/SKILL.md",
   "skills/blast-radius/SKILL.md",
+  "skills/figure-it-out/SKILL.md",
   "skills/flatpaper-help/SKILL.md",
   "skills/flatpaper-mode/SKILL.md",
   "skills/flatpaper-mode/playbooks/autopilot-full.md",
-  "skills/flatpaper-mode/playbooks/multi-phase-plan.md",
-  "skills/flatpaper-mode/playbooks/orchestrate.md",
+  "skills/flatpaper-mode/playbooks/babysit.md",
+  "skills/flatpaper-mode/playbooks/opening-a-pr.md",
+  "skills/flatpaper-mode/playbooks/session-pickup.md",
+  "skills/flatpaper-mode/playbooks/shipping.md",
+  "skills/flatpaper-mode/playbooks/worktree-cleanup.md",
   "skills/interrogate/SKILL.md",
   "skills/ketchup-video/SKILL.md",
   "skills/no-comments/SKILL.md",
+  "skills/principle-explain-the-number/SKILL.md",
   "skills/recall/SKILL.md",
   "skills/reflect/SKILL.md",
   "skills/setup-flatpaper-stack/SKILL.md",
+  "skills/show-me-your-work/SKILL.md",
   "skills/swarm/SKILL.md",
 ];
 const NEVER_TOUCH = ["models.json", "scripts/", "tests/", "hooks/", ".claude-plugin/", "LICENSE", "README.md", "sync/forks.json", "sync/substitutions.json"];
@@ -86,7 +94,7 @@ test("a real run at the pin writes nothing", { skip }, () => {
   assert.deepEqual(snapshot(root), before);
 });
 
-test("replay: 519d36a to bf0c7cd rebuilds flatpaper's tree", { skip }, () => {
+test("replay: 519d36a to e58dd04 rebuilds flatpaper's tree", { skip }, () => {
   const root = copyRepo();
   const head = snapshot(root);
   const cfg = loadConfig(root);
@@ -101,7 +109,7 @@ test("replay: 519d36a to bf0c7cd rebuilds flatpaper's tree", { skip }, () => {
   } finally {
     up.close();
   }
-  assert.equal(range.size, 64, "the range touches 64 carried files");
+  assert.equal(range.size, 99, "the range touches 99 carried files");
   const forksInRange = [...range.keys()].filter((p) => cfg.forks.has(p));
   for (const [path, blob] of range) {
     if (cfg.forks.has(path)) continue;
