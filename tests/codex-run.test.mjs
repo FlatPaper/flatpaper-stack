@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const script = join(root, "skills/flatpaper-mode/scripts/codex-run.sh");
-const usage = "Usage: codex-run.sh <cwd> <model|default> <effort> <prompt-file> [read-only]\n";
+const usage = "Usage: codex-run.sh <cwd> <model|default> <effort> <prompt-file> [read-only] [--agent <name>]\n";
 
 function fixture(t, { versions = ["1.0.2", "1.0.10", "1.0.9"], exitCode = 0, promptName = "brief draft.md" } = {}) {
   const home = mkdtempSync(join(tmpdir(), "flatpaper-codex-run-"));
@@ -24,7 +24,9 @@ function fixture(t, { versions = ["1.0.2", "1.0.10", "1.0.9"], exitCode = 0, pro
     writeFileSync(companion, `
 import { readFileSync } from "node:fs";
 const input = readFileSync(0, "utf8");
-console.log(JSON.stringify({ version: ${JSON.stringify(version)}, argv: process.argv.slice(2), stdinEOF: true, input }));
+const argv = process.argv.slice(2);
+const promptContents = readFileSync(argv[argv.indexOf("--prompt-file") + 1], "utf8");
+console.log(JSON.stringify({ version: ${JSON.stringify(version)}, argv, stdinEOF: true, input, promptContents }));
 console.error("companion progress");
 process.exit(${exitCode});
 `);
@@ -52,6 +54,88 @@ test("write mode passes the exact argv", (t) => {
   const result = f.run();
   assert.equal(result.status, 0);
   assert.deepEqual(JSON.parse(result.stdout).argv, [...f.expected, "--model", "gpt-5.4", "--write"]);
+  assert.equal(JSON.parse(result.stdout).promptContents, readFileSync(f.prompt, "utf8"));
+});
+
+test("--agent sends the resolved agent body and verbatim brief through a combined prompt", (t) => {
+  const f = fixture(t);
+  f.options.env.CLAUDE_PLUGIN_ROOT = "/ignore-this-environment-root";
+  const brief = "Inspect the project.\r\nKeep `literal $text` verbatim without a final newline.";
+  writeFileSync(f.prompt, brief);
+  const result = f.run([...f.args, "--agent", "flatpaper-agent"]);
+  assert.equal(result.status, 0, result.stderr);
+  const { argv, promptContents } = JSON.parse(result.stdout);
+  const combined = f.prompt.replace(/\.[^.]*$/, ".flatpaper-agent.prompt.md");
+  assert.deepEqual(argv, [...f.expected.slice(0, -1), combined, "--model", "gpt-5.4", "--write"]);
+  assert.ok(promptContents.startsWith("# Flatpaper Codex delegate\n"));
+  const body = promptContents.slice(0, -brief.length);
+  assert.doesNotMatch(body, /^name:|^description:|^---\nname:/m);
+  assert.ok(body.includes(`${realpathSync(root)}/skills/flatpaper-mode/SKILL.md`));
+  assert.ok(body.includes(`${realpathSync(root)}/skills/unslop/SKILL.md`));
+  assert.ok(!promptContents.includes("${CLAUDE_PLUGIN_ROOT}"));
+  assert.ok(promptContents.endsWith(`\n---\n${brief}`));
+  assert.equal(readFileSync(combined, "utf8"), promptContents);
+  assert.equal(readFileSync(f.prompt, "utf8"), brief);
+  assert.equal(result.stderr, `codex progress log: ${f.log}\n`);
+  writeFileSync(combined, "stale combined prompt");
+  const rerun = f.run([...f.args, "--agent", "flatpaper-agent"]);
+  assert.equal(rerun.status, 0, rerun.stderr);
+  assert.equal(JSON.parse(rerun.stdout).promptContents, promptContents);
+});
+
+test("--agent preserves plugin-root placeholders in the brief verbatim", (t) => {
+  const f = fixture(t);
+  const brief = "Keep ${CLAUDE_PLUGIN_ROOT} in the brief.\n";
+  writeFileSync(f.prompt, brief);
+  const result = f.run([...f.args, "--agent", "flatpaper-agent"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(JSON.parse(result.stdout).promptContents.endsWith(`\n---\n${brief}`));
+});
+
+test("--agent resolves an extensionless relative brief beside its combined prompt", (t) => {
+  const f = fixture(t, { promptName: "brief" });
+  const result = spawnSync(script, [f.cwd, "default", "high", "brief", "--agent", "flatpaper-agent"],
+    { ...f.options, cwd: f.cwd });
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, result.stderr);
+  const prompt = join(realpathSync(f.cwd), "brief.flatpaper-agent.prompt.md");
+  assert.deepEqual(JSON.parse(result.stdout).argv,
+    ["task", "--cwd", f.cwd, "--effort", "high", "--prompt-file", prompt, "--write"]);
+  assert.equal(readFileSync(prompt, "utf8"), JSON.parse(result.stdout).promptContents);
+});
+
+for (const extra of [["read-only", "--agent", "flatpaper-agent"], ["--agent", "flatpaper-agent", "read-only"]]) {
+  test(`--agent accepts read-only in the order ${extra.join(" ")}`, (t) => {
+    const f = fixture(t);
+    const result = f.run([...f.args, ...extra]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(JSON.parse(result.stdout).argv,
+      [...f.expected.slice(0, -1), f.prompt.replace(/\.[^.]*$/, ".flatpaper-agent.prompt.md"), "--model", "gpt-5.4"]);
+  });
+}
+
+for (const name of ["missing-agent", "nested/agent", "..", "../flatpaper-agent", "", "Flatpaper", "-agent"]) {
+  test(`unknown agent ${JSON.stringify(name)} exits 2 before running the companion`, (t) => {
+    const f = fixture(t, { versions: [] });
+    const result = f.run([...f.args, "--agent", name]);
+    assert.deepEqual([result.status, result.stdout, result.stderr], [2, "",
+      `error: unknown codex agent: ${name} (looked in ${realpathSync(root)}/skills/flatpaper-mode/codex-agents)\n`]);
+  });
+}
+
+for (const extra of [["--agent"], ["read-only", "read-only"], ["--agent", "flatpaper-agent", "--agent", "flatpaper-agent"], ["--agent", "flatpaper-agent", "--background"]]) {
+  test(`invalid options ${extra.join(" ")} produce a usage error`, (t) => {
+    const f = fixture(t);
+    const result = f.run([...f.args, ...extra]);
+    assert.deepEqual([result.status, result.stdout, result.stderr], [2, "", usage]);
+  });
+}
+
+test("cwd validation precedes optional argument validation", (t) => {
+  const f = fixture(t);
+  const missing = join(f.home, "missing project");
+  const result = f.run([missing, ...f.args.slice(1), "--agent", "../agent"]);
+  assert.deepEqual([result.status, result.stdout, result.stderr], [2, "", `error: cwd not found: ${missing}\n`]);
 });
 
 test("read-only mode passes the exact argv without --write", (t) => {
@@ -74,7 +158,7 @@ test("stdout contains only companion output and progress appends to the log", (t
   const result = f.run();
   assert.equal(result.status, 0);
   assert.equal(result.stdout, JSON.stringify({
-    version: "1.0.10", argv: [...f.expected, "--model", "gpt-5.4", "--write"], stdinEOF: true, input: "",
+    version: "1.0.10", argv: [...f.expected, "--model", "gpt-5.4", "--write"], stdinEOF: true, input: "", promptContents: "Inspect the project.\n",
   }) + "\n");
   assert.equal(result.stderr, `codex progress log: ${f.log}\n`);
   assert.equal(readFileSync(f.log, "utf8"), "earlier progress\ncompanion progress\n");

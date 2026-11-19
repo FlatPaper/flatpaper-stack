@@ -17,6 +17,16 @@ const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 const rules = [
   {
+    source: "#40 Codex delegates select flatpaper-agent like Claude delegates",
+    file: "skills/flatpaper-mode/references/spawning.md",
+    phrase: 'Pass `--agent flatpaper-agent` whenever the same step on Claude would use `subagent_type: "flatpaper-stack:flatpaper-agent"`.',
+  },
+  {
+    source: "#40 Codex flatpaper-agent reads unslop before its hand-back",
+    file: "skills/flatpaper-mode/codex-agents/flatpaper-agent.md",
+    phrase: "Before you hand back, read `${CLAUDE_PLUGIN_ROOT}/skills/unslop/SKILL.md` in full and write the hand-back through it, per flatpaper-mode's **Writing the reply**.",
+  },
+  {
     source: "#22 load the deferred task tools with ToolSearch",
     file: "skills/flatpaper-mode/SKILL.md",
     phrase: "Claude Code defers `TaskCreate` and `TaskUpdate`, so load them with `ToolSearch`",
@@ -252,6 +262,15 @@ const rules = [
     phrase: "a fresh delegate on that step's role folds the grafts into the base's worktree",
   },
 ];
+
+test("Claude and Codex flatpaper agents keep the same required skill paths", () => {
+  for (const file of ["agents/flatpaper-agent.md", "skills/flatpaper-mode/codex-agents/flatpaper-agent.md"]) {
+    const agent = readFileSync(join(repo, file), "utf8");
+    for (const skill of ["flatpaper-mode", "unslop"]) {
+      assert.ok(agent.includes(`\${CLAUDE_PLUGIN_ROOT}/skills/${skill}/SKILL.md`), `${file} names ${skill}`);
+    }
+  }
+});
 
 test("every pinned phrase is distinctive enough to pin a rule", () => {
   const phrases = rules.map((r) => r.phrase);
