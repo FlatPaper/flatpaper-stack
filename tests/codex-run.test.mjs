@@ -127,6 +127,13 @@ test("a bad fifth argument produces a one-line usage error and exit 2", (t) => {
   assert.deepEqual([result.status, result.stdout, result.stderr], [2, "", usage]);
 });
 
+test("a nonexistent cwd names the path, exits 2, and never runs the companion", (t) => {
+  const f = fixture(t);
+  const missing = join(f.home, "missing project");
+  const result = f.run([missing, "gpt-5.4", "high", f.prompt]);
+  assert.deepEqual([result.status, result.stdout, result.stderr], [2, "", `error: cwd not found: ${missing}\n`]);
+});
+
 test("a missing companion names the path pattern and exits 1", (t) => {
   const f = fixture(t, { versions: [] });
   const result = f.run();

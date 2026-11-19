@@ -3,6 +3,10 @@ if [ "$#" -lt 4 ] || [ "$#" -gt 5 ] || { [ "$#" -eq 5 ] && [ "$5" != read-only ]
   printf '%s\n' 'Usage: codex-run.sh <cwd> <model|default> <effort> <prompt-file> [read-only]' >&2
   exit 2
 fi
+if [ ! -d "$1" ]; then
+  printf 'error: cwd not found: %s\n' "$1" >&2
+  exit 2
+fi
 
 shopt -s nullglob
 companions=("$HOME"/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs)
