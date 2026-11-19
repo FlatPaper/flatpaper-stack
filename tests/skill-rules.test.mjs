@@ -17,6 +17,11 @@ const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 const rules = [
   {
+    source: "e58dd04 sync: bullet-only playbooks still copy one task per item",
+    file: "skills/flatpaper-mode/SKILL.md",
+    phrase: "In a playbook with no numbered steps, each paragraph and each list item is a step.",
+  },
+  {
     source: "e58dd04 sync: codex-run.sh carries the worker.md line",
     file: "skills/flatpaper-mode/SKILL.md",
     phrase: "`scripts/codex-run.sh` puts the same line first in every Codex seat's prompt, so a Codex brief leaves it out.",
