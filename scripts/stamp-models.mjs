@@ -17,10 +17,9 @@ export const SCAN_DIRS = ["skills", "agents", "hooks"];
 const KINDS = ["single", "panel", "pool"];
 const FAMILIES = {
   any: () => true,
-  claude: (ref) => ref.provider === "parent" || ref.provider === "claude",
   other: (ref) => ref.provider !== "parent" && ref.provider !== "claude",
 };
-const FAMILY_RULE = { claude: "needs MCP tools, so only parent or claude/*", other: "needs a family other than Claude, so no parent or claude/*" };
+const FAMILY_RULE = { other: "needs a family other than Claude, so no parent or claude/*" };
 
 export class CatalogError extends Error {
   constructor(problems) {
