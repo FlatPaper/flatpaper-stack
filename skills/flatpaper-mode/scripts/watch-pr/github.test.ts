@@ -36,6 +36,7 @@ describe("checks fallback chain", () => {
       fastPath: { kind: "checks", checks: [passingCheck("fast")] },
     });
     const read = await resolveChecks(reader, context);
+    if (read.kind !== "reported") throw new Error("expected reported checks");
     expect(read.source).toBe("gh-pr-checks");
     expect(read.checks.map((check) => check.name)).toEqual(["fast"]);
     expect(reader.calls).toEqual(["checksFastPath"]);
@@ -50,6 +51,7 @@ describe("checks fallback chain", () => {
       ],
     });
     const read = await resolveChecks(reader, context);
+    if (read.kind !== "reported") throw new Error("expected reported checks");
     expect(read.source).toBe("graphql-rollup");
     expect(read.checks.map((check) => check.name)).toEqual(["first", "second"]);
     expect(reader.calls).toEqual([
@@ -64,9 +66,9 @@ describe("checks fallback chain", () => {
       fastPath: { kind: "checks", checks: [] },
       rollupPages: [{ checks: [pendingCheck("fallback")], endCursor: null }],
     });
-    expect((await resolveChecks(reader, context)).checks[0].name).toBe(
-      "fallback"
-    );
+    const read = await resolveChecks(reader, context);
+    if (read.kind !== "reported") throw new Error("expected reported checks");
+    expect(read.checks[0].name).toBe("fallback");
     expect(reader.calls).toEqual(["checksFastPath", "checkRollupPage:null"]);
   });
 

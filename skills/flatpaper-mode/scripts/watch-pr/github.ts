@@ -6,7 +6,7 @@ export const REVIEW_THREADS_QUERY =
 export const PR_COMMIT_STATUS_QUERY =
   "\nquery PrCommitStatuses($owner: String!, $repo: String!, $pr: Int!) {\n  repository(owner: $owner, name: $repo) {\n    pullRequest(number: $pr) {\n      commits(last: 50) {\n        nodes {\n          commit {\n            oid\n            statusCheckRollup {\n              state\n            }\n          }\n        }\n      }\n    }\n  }\n}\n";
 export const PR_CHECK_ROLLUP_QUERY =
-  "\nquery PrCheckRollup($owner: String!, $repo: String!, $pr: Int!, $after: String) {\n  repository(owner: $owner, name: $repo) {\n    pullRequest(number: $pr) {\n      commits(last: 1) {\n        nodes {\n          commit {\n            statusCheckRollup {\n              contexts(first: 100, after: $after) {\n                pageInfo {\n                  hasNextPage\n                  endCursor\n                }\n                nodes {\n                  __typename\n                  ... on CheckRun {\n                    name\n                    status\n                    conclusion\n                    detailsUrl\n                  }\n                  ... on StatusContext {\n                    context\n                    state\n                    targetUrl\n                  }\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}\n";
+  "\nquery PrCheckRollup($owner: String!, $repo: String!, $pr: Int!, $after: String) {\n  repository(owner: $owner, name: $repo) {\n    pullRequest(number: $pr) {\n      commits(last: 1) {\n        nodes {\n          commit {\n            oid\n            statusCheckRollup {\n              contexts(first: 100, after: $after) {\n                pageInfo {\n                  hasNextPage\n                  endCursor\n                }\n                nodes {\n                  __typename\n                  ... on CheckRun {\n                    name\n                    status\n                    conclusion\n                    detailsUrl\n                  }\n                  ... on StatusContext {\n                    context\n                    state\n                    targetUrl\n                  }\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}\n";
 
 interface CommandResult {
   readonly code: number;
@@ -540,6 +540,11 @@ export class GhGitHubReader implements T.GitHubReader {
         if (!(error instanceof WatcherQueryError)) throw error;
       }
     }
+    if (
+      result.code === 1 &&
+      firstLine(result.stderr).startsWith("no checks reported on the ")
+    )
+      return { kind: "none-reported" };
     return { kind: "unusable", exitCode: result.code, stderr: result.stderr };
   }
   async checkRollupPage(
@@ -558,8 +563,20 @@ export class GhGitHubReader implements T.GitHubReader {
       at(commits[commits.length - 1], ["commit"]),
       "commit"
     );
-    if (commit.statusCheckRollup === null)
-      return { checks: [], endCursor: null };
+    if (commit.statusCheckRollup === null) {
+      const head = string(commit.oid, "commit.oid");
+      checkUnreportedSuites(
+        await runJson([
+          "gh",
+          "api",
+          "--paginate",
+          "--slurp",
+          `repos/${context.owner}/${context.repo}/commits/${head}/check-suites?per_page=100`,
+        ]),
+        head
+      );
+      return { rollup: "absent", checks: [], endCursor: null };
+    }
     const contexts = record(
       at(commit, ["statusCheckRollup", "contexts"]),
       "contexts"
@@ -610,22 +627,68 @@ export class GhGitHubReader implements T.GitHubReader {
   }
 }
 
+function checkUnreportedSuites(pages: unknown, head: string): void {
+  const slurped = list(pages, "check suite pages");
+  if (slurped.length === 0) missing("check suite pages", slurped);
+  for (const page of slurped) {
+    for (const value of list(at(page, ["check_suites"]), "check_suites")) {
+      const suite = record(value, "check suite");
+      if (string(suite.head_sha, "check suite.head_sha") !== head)
+        missing(
+          "check suite.head_sha must match the queried head",
+          suite.head_sha
+        );
+      const status = string(suite.status, "check suite.status");
+      const conclusion = optionalString(
+        suite.conclusion,
+        "check suite.conclusion"
+      );
+      if (
+        status === "completed" &&
+        ["success", "neutral", "skipped"].includes(conclusion ?? "")
+      )
+        continue;
+      if (
+        status === "queued" &&
+        suite.latest_check_runs_count === 0 &&
+        isRecord(suite.app) &&
+        typeof suite.app.slug === "string" &&
+        suite.app.slug !== "github-actions"
+      )
+        continue;
+      const reason =
+        conclusion === "action_required"
+          ? "requires maintainer approval or other action"
+          : `is ${conclusion ?? status}`;
+      throw new ChecksUnavailable(
+        `head ${head} has no check runs, but a check suite ${reason}; this is not a repository without CI`
+      );
+    }
+  }
+}
 export async function resolveChecks(
   reader: T.GitHubReader,
   context: T.PrContext
 ): Promise<T.CheckRead> {
   const fast = await reader.checksFastPath(context);
   const direct = fast.kind === "checks" ? nonEmpty(fast.checks) : null;
-  if (direct !== null) return { source: "gh-pr-checks", checks: direct };
+  if (direct !== null)
+    return { kind: "reported", source: "gh-pr-checks", checks: direct };
   const checks: T.Check[] = [];
   let after: string | null = null;
   do {
     const page = await reader.checkRollupPage(context, after);
+    if (page.rollup === "absent") {
+      if (fast.kind === "none-reported" && after === null)
+        return { kind: "no-checks" };
+      break;
+    }
     checks.push(...page.checks);
     after = page.endCursor;
   } while (after !== null);
   const fallback = nonEmpty(checks);
-  if (fallback !== null) return { source: "graphql-rollup", checks: fallback };
+  if (fallback !== null)
+    return { kind: "reported", source: "graphql-rollup", checks: fallback };
   const suffix =
     fast.kind === "unusable"
       ? `fast path exit=${fast.exitCode}; GraphQL rollup was empty${firstLine(fast.stderr) ? `; ${firstLine(fast.stderr)}` : ""}`
