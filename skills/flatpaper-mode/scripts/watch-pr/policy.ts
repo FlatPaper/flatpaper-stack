@@ -52,10 +52,34 @@ async function mergeAssessment(
     }),
   };
 }
+export const NO_CHECKS_CONFIRM_SECONDS = 60;
+export type NoChecksConfirmer = (
+  head: Pick<T.PullRequestFacts, "context" | "headRefOid">
+) => boolean;
+export function noChecksConfirmer(
+  clock: Pick<WatchClock, "now">
+): NoChecksConfirmer {
+  const firstSeen = new Map<
+    string,
+    { readonly headRefOid: string; readonly at: number }
+  >();
+  return (head) => {
+    if (head.headRefOid === null) return false;
+    const key = `${head.context.owner}/${head.context.repo}#${head.context.number}`;
+    const prior = firstSeen.get(key);
+    const now = clock.now();
+    if (prior?.headRefOid === head.headRefOid)
+      return now - prior.at >= NO_CHECKS_CONFIRM_SECONDS;
+    firstSeen.set(key, { headRefOid: head.headRefOid, at: now });
+    return false;
+  };
+}
+const neverConfirms: NoChecksConfirmer = () => false;
 async function noChecksCi(
   reader: T.GitHubReader,
-  facts: T.PullRequestFacts
-): Promise<T.CiNone> {
+  facts: T.PullRequestFacts,
+  confirmNoChecks = neverConfirms
+): Promise<T.CiNone | T.CiUnreported> {
   const merge = await mergeAssessment(reader, facts);
   if (merge.anyCommitReported || merge.github.kind === "refused")
     throw new ChecksUnavailable(
@@ -65,13 +89,10 @@ async function noChecksCi(
     throw new ChecksUnavailable(
       `no checks reported on head ${facts.headRefOid}, and GitHub has not computed mergeability yet`
     );
-  return {
-    kind: "ci-none",
-    failed: [],
-    pending: [],
-    hadPreviousPassingCi: false,
-    github: merge.github,
-  };
+  const none = { failed: [], pending: [], hadPreviousPassingCi: false } as const;
+  return confirmNoChecks(facts)
+    ? { ...none, kind: "ci-none", github: merge.github }
+    : { ...none, kind: "ci-unreported" };
 }
 async function reportedCi(
   reader: T.GitHubReader,
@@ -145,6 +166,7 @@ export async function readSnapshot(args: {
   readonly reader: T.GitHubReader;
   readonly context: T.PrContext;
   readonly pendingHistory: "include" | "omit";
+  readonly confirmNoChecks?: NoChecksConfirmer;
   readonly allowDraft: boolean;
 }): Promise<T.PrSnapshot> {
   const facts = await args.reader.pullRequest(args.context);
@@ -156,7 +178,7 @@ export async function readSnapshot(args: {
   const checks = await resolveChecks(args.reader, args.context);
   const ci =
     checks.kind === "no-checks"
-      ? await noChecksCi(args.reader, facts)
+      ? await noChecksCi(args.reader, facts, args.confirmNoChecks)
       : await reportedCi(args.reader, facts, checks, args.pendingHistory);
   return {
     kind: "open",
@@ -265,6 +287,8 @@ export function classifyPr(
     if (blocker !== null) return { kind: "blocker", blocker };
   if (row.kind === "open" && row.ci.kind === "ci-pending")
     return { kind: "waiting", frontier: row.context, pending: row.ci.pending };
+  if (row.kind === "open" && row.ci.kind === "ci-unreported")
+    return { kind: "checks-unreported", frontier: row.context };
   const ready = readyContribution(row, allowDraft);
   if (ready === null) throw new Error("snapshot has no classified decision");
   return ready.kind === "merged-pr"
@@ -291,6 +315,9 @@ export function selectTierMajorStackDecision(
         frontier: row.context,
         pending: row.ci.pending,
       };
+  for (const row of rows)
+    if (row.kind === "open" && row.ci.kind === "ci-unreported")
+      return { kind: "checks-unreported", frontier: row.context };
   const prs = nonEmpty(
     rows
       .map((row) => readyContribution(row, allowDraft))
@@ -465,6 +492,7 @@ export async function runSimple(args: {
   readonly options: T.PollingOptions;
 }): Promise<T.TerminalVerdict> {
   const stamp = verdictFactory(args.dependencies.clock, args.mode);
+  const confirmNoChecks = noChecksConfirmer(args.dependencies.clock);
   const step = async (): Promise<StepResult<T.TerminalVerdict>> => {
     const rows: T.PrSnapshot[] = [];
     for (const context of args.contexts)
@@ -473,6 +501,7 @@ export async function runSimple(args: {
           reader: args.dependencies.reader,
           context,
           pendingHistory: "include",
+          confirmNoChecks,
           allowDraft: args.options.allowDraft,
         })
       );
@@ -533,12 +562,16 @@ export async function runSimple(args: {
           args.mode
         ),
       };
+    const reason =
+      decision.kind === "checks-unreported"
+        ? { kind: "checks-unreported" as const }
+        : { kind: "pending-checks" as const, pending: decision.pending };
     args.dependencies.emit(
       stamp({
         kind: "WAITING",
         terminal: false,
         frontier: decision.frontier,
-        reason: { kind: "pending-checks", pending: decision.pending },
+        reason,
       })
     );
     return {
@@ -549,7 +582,7 @@ export async function runSimple(args: {
           kind: "TIMEOUT",
           terminal: true,
           exitCode: 5,
-          reason: { kind: "pending-checks", pending: decision.pending },
+          reason,
         }),
     };
   };
@@ -677,6 +710,7 @@ export type QueueEvaluation =
       readonly state: QueueState;
       readonly frontier: T.PrContext;
       readonly reason:
+        | { readonly kind: "checks-unreported" }
         | {
             readonly kind: "pending-checks";
             readonly pending: T.NonEmpty<T.PendingCheck>;
@@ -732,13 +766,17 @@ export function evaluateQueue(
   const pending =
     row.kind === "open" && row.ci.kind === "ci-pending" ? row.ci.pending : null;
   const reason =
-    pending === null
-      ? ({ kind: "merge-queue", unmergedCount: active.length } as const)
-      : ({ kind: "pending-checks", pending } as const);
+    row.kind === "open" && row.ci.kind === "ci-unreported"
+      ? ({ kind: "checks-unreported" } as const)
+      : pending === null
+        ? ({ kind: "merge-queue", unmergedCount: active.length } as const)
+        : ({ kind: "pending-checks", pending } as const);
   const key =
     reason.kind === "pending-checks"
       ? `pending:${frontier.number}:${reason.pending.length}`
-      : `queue:${frontier.number}:${reason.unmergedCount}`;
+      : reason.kind === "checks-unreported"
+        ? `unreported:${frontier.number}`
+        : `queue:${frontier.number}:${reason.unmergedCount}`;
   return {
     kind: "waiting",
     state: { ...state, frontier, lastWaitKey: key },
@@ -754,6 +792,7 @@ export async function runQueued(args: {
 }): Promise<T.QueueTerminalVerdict> {
   let state = createQueueState(args.contexts, args.dependencies.clock.now());
   const stamp = verdictFactory(args.dependencies.clock, "queued-stack");
+  const confirmNoChecks = noChecksConfirmer(args.dependencies.clock);
   args.dependencies.emit(
     stamp({ kind: "QUEUE", terminal: false, queue: args.contexts })
   );
@@ -786,6 +825,7 @@ export async function runQueued(args: {
       reader: args.dependencies.reader,
       context,
       pendingHistory: "omit",
+      confirmNoChecks,
       allowDraft: args.options.allowDraft,
     });
     const applied = applyQueueSnapshot(

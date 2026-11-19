@@ -151,7 +151,13 @@ export interface CiNone {
   readonly hadPreviousPassingCi: false;
   readonly github: GitHubMergeAllowed;
 }
-export type CiState = CiFailing | CiGithubRejected | CiPending | CiClean | CiNone;
+export interface CiUnreported {
+  readonly kind: "ci-unreported";
+  readonly failed: readonly [];
+  readonly pending: readonly [];
+  readonly hadPreviousPassingCi: false;
+}
+export type CiState = CiFailing | CiGithubRejected | CiPending | CiClean | CiNone | CiUnreported;
 export type PrSnapshot =
   | {
       readonly kind: "merged" | "closed";
@@ -255,14 +261,20 @@ export interface WaitingDecision {
   readonly frontier: PrContext;
   readonly pending: NonEmpty<PendingCheck>;
 }
+export interface ChecksUnreportedDecision {
+  readonly kind: "checks-unreported";
+  readonly frontier: PrContext;
+}
 export type PrDecision =
   | { readonly kind: "blocker"; readonly blocker: MergeBlocker }
   | WaitingDecision
+  | ChecksUnreportedDecision
   | { readonly kind: "ready"; readonly pr: ReadyPr }
   | { readonly kind: "merged"; readonly pr: MergedPr };
 export type StackDecision =
   | { readonly kind: "blocker"; readonly blocker: MergeBlocker }
   | WaitingDecision
+  | ChecksUnreportedDecision
   | { readonly kind: "clear"; readonly prs: NonEmpty<ReadyPr | MergedPr> };
 export type WatchMode = "single" | "stack" | "queued-stack";
 interface EventBase<K extends string, M extends WatchMode = WatchMode> {
@@ -295,6 +307,7 @@ export type ProgressVerdict =
   | (Progress<"WAITING"> & {
       readonly frontier: PrContext;
       readonly reason:
+        | { readonly kind: "checks-unreported" }
         | {
             readonly kind: "pending-checks";
             readonly pending: NonEmpty<PendingCheck>;
@@ -342,6 +355,7 @@ export type BlockerVerdict =
     });
 export type TimeoutVerdict = Terminal<"TIMEOUT", 5> & {
   readonly reason:
+    | { readonly kind: "checks-unreported" }
     | {
         readonly kind: "pending-checks";
         readonly pending: NonEmpty<PendingCheck>;

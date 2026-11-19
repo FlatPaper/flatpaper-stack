@@ -5,6 +5,8 @@ function ciCell(row: T.PrSnapshot): string {
   if (row.kind !== "open") return "\u2014";
   const was = row.ci.hadPreviousPassingCi ? ", was ✅" : "";
   switch (row.ci.kind) {
+    case "ci-unreported":
+      return "⏳ no checks reported yet";
     case "ci-none":
       return "➖ no checks";
     case "ci-clean":
@@ -139,6 +141,8 @@ export function renderPretty(verdict: T.WatcherVerdict): string {
     case "STATUS":
       return renderStatusTable(verdict.rows);
     case "WAITING":
+      if (verdict.reason.kind === "checks-unreported")
+        return `WAITING: frontier=#${verdict.frontier.number}; no checks reported yet; confirming\n`;
       return verdict.reason.kind === "pending-checks"
         ? `WAITING: frontier=#${verdict.frontier.number}; ${verdict.reason.pending.length} check${verdict.reason.pending.length === 1 ? "" : "s"} pending\n`
         : `WAITING: frontier=#${verdict.frontier.number} is blocker-free; waiting for merge queue (${verdict.reason.unmergedCount} PR${verdict.reason.unmergedCount === 1 ? "" : "s"} unmerged)\n`;
@@ -164,6 +168,8 @@ export function renderPretty(verdict: T.WatcherVerdict): string {
     case "COMPLETE":
       return `COMPLETE: queued stack merged (${verdict.queue.length} PR${verdict.queue.length === 1 ? "" : "s"})\n`;
     case "TIMEOUT":
+      if (verdict.reason.kind === "checks-unreported")
+        return "TIMEOUT: no checks reported on the head commit yet\n";
       if (verdict.reason.kind === "pending-checks")
         return "TIMEOUT: checks still pending\n";
       if (verdict.reason.kind === "status-unavailable")

@@ -43,7 +43,7 @@ import { parsePrNumber } from "./types.ts";
 import type * as T from "./types.ts";
 
 const context = (number = 1): T.PrContext => ({ owner: "owner", repo: "repo", number: parsePrNumber(number) });
-const noChecks = () => fakeReader({ fastPath: { kind: "none-reported" }, rollupPages: [{ rollup: "absent", checks: [], endCursor: null }], commitRollups: [{ oid: "head", state: null }] });
+const noChecks = () => ({ ...fakeReader({ fastPath: { kind: "none-reported" }, rollupPages: [{ rollup: "absent", checks: [], endCursor: null }], commitRollups: [{ oid: "head", state: null }] }), async checkRollupPage() { return { rollup: "absent" as const, checks: [], endCursor: null }; } });
 const options = { interval: 10, sweepInterval: 300, timeout: 180, maxQueryErrors: 1, allowDraft: false };
 function ticking() {
   let now = 0;
