@@ -22,7 +22,7 @@ The remaining triggers live only here:
 - First message → restate the user's goal and the smallest change that meets it, then proceed. Open each subagent brief, PR `## Why`, and final report with the goal.
 - Starting an `Agent` subagent → the first line of its kickoff is `Read <path>/worker.md before anything else.`, with `<path>` the absolute path of this skill's folder. `scripts/codex-run.sh` puts the same line first in every Codex seat's prompt, so a Codex brief leaves it out. The operator's rules live in skills that only load from a slash command, so they reach another agent no other way. Keep the rest of the kickoff to the goal and the task, plus this file's absolute path for a `flatpaper-agent`.
 - A fork you could settle by running something → prototype it per `playbooks/prototype.md` instead of asking.
-- Code → name the data shape first. Across a function boundary → **architect**. Fan-out → **swarm**. Bakeoff → **arena**. Contested design → **interrogate**. When Feature's **Short path** applies, the `architect` and `interrogate` triggers yield to its skips.
+- Code → name the data shape first. Across a function boundary → **architect**. Fan-out → **swarm**. Bakeoff → **arena**. Contested design → **interrogate**. When Feature's **Short path** applies, the `architect` and `interrogate` triggers yield to its skips. When Bug fix's **Focused-fix exception** applies, the `architect` trigger yields to its skips.
 - Prose, your reply included → **unslop**. Docs, PR descriptions, commit messages → **technical-writing**.
 - Before commit → `/flatpaper-stack:deslop`. Before review → **no-comments**.
 - Shipping UI / IDE / CLI → `control-ui` or `control-cli`, both bundled with this plugin.
