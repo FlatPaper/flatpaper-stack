@@ -15,7 +15,7 @@ let value;
 if (args[0] === 'pr' && args[1] === 'view') {
   value = { mergeable: 'MERGEABLE', mergeStateStatus: 'CLEAN', reviewDecision: '', headRefOid: 'head', headRefName: 'feature', baseRefName: 'main', state: 'OPEN', mergedAt: null, isDraft: false, ...s.facts };
 } else if (args[0] === 'pr' && args[1] === 'checks') {
-  if (s.fast === 'reported') value = [{ name: 'ci', state: 'SUCCESS', bucket: 'pass' }];
+  if (s.fast === 'reported') value = s.checks ?? [{ name: 'third-party', state: 'SUCCESS', bucket: 'pass' }];
   else if (s.fast === 'empty') value = [];
   else fail(s.fast === 'error' ? 'HTTP 401' : "no checks reported on the 'feature' branch");
 } else if (args.some(a => a.includes('query PrCheckRollup'))) {
@@ -24,6 +24,7 @@ if (args[0] === 'pr' && args[1] === 'view') {
   value = { data: { repository: { pullRequest: { commits: { nodes: s.rollup === 'missing-head' ? [] : [{ commit }] } } } } };
 } else if (args.some(a => a.includes('/check-suites'))) {
   if (s.suites === 'error') fail('HTTP 403');
+  if (!args.some(a => a.includes('/commits/' + (s.facts?.headRefOid ?? 'head') + '/check-suites?'))) fail('wrong suite head');
   if (!args.includes('--paginate') || !args.includes('--slurp')) fail('pagination required');
   value = s.pages ?? [{ check_suites: s.suites ?? [] }];
 } else if (args.some(a => a.includes('query PrCommitStatuses'))) {

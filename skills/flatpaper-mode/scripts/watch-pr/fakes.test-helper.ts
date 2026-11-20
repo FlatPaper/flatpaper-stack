@@ -121,6 +121,9 @@ export function fakeReader(
         endCursor: null,
       };
     },
+    async unsettledSuites() {
+      return [];
+    },
     async commitRollups() {
       calls.push("commitRollups");
       return options.commitRollups ?? [{ oid: "head", state: "SUCCESS" }];

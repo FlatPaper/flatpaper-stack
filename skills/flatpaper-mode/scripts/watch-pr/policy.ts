@@ -156,6 +156,28 @@ async function reportedCi(
   }
   return ci;
 }
+async function withUnsettledSuites(
+  reader: T.GitHubReader,
+  facts: T.PullRequestFacts,
+  read: T.CheckRead
+): Promise<T.CheckRead> {
+  if (
+    read.kind === "reported" &&
+    read.checks.some(
+      (check) => check.kind === "failed" || check.kind === "pending"
+    )
+  )
+    return read;
+  if (facts.headRefOid === null)
+    throw new ChecksUnavailable("cannot read check suites without the PR head");
+  const suites = nonEmpty(
+    await reader.unsettledSuites(facts.context, facts.headRefOid, read.kind)
+  );
+  if (suites === null) return read;
+  return read.kind === "reported"
+    ? { ...read, checks: [...read.checks, ...suites] }
+    : { kind: "reported", source: "check-suites", checks: suites };
+}
 const AUTOMATION_TOKENS = [
   "bugbot",
   "security review",
@@ -175,7 +197,8 @@ export async function readSnapshot(args: {
   if (facts.state === "CLOSED")
     return { kind: "closed", context: args.context, facts };
   const threads = await resolveReviewThreads(args.reader, args.context);
-  const checks = await resolveChecks(args.reader, args.context);
+  const read = await resolveChecks(args.reader, args.context);
+  const checks = await withUnsettledSuites(args.reader, facts, read);
   const ci =
     checks.kind === "no-checks"
       ? await noChecksCi(args.reader, facts, args.confirmNoChecks)
