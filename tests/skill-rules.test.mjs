@@ -192,6 +192,16 @@ const rules = [
     phrase: "When Feature's **Short path** applies, the `architect` and `interrogate` triggers yield to its skips.",
   },
   {
+    source: "pstack-claude #438 a focused bug fix skips architect",
+    file: "skills/flatpaper-mode/SKILL.md",
+    phrase: "When Bug fix's **Focused-fix exception** applies, the `architect` trigger yields to its skips.",
+  },
+  {
+    source: "pstack-claude #438 patch size alone never qualifies",
+    file: "skills/flatpaper-mode/playbooks/bug-fix.md",
+    phrase: "A small patch alone never qualifies.",
+  },
+  {
     source: "#29 a Codex reviewer runs with --write in a throwaway worktree",
     file: "skills/flatpaper-mode/references/spawning.md",
     phrase: "Pass a throwaway detached worktree at the head under review as the reviewer's `<cwd>`",
