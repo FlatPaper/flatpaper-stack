@@ -28,7 +28,7 @@ if (args[0] === 'pr' && args[1] === 'view') {
   if (!args.includes('--paginate') || !args.includes('--slurp')) fail('pagination required');
   value = s.pages ?? [{ check_suites: s.suites ?? [] }];
 } else if (args.some(a => a.includes('query PrCommitStatuses'))) {
-  value = { data: { repository: { pullRequest: { commits: { nodes: (s.commits ?? [{ oid: 'head', state: null }]).map(c => ({ commit: { oid: c.oid, statusCheckRollup: c.state === null ? null : { state: c.state } } })) } } } } };
+  value = { data: { repository: { pullRequest: { commits: { nodes: (s.commits ?? [{ oid: s.facts?.headRefOid ?? 'head', state: null }]).map(c => ({ commit: { oid: c.oid, statusCheckRollup: c.state === null ? null : { state: c.state } } })) } } } } };
 } else if (args.some(a => a.includes('query ReviewThreads'))) {
   value = { data: { repository: { pullRequest: { reviewThreads: { nodes: s.threads ?? [], pageInfo: { hasNextPage: false, endCursor: null } } } } } };
 } else fail('unexpected fixture command');
