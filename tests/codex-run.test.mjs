@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const script = join(root, "skills/flatpaper-mode/scripts/codex-run.sh");
+const worker = `Read ${realpathSync(root)}/skills/flatpaper-mode/worker.md before anything else.\n\n`;
 const usage = "Usage: codex-run.sh <cwd> <model|default> <effort> <prompt-file> [read-only] [--agent <name>]\n";
 
 function fixture(t, { versions = ["1.0.2", "1.0.10", "1.0.9"], exitCode = 0, promptName = "brief draft.md" } = {}) {
@@ -38,8 +39,9 @@ process.exit(${exitCode});
     assert.ifError(result.error);
     return result;
   };
-  const expected = ["task", "--cwd", cwd, "--effort", "high", "--prompt-file", prompt];
-  return { home, cwd, prompt, log, args, options, run, expected };
+  const combined = prompt.replace(/\.[^.]*$/, "") + ".prompt.md";
+  const expected = ["task", "--cwd", cwd, "--effort", "high", "--prompt-file", combined];
+  return { home, cwd, prompt, combined, log, args, options, run, expected };
 }
 
 test("picks version 1.0.10 over 1.0.9 and 1.0.2", (t) => {
@@ -54,7 +56,20 @@ test("write mode passes the exact argv", (t) => {
   const result = f.run();
   assert.equal(result.status, 0);
   assert.deepEqual(JSON.parse(result.stdout).argv, [...f.expected, "--model", "gpt-5.4", "--write"]);
-  assert.equal(JSON.parse(result.stdout).promptContents, readFileSync(f.prompt, "utf8"));
+  assert.equal(JSON.parse(result.stdout).promptContents, worker + readFileSync(f.prompt, "utf8"));
+});
+
+test("a seat without --agent gets the worker line before its verbatim brief", (t) => {
+  const f = fixture(t);
+  const brief = "Review the diff.\r\nKeep ${CLAUDE_PLUGIN_ROOT} verbatim.";
+  writeFileSync(f.prompt, brief);
+  const result = f.run([...f.args, "read-only"]);
+  assert.equal(result.status, 0, result.stderr);
+  const { argv, promptContents } = JSON.parse(result.stdout);
+  assert.deepEqual(argv, [...f.expected, "--model", "gpt-5.4"]);
+  assert.equal(promptContents, worker + brief);
+  assert.equal(readFileSync(f.combined, "utf8"), promptContents);
+  assert.equal(readFileSync(f.prompt, "utf8"), brief);
 });
 
 test("--agent sends the resolved agent body and verbatim brief through a combined prompt", (t) => {
@@ -67,8 +82,8 @@ test("--agent sends the resolved agent body and verbatim brief through a combine
   const { argv, promptContents } = JSON.parse(result.stdout);
   const combined = f.prompt.replace(/\.[^.]*$/, ".flatpaper-agent.prompt.md");
   assert.deepEqual(argv, [...f.expected.slice(0, -1), combined, "--model", "gpt-5.4", "--write"]);
-  assert.ok(promptContents.startsWith("# Flatpaper Codex delegate\n"));
-  const body = promptContents.slice(0, -brief.length);
+  assert.ok(promptContents.startsWith(`${worker}# Flatpaper Codex delegate\n`));
+  const body = promptContents.slice(worker.length, -brief.length);
   assert.doesNotMatch(body, /^name:|^description:|^---\nname:/m);
   assert.ok(body.includes(`${realpathSync(root)}/skills/flatpaper-mode/SKILL.md`));
   assert.ok(body.includes(`${realpathSync(root)}/skills/unslop/SKILL.md`));
@@ -158,7 +173,7 @@ test("stdout contains only companion output and progress appends to the log", (t
   const result = f.run();
   assert.equal(result.status, 0);
   assert.equal(result.stdout, JSON.stringify({
-    version: "1.0.10", argv: [...f.expected, "--model", "gpt-5.4", "--write"], stdinEOF: true, input: "", promptContents: "Inspect the project.\n",
+    version: "1.0.10", argv: [...f.expected, "--model", "gpt-5.4", "--write"], stdinEOF: true, input: "", promptContents: `${worker}Inspect the project.\n`,
   }) + "\n");
   assert.equal(result.stderr, `codex progress log: ${f.log}\n`);
   assert.equal(readFileSync(f.log, "utf8"), "earlier progress\ncompanion progress\n");
@@ -236,7 +251,7 @@ test("a relative prompt path resolves against the caller's directory, not the cw
   assert.ifError(result.error);
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(JSON.parse(result.stdout).argv,
-    ["task", "--cwd", f.cwd, "--effort", "high", "--prompt-file", prompt, "--model", "gpt-5.4", "--write"]);
+    ["task", "--cwd", f.cwd, "--effort", "high", "--prompt-file", join(caller, "relative brief.prompt.md"), "--model", "gpt-5.4", "--write"]);
   assert.equal(result.stderr, `codex progress log: ${log}\n`);
   assert.equal(readFileSync(log, "utf8"), "companion progress\n");
 });

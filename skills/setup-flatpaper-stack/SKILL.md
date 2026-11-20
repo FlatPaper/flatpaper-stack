@@ -32,7 +32,7 @@ Never write a value you have not confirmed is available. `parent` is always vali
 
 ### 2. Load current state
 
-The default role-to-model mapping is the file shape shown in step 5 below. If `~/.claude/flatpaper-stack/models.md` already exists, read it and treat its `# budget` line, its `session hook` line, and its role values as the current choices. Otherwise start from those defaults. A line whose role is not in step 5 is from a retired role. Drop it.
+The default role-to-model mapping is the file shape shown in step 5 below. If `~/.claude/flatpaper-stack/models.md` already exists, read it and treat its `# budget` line, its `session hook` line, and its role values as the current choices. Otherwise start from those defaults. A line whose role is not in step 5, such as `architect runners`, `reflect tooling`, or `pr verifier`, is from a retired role. Drop it.
 
 ### 3. Budget, map, and confirm
 
@@ -47,7 +47,7 @@ The default role-to-model mapping is the file shape shown in step 5 below. If `~
 
 **(c) Show the roles and confirm.** Show every role with its value as a table. Mark any value whose provider or model was not detected as needing a choice. Also list each line step 2 dropped, and one line per skipped provider. Ask whether to accept as-is or change specific roles, offering the detected models plus `parent` as the options. Use AskUserQuestion, which takes at most four options per question, so offer the most likely models and let "Other" take the rest.
 
-For panel roles (arena runners, architect runners, interrogate reviewers) the value is a list, and one subagent runs per entry, `parent` included, so the list length sets the count. A panel is for diverse review, so warn when every entry is from one provider. `arena cross-judge pool` is also a list, but Arena runs one judge. It tries only values from a provider other than the parent's (Claude), in list order, so order it by preference. A `parent` value never judges. `trail reviewer` and `pr verifier` are ordered lists too. Each review takes the first entry from a family that did not write the work, and falls back to a labelled same-family review when none is available, per **Cross-family reviewer** in `../flatpaper-mode/references/spawning.md`. Order each by preference, and include a family your code-writing roles don't use when one is detected. `swarm workers` runs a swarm's easy pieces and `swarm hard workers` runs the pieces that need judgment, unless a race or comparison assigns another model per arm.
+For panel roles (arena runners, interrogate reviewers) the value is a list, and one subagent runs per entry, `parent` included, so the list length sets the count. A panel is for diverse review, so warn when every entry is from one provider. `arena cross-judge pool` is also a list, but Arena runs one judge. It tries only values from a provider other than the parent's (Claude), in list order, so order it by preference. A `parent` value never judges. `trail reviewer` is an ordered list too. Each review takes the first entry from a family that did not write the work, and falls back to a labelled same-family review when none is available, per **Cross-family reviewer** in `../flatpaper-mode/references/spawning.md`. Order each by preference, and include a family your code-writing roles don't use when one is detected. `swarm workers` runs a swarm's easy pieces and `swarm hard workers` runs the pieces that need judgment, unless a race or comparison assigns another model per arm.
 
 **(d) Ask about the session hook.** The plugin's `SessionStart` hook tells the agent to invoke flatpaper-mode for multi-file, design, and unknown-cause bug or perf work. It runs on startup, resume, clear, and compact. Use AskUserQuestion to ask whether to keep it. The default is on. The answer is the `session hook` line, `on` or `off`. With no file or no line, the hook runs.
 
@@ -74,20 +74,16 @@ hardest tasks: parent:high
 thermos reviewers: parent:medium
 how explorer: claude/sonnet:medium
 how explainer: parent:medium
-reflect tooling: parent:medium
-reflect judgment, divergent, synthesizer: parent:medium
 history explorers: claude/sonnet:medium
 trail reviewer: codex/matched:medium
-pr verifier: codex/matched:medium
 arena runners: parent:medium, codex/matched:medium
 arena cross-judge pool: codex/matched:medium
 swarm workers: claude/sonnet:medium
 swarm hard workers: claude/opus:medium
-architect runners: parent:medium, codex/matched:medium
 interrogate reviewers: parent:medium, codex/matched:medium
 ```
 
-`history explorers` covers the chat-history fan-out in `recall` and `automate-me`. `trail reviewer` is the cross-model reviewer in `show-me-your-work`. `pr verifier` checks each PR in the Orchestrate playbook.
+`history explorers` covers the chat-history fan-out in `recall` and `automate-me`. `trail reviewer` is the cross-model reviewer in `show-me-your-work`.
 
 ### 6. Confirm
 

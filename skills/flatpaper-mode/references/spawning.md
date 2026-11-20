@@ -29,7 +29,7 @@ A model the user names (`sonnet`, `opus`, `haiku`, `fable`, or a Codex model) wi
 
 A Codex seat is a background Bash command, not an `Agent` call. The `Agent` defaults (`subagent_type`, the Agent `model` and `effort`, and `isolation`) do not apply to it.
 
-1. Write the brief to a file, such as `<scratchpad>/codex-<task>.md`.
+1. Write the brief to a file, such as `<scratchpad>/codex-<task>.md`. Leave out the `worker.md` line, because the script adds it.
 2. Run `<plugin>/skills/flatpaper-mode/scripts/codex-run.sh <cwd> <model> <effort> <prompt-file>` with Bash `run_in_background: true` and the description `Codex: <task>`. `<cwd>` is the directory Codex works in. Add `read-only` as a fifth argument for a seat that must not write. A writing seat that runs beside other writers gets a worktree of its own as `<cwd>`.
 3. Pass `--agent flatpaper-agent` whenever the same step on Claude would use `subagent_type: "flatpaper-stack:flatpaper-agent"`. This covers code-writing delegates and helpers inside a playbook step. Panel reviewers, judges, and workers whose skill sets its own agent type pass no `--agent`. Those skills include `arena`, `interrogate`, `architect`, `swarm`, `reflect`, and `thermos`.
 4. For a list of N Codex seats, send N background commands in one message.

@@ -13,13 +13,7 @@
   },
   "skills/architect/SKILL.md": {
     "kind": "port-feature",
-    "why": "Reads why and arena from their SKILL.md files because they are user-only here, tracks phases with TaskCreate, takes runners from the `architect runners` role in models.json, and links each principle skill by path.",
-    "since": "0.9.2",
-    "upstream": "not-proposed"
-  },
-  "skills/architect/references/runner-prompt.md": {
-    "kind": "port-feature",
-    "why": "Links the architect skill and each principle skill by relative path, since user-only skills are read rather than invoked.",
+    "why": "Reads arena from its SKILL.md file because arena is user-only here. The model can invoke architect itself, per the substitution rule that drops its disable-model-invocation key.",
     "since": "0.9.2",
     "upstream": "not-proposed"
   },
@@ -37,7 +31,7 @@
   },
   "skills/benchmark-checklist/SKILL.md": {
     "kind": "port-feature",
-    "why": "Links the Opening a PR, Perf issue, and Hillclimb playbooks by path, since playbooks are files inside flatpaper-mode, not skills.",
+    "why": "Links the Perf issue and Hillclimb playbooks by path, since playbooks are files inside flatpaper-mode, not skills.",
     "since": "0.9.2",
     "upstream": "not-proposed"
   },
@@ -61,7 +55,7 @@
   },
   "skills/flatpaper-mode/SKILL.md": {
     "kind": "policy",
-    "why": "Opens the task list first, routes sessions through the SessionStart hook, moves model and effort choice into references/spawning.md, adds project playbooks, requires a reviewer who agrees before a reply says \"fixed\", keeps the chat running a playbook off product files in a step that delegates implementation, and runs Codex roles through scripts/codex-run.sh.",
+    "why": "Opens the task list first, routes sessions through the SessionStart hook, moves model and effort choice into references/spawning.md, adds project playbooks, keeps the review gate closed without an independent reviewer, requires a reviewer who agrees before a reply says \"fixed\", keeps the chat running a playbook off product files in a step that delegates implementation, runs Codex roles through scripts/codex-run.sh, which adds the worker.md line to every Codex seat, and drops upstream's Opus and Fable model routing.",
     "since": "0.9.2",
     "upstream": "not-proposed"
   },
@@ -73,7 +67,7 @@
   },
   "skills/flatpaper-mode/playbooks/babysit.md": {
     "kind": "policy",
-    "why": "Drops the Origin forge and the routing away from Cursor's built-in babysit skill, finds watch-pr inside the flatpaper-mode folder, and triages any review bot, since bugbot-triage.md is excluded.",
+    "why": "Uses gh only (no Origin forge), finds watch-pr inside the flatpaper-mode folder, and triages any review bot, since bugbot-triage.md is excluded.",
     "since": "0.9.2",
     "upstream": "not-proposed"
   },
@@ -89,21 +83,9 @@
     "since": "0.9.6",
     "upstream": "not-proposed"
   },
-  "skills/flatpaper-mode/playbooks/multi-phase-plan.md": {
-    "kind": "policy",
-    "why": "Writes plans to the program store under ~/.claude/orchestrate, uses gh only, names skill files through a <plugin> placeholder instead of git show of pstack paths, and triages review bots per babysit step 8.",
-    "since": "0.9.2",
-    "upstream": "not-proposed"
-  },
   "skills/flatpaper-mode/playbooks/opening-a-pr.md": {
     "kind": "policy",
-    "why": "Uses gh only (no Origin forge), Agent calls with worktree isolation instead of Task, and the plugin-prefixed deslop, no-comments, and technical-writing commands.",
-    "since": "0.9.2",
-    "upstream": "not-proposed"
-  },
-  "skills/flatpaper-mode/playbooks/orchestrate.md": {
-    "kind": "policy",
-    "why": "Runs workers as local Agent subagents in their own worktrees and continues them with SendMessage instead of cloud VMs and forks, keeps program state under ~/.claude/orchestrate, and verifies each PR on the `pr verifier` role.",
+    "why": "Uses gh only (no Origin forge or Cursor PR tool) and the plugin-prefixed deslop command.",
     "since": "0.9.2",
     "upstream": "not-proposed"
   },
@@ -173,12 +155,6 @@
     "since": "0.9.2",
     "upstream": "not-proposed"
   },
-  "skills/principle-prove-it-works/SKILL.md": {
-    "kind": "port-feature",
-    "why": "Links show-me-your-work by path, since it is user-only.",
-    "since": "0.9.2",
-    "upstream": "not-proposed"
-  },
   "skills/recall/SKILL.md": {
     "kind": "port-feature",
     "why": "Reads Claude Code transcripts at ~/.claude/projects/<slug>/<uuid>.jsonl, fans out Explore subagents and general-purpose investigators on the `history explorers` role, and reads unslop by path.",
@@ -187,7 +163,7 @@
   },
   "skills/reflect/SKILL.md": {
     "kind": "port-feature",
-    "why": "Finds the transcript at ~/.claude/projects/<project>/${CLAUDE_SESSION_ID}.jsonl, spawns general-purpose Agent reviewers so they keep every MCP tool, and takes each model from its models.json role.",
+    "why": "Finds the transcript at ~/.claude/projects/<project>/${CLAUDE_SESSION_ID}.jsonl, with a fallback to the newest matching transcript in that folder, and protects skills under ~/.claude/plugins/cache/.",
     "since": "0.9.2",
     "upstream": "not-proposed"
   },

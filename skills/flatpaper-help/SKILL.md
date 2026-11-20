@@ -100,16 +100,15 @@ Close calls:
 
 - `/flatpaper-stack:how` explains what the code does. `/flatpaper-stack:why` explains the reasons. `/flatpaper-stack:teach` runs one or both and explains the result plainly.
 - `/flatpaper-stack:arena` gives every worker the same brief and merges the best parts. `/flatpaper-stack:swarm` splits work into slices or a race and returns one report.
-- `/flatpaper-stack:architect` implements right after it settles the design. Add "with checkpoint" to review the design before it writes code.
 - `/flatpaper-stack:deslop` sweeps the diff for five kinds of AI slop in one quick pass. `/flatpaper-stack:no-comments` goes deep on comments only, using a reviewer that didn't write them.
 - `/flatpaper-stack:interrogate` reviews the diff. `/flatpaper-stack:blast-radius` looks for breakage outside the diff and proves the one fact that makes the change safe.
 - `/flatpaper-stack:recall` rebuilds context across recent chats. `/flatpaper-stack:ketchup` covers only this chat since the user's last message. Resuming one specific chat or branch is the Session pickup playbook.
-- `/flatpaper-stack:figure-it-out` designs one rigorous run. The Orchestrate playbook runs a program that spans days and many PRs. The Autonomous run playbook drives one task to a finish condition.
+- `/flatpaper-stack:figure-it-out` designs one rigorous run. The Autonomous run playbook drives one task to a finish condition.
 
 Not in flatpaper-stack:
 
 - `/loop` is a Claude Code built-in. Skill authoring uses the **skill-creator** skill (Anthropic's skill for authoring SKILL.md files).
-- flatpaper-stack has no `/orchestrate` skill. Orchestrate is a `/flatpaper-stack:flatpaper-mode` playbook. If the slash menu shows `/orchestrate`, another plugin provides it.
+- flatpaper-stack has no `/orchestrate` skill. If the slash menu shows `/orchestrate`, another plugin provides it.
 
 ## Playbooks and principles
 
@@ -122,7 +121,7 @@ Playbooks are step lists inside `/flatpaper-stack:flatpaper-mode`, not skills, s
 - "full autopilot on this queue" runs Autopilot-full. "autopilot, don't merge" runs Autopilot-stack.
 - "run the eval playbook" runs Eval.
 
-Without `/flatpaper-stack:flatpaper-mode`, a phrase such as "babysit this pr" can start another installed skill for the same job instead. The Playbooks section of [`flatpaper-mode`](../flatpaper-mode/SKILL.md) lists every playbook and when it applies.
+Without `/flatpaper-stack:flatpaper-mode`, a phrase such as "babysit this pr" can start another installed skill for the same job instead. The Playbooks section of [`flatpaper-mode`](../flatpaper-mode/SKILL.md) lists every playbook.
 
 flatpaper-stack has no planning skill. Claude Code's plan mode works alongside it. For work that spans phases or stacked PRs, asking `/flatpaper-stack:flatpaper-mode` for a plan runs the [Multi-phase plan playbook](../flatpaper-mode/playbooks/multi-phase-plan.md), which writes the plan and doesn't implement it. For a design question, the Prototype playbook or `/flatpaper-stack:architect` settles it in code first.
 

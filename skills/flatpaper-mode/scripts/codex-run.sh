@@ -36,9 +36,9 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
+plugin_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd -P) || exit 1
+agents_dir="$plugin_root/skills/flatpaper-mode/codex-agents"
 if [ "$agent_set" = true ]; then
-  plugin_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd -P) || exit 1
-  agents_dir="$plugin_root/skills/flatpaper-mode/codex-agents"
   if [[ ! "$agent" =~ ^[a-z0-9][a-z0-9-]*$ ]] || [ ! -f "$agents_dir/$agent.md" ]; then
     printf 'error: unknown codex agent: %s (looked in %s)\n' "$agent" "$agents_dir" >&2
     exit 2
@@ -64,23 +64,30 @@ case "${log##*/}" in
 esac
 log="$log.codex.log"
 
+combined=$prompt
+case "${combined##*/}" in
+  *.*) combined="${combined%.*}" ;;
+esac
 if [ "$agent_set" = true ]; then
-  combined=$prompt
-  case "${combined##*/}" in
-    *.*) combined="${combined%.*}" ;;
-  esac
   combined="$combined.$agent.prompt.md"
-  node - "$agents_dir/$agent.md" "$plugin_root" "$prompt" "$combined" <<'NODE' || exit 1
-const { readFileSync, writeFileSync } = require("node:fs");
-const [agentFile, root, brief, output] = process.argv.slice(2);
-const body = readFileSync(agentFile, "utf8")
-  .replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "")
-  .replace(/^\r?\n/, "")
-  .replaceAll("${CLAUDE_PLUGIN_ROOT}", root);
-writeFileSync(output, Buffer.concat([Buffer.from(body + "\n---\n"), readFileSync(brief)]));
-NODE
-  prompt=$combined
+  agent_file="$agents_dir/$agent.md"
+else
+  combined="$combined.prompt.md"
+  agent_file=
 fi
+node - "$plugin_root" "$prompt" "$combined" "$agent_file" <<'NODE' || exit 1
+const { readFileSync, writeFileSync } = require("node:fs");
+const [root, brief, output, agentFile] = process.argv.slice(2);
+const worker = `Read ${root}/skills/flatpaper-mode/worker.md before anything else.\n\n`;
+const body = agentFile
+  ? readFileSync(agentFile, "utf8")
+      .replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "")
+      .replace(/^\r?\n/, "")
+      .replaceAll("${CLAUDE_PLUGIN_ROOT}", root) + "\n---\n"
+  : "";
+writeFileSync(output, Buffer.concat([Buffer.from(worker + body), readFileSync(brief)]));
+NODE
+prompt=$combined
 
 args=(node "$companion" task --cwd "$cwd" --effort "$effort" --prompt-file "$prompt")
 if [ "$model" != default ]; then
