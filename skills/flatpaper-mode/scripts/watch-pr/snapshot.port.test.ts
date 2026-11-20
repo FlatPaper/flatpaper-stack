@@ -41,6 +41,57 @@ const changes: Partial<Omit<T.PullRequestFacts, "context">>[] = [
   { isDraft: true }, { reviewDecision: "CHANGES_REQUESTED" },
   { mergeable: "CONFLICTING" }, { mergeStateStatus: "DIRTY" },
 ];
+const unknownMergeability: Partial<T.PullRequestFacts>[] = [
+  { mergeable: "UNKNOWN" },
+  { mergeStateStatus: "UNKNOWN" },
+  { mergeable: "UNKNOWN", mergeStateStatus: "UNKNOWN" },
+];
+for (const unknown of unknownMergeability) {
+  it(`accepts computed mergeability ${JSON.stringify(unknown)} without replacing first-read facts`, async () => {
+    const reader = fakeReader();
+    const facts = reader.pullRequest;
+    let collected = false;
+    reader.commitRollups = async () => {
+      collected = true;
+      return [{ oid: "head", state: "SUCCESS" }];
+    };
+    reader.pullRequest = async requested => ({ ...await facts(requested), ...collected ? {} : unknown });
+    expect(await snapshot(reader)).toMatchObject({
+      kind: "open",
+      facts: { mergeable: "MERGEABLE", mergeStateStatus: "CLEAN", ...unknown },
+      ci: { kind: "ci-clean", github: { mergeStateStatus: unknown.mergeStateStatus ?? "CLEAN" } },
+    });
+  });
+
+  it(`retries a changed head despite computed mergeability ${JSON.stringify(unknown)}`, async () => {
+    const reader = fakeReader();
+    const facts = reader.pullRequest;
+    let collected = false;
+    reader.commitRollups = async () => {
+      collected = true;
+      return [{ oid: "head", state: "SUCCESS" }];
+    };
+    reader.pullRequest = async requested => ({ ...await facts(requested), ...collected ? { headRefOid: "pushed" } : unknown });
+    await expect(snapshot(reader)).rejects.toMatchObject({
+      failure: { kind: "snapshot-changed", retryable: true },
+    });
+  });
+}
+
+it("retries known mergeability changing from MERGEABLE to CONFLICTING", async () => {
+  const reader = fakeReader();
+  const facts = reader.pullRequest;
+  let collected = false;
+  reader.commitRollups = async () => {
+    collected = true;
+    return [{ oid: "head", state: "SUCCESS" }];
+  };
+  reader.pullRequest = async requested => ({ ...await facts(requested), mergeable: collected ? "CONFLICTING" : "MERGEABLE" });
+  await expect(snapshot(reader)).rejects.toMatchObject({
+    failure: { kind: "snapshot-changed", retryable: true },
+  });
+});
+
 for (const change of changes) {
   it(`rejects changed facts ${JSON.stringify(change)}`, async () => {
     const reader = fakeReader();
