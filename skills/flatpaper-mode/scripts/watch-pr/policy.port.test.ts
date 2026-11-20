@@ -49,8 +49,7 @@ function ticking() {
   let now = 0;
   return { now: () => now, observedAt: () => new Date(now * 1000).toISOString(), async sleep(seconds: number) { now += seconds; if (now > 3600) throw new Error("polling did not terminate"); } };
 }
-async function watch(reader = noChecks(), overrides: Partial<T.PollingOptions> = {}) {
-  const clock = ticking();
+async function watch(reader = noChecks(), overrides: Partial<T.PollingOptions> = {}, clock = ticking()) {
   const events: T.ProgressVerdict[] = [];
   const verdict = await runSimple({ dependencies: { reader, clock, emit: event => events.push(event) }, contexts: [context()], mode: "single", statusOnly: false, options: { ...options, ...overrides } });
   return { verdict, events, elapsed: clock.now() };
@@ -79,9 +78,11 @@ it("requires 60 seconds whatever the poll interval", async () => {
 it("resets confirmation when a new head is pushed", async () => {
   const reader = noChecks();
   const facts = reader.pullRequest;
-  let polls = 0;
-  reader.pullRequest = async requested => ({ ...await facts(requested), headRefOid: ++polls < 4 ? "head" : "pushed" });
-  expect((await watch(reader)).elapsed).toBe(90);
+  const clock = ticking();
+  const head = () => clock.now() < 30 ? "head" : "pushed";
+  reader.pullRequest = async requested => ({ ...await facts(requested), headRefOid: head() });
+  reader.commitRollups = async () => [{ oid: head(), state: null }];
+  expect((await watch(reader, {}, clock)).elapsed).toBe(90);
 });
 
 it("honors checks that register after the first no-checks reading", async () => {
@@ -98,6 +99,7 @@ it("confirms every PR in a stack independently", async () => {
   const facts = reader.pullRequest;
   const clock = ticking();
   reader.pullRequest = async requested => ({ ...await facts(requested), headRefOid: requested.number === 2 && clock.now() >= 30 ? "pushed" : "head" });
+  reader.commitRollups = async requested => [{ oid: (await reader.pullRequest(requested)).headRefOid!, state: null }];
   const events: T.ProgressVerdict[] = [];
   const verdict = await runSimple({ dependencies: { reader, clock, emit: event => events.push(event) }, contexts: [context(), context(2)], mode: "stack", statusOnly: false, options });
   expect(verdict.kind).toBe("READY");
