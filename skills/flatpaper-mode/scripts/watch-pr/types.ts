@@ -270,16 +270,22 @@ export interface ChecksUnreportedDecision {
   readonly kind: "checks-unreported";
   readonly frontier: PrContext;
 }
+export interface MergeabilityUnknownDecision {
+  readonly kind: "mergeability-unknown";
+  readonly frontier: PrContext;
+}
 export type PrDecision =
   | { readonly kind: "blocker"; readonly blocker: MergeBlocker }
   | WaitingDecision
   | ChecksUnreportedDecision
+  | MergeabilityUnknownDecision
   | { readonly kind: "ready"; readonly pr: ReadyPr }
   | { readonly kind: "merged"; readonly pr: MergedPr };
 export type StackDecision =
   | { readonly kind: "blocker"; readonly blocker: MergeBlocker }
   | WaitingDecision
   | ChecksUnreportedDecision
+  | MergeabilityUnknownDecision
   | { readonly kind: "clear"; readonly prs: NonEmpty<ReadyPr | MergedPr> };
 export type WatchMode = "single" | "stack" | "queued-stack";
 interface EventBase<K extends string, M extends WatchMode = WatchMode> {
@@ -313,6 +319,7 @@ export type ProgressVerdict =
       readonly frontier: PrContext;
       readonly reason:
         | { readonly kind: "checks-unreported" }
+        | { readonly kind: "mergeability-unknown" }
         | {
             readonly kind: "pending-checks";
             readonly pending: NonEmpty<PendingCheck>;
@@ -361,6 +368,7 @@ export type BlockerVerdict =
 export type TimeoutVerdict = Terminal<"TIMEOUT", 5> & {
   readonly reason:
     | { readonly kind: "checks-unreported" }
+    | { readonly kind: "mergeability-unknown" }
     | {
         readonly kind: "pending-checks";
         readonly pending: NonEmpty<PendingCheck>;

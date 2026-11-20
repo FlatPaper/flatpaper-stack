@@ -88,10 +88,6 @@ async function noChecksCi(
     throw new ChecksUnavailable(
       `no checks reported on head ${facts.headRefOid}, but a commit on this PR has reported checks`
     );
-  if (facts.mergeable === "UNKNOWN")
-    throw new ChecksUnavailable(
-      `no checks reported on head ${facts.headRefOid}, and GitHub has not computed mergeability yet`
-    );
   const none = { failed: [], pending: [], hadPreviousPassingCi: false } as const;
   return confirmNoChecks(facts)
     ? { ...none, kind: "ci-none", github: merge.github }
@@ -296,7 +292,9 @@ function gateBlocker(
   return reason === null ||
     (reason === "draft-pr" &&
       row.kind === "open" &&
-      row.ci.kind === "ci-pending")
+      (row.ci.kind === "ci-pending" ||
+        row.ci.kind === "ci-unreported" ||
+        mergeabilityUnknown(row.facts)))
     ? null
     : { kind: "merge-gate", pr: row.context, reason };
 }
@@ -314,6 +312,7 @@ function readyContribution(
     row.kind !== "open" ||
     (row.ci.kind !== "ci-clean" && row.ci.kind !== "ci-none") ||
     row.threads.length !== 0 ||
+    mergeabilityUnknown(row.facts) ||
     conflictBlocker(row) !== null ||
     gateReason(row, allowDraft) !== null
   )
@@ -350,6 +349,8 @@ export function classifyPr(
     return { kind: "waiting", frontier: row.context, pending: row.ci.pending };
   if (row.kind === "open" && row.ci.kind === "ci-unreported")
     return { kind: "checks-unreported", frontier: row.context };
+  if (row.kind === "open" && mergeabilityUnknown(row.facts))
+    return { kind: "mergeability-unknown", frontier: row.context };
   const ready = readyContribution(row, allowDraft);
   if (ready === null) throw new Error("snapshot has no classified decision");
   return ready.kind === "merged-pr"
@@ -379,6 +380,9 @@ export function selectTierMajorStackDecision(
   for (const row of rows)
     if (row.kind === "open" && row.ci.kind === "ci-unreported")
       return { kind: "checks-unreported", frontier: row.context };
+  for (const row of rows)
+    if (row.kind === "open" && mergeabilityUnknown(row.facts))
+      return { kind: "mergeability-unknown", frontier: row.context };
   const prs = nonEmpty(
     rows
       .map((row) => readyContribution(row, allowDraft))
@@ -624,8 +628,9 @@ export async function runSimple(args: {
         ),
       };
     const reason =
-      decision.kind === "checks-unreported"
-        ? { kind: "checks-unreported" as const }
+      decision.kind === "checks-unreported" ||
+      decision.kind === "mergeability-unknown"
+        ? { kind: decision.kind }
         : { kind: "pending-checks" as const, pending: decision.pending };
     args.dependencies.emit(
       stamp({
@@ -772,6 +777,7 @@ export type QueueEvaluation =
       readonly frontier: T.PrContext;
       readonly reason:
         | { readonly kind: "checks-unreported" }
+        | { readonly kind: "mergeability-unknown" }
         | {
             readonly kind: "pending-checks";
             readonly pending: T.NonEmpty<T.PendingCheck>;
@@ -829,15 +835,19 @@ export function evaluateQueue(
   const reason =
     row.kind === "open" && row.ci.kind === "ci-unreported"
       ? ({ kind: "checks-unreported" } as const)
-      : pending === null
-        ? ({ kind: "merge-queue", unmergedCount: active.length } as const)
-        : ({ kind: "pending-checks", pending } as const);
+      : pending !== null
+        ? ({ kind: "pending-checks", pending } as const)
+        : row.kind === "open" && mergeabilityUnknown(row.facts)
+          ? ({ kind: "mergeability-unknown" } as const)
+          : ({ kind: "merge-queue", unmergedCount: active.length } as const);
   const key =
     reason.kind === "pending-checks"
       ? `pending:${frontier.number}:${reason.pending.length}`
       : reason.kind === "checks-unreported"
         ? `unreported:${frontier.number}`
-        : `queue:${frontier.number}:${reason.unmergedCount}`;
+        : reason.kind === "mergeability-unknown"
+          ? `mergeability:${frontier.number}`
+          : `queue:${frontier.number}:${reason.unmergedCount}`;
   return {
     kind: "waiting",
     state: { ...state, frontier, lastWaitKey: key },

@@ -25,11 +25,10 @@ it("keeps existing conflicts, review threads, and merge gates", () => {
   }
 });
 
-it("waits when any PR commit reported CI or mergeability is unknown", () => {
+it("waits when any PR commit reported CI", () => {
   for (const scenario of [
     { commits: [{ oid: "earlier", state: "SUCCESS" }, { oid: "head", state: null }] },
     { commits: [{ oid: "head", state: "PENDING" }] },
-    { facts: { mergeable: "UNKNOWN" } },
   ]) {
     const result = runPort(scenario);
     expect(result.status).toBe(7);
