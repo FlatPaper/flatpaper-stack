@@ -44,7 +44,10 @@ function mergeCell(row: T.PrSnapshot): string {
     row.facts.mergeStateStatus === "DIRTY" ||
     row.facts.mergeStateStatus === "CONFLICTING"
     ? "⚠️ conflict"
-    : "✅";
+    : row.facts.mergeable === "UNKNOWN" ||
+        row.facts.mergeStateStatus === "UNKNOWN"
+      ? "⏳ GitHub is still computing mergeability"
+      : "✅";
 }
 export function renderStatusTable(rows: T.NonEmpty<T.PrSnapshot>): string {
   const lines = ["| PR | CI | Review | Merge |", "| --- | --- | --- | --- |"];
@@ -141,6 +144,8 @@ export function renderPretty(verdict: T.WatcherVerdict): string {
     case "STATUS":
       return renderStatusTable(verdict.rows);
     case "WAITING":
+      if (verdict.reason.kind === "mergeability-unknown")
+        return `WAITING: frontier=#${verdict.frontier.number}; GitHub is still computing mergeability\n`;
       if (verdict.reason.kind === "checks-unreported")
         return `WAITING: frontier=#${verdict.frontier.number}; no checks reported yet; confirming\n`;
       return verdict.reason.kind === "pending-checks"
@@ -168,6 +173,8 @@ export function renderPretty(verdict: T.WatcherVerdict): string {
     case "COMPLETE":
       return `COMPLETE: queued stack merged (${verdict.queue.length} PR${verdict.queue.length === 1 ? "" : "s"})\n`;
     case "TIMEOUT":
+      if (verdict.reason.kind === "mergeability-unknown")
+        return "TIMEOUT: GitHub is still computing mergeability\n";
       if (verdict.reason.kind === "checks-unreported")
         return "TIMEOUT: no checks reported on the head commit yet\n";
       if (verdict.reason.kind === "pending-checks")

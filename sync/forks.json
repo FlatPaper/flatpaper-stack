@@ -145,19 +145,19 @@
   },
   "skills/flatpaper-mode/scripts/watch-pr/policy.ts": {
     "kind": "local-fix",
-    "why": "Confirms absence for the same PR head across at least 60 seconds with an injectable clock before ci-none, preserving history, mergeability, and existing blockers in single, stack, and queued runs. Reads suites for the same head before CI counts as clean or absent, so approval-gated Actions blocks as a failed check even beside another app's passing check. Re-reads verdict facts after CI assessment and retries changed snapshots or commit responses missing the expected head, including the no-checks path. Exempts changes to mergeable and mergeStateStatus when either was UNKNOWN on the first read because GitHub computes them on demand. Other changed facts still retry, and the snapshot retains the first read's facts.",
+    "why": "Confirms absence for the same PR head across at least 60 seconds with an injectable clock before ci-none, preserving history, mergeability, and existing blockers in single, stack, and queued runs. Reads suites for the same head before CI counts as clean or absent, so approval-gated Actions blocks as a failed check even beside another app's passing check. Re-reads verdict facts after CI assessment and retries changed snapshots or commit responses missing the expected head, including the no-checks path. Exempts changes to mergeable and mergeStateStatus when either was UNKNOWN on the first read because GitHub computes them on demand. Other changed facts still retry, and the snapshot retains the first read's facts. Waits for mergeability-unknown when either mergeability field is UNKNOWN, after pending or unreported checks, in single, stack, and queued modes. Defers draft gates during these waits and never treats UNKNOWN as readiness or a no-checks query failure.",
     "since": "0.9.15",
     "upstream": "not-proposed"
   },
   "skills/flatpaper-mode/scripts/watch-pr/render.ts": {
     "kind": "local-fix",
-    "why": "Distinguishes unconfirmed no-checks sightings in status, waiting, and timeout output from confirmed absence in status and READY output. Explains snapshot-changed retries as a PR changing while its status was being read.",
+    "why": "Distinguishes unconfirmed no-checks sightings in status, waiting, and timeout output from confirmed absence in status and READY output. Explains snapshot-changed retries as a PR changing while its status was being read. Shows GitHub computing mergeability in status cells and mergeability-unknown waiting and timeout output.",
     "since": "0.9.15",
     "upstream": "not-proposed"
   },
   "skills/flatpaper-mode/scripts/watch-pr/types.ts": {
     "kind": "local-fix",
-    "why": "Models reported and absent checks as tagged unions, separates ci-unreported from ci-none readiness proof, and adds checks-unreported decisions and wait/timeout reasons without changing existing pending-check shapes. Adds the check-suites source and the unsettledSuites reader method. Adds the retryable snapshot-changed query failure.",
+    "why": "Models reported and absent checks as tagged unions, separates ci-unreported from ci-none readiness proof, and adds checks-unreported decisions and wait/timeout reasons without changing existing pending-check shapes. Adds the check-suites source and the unsettledSuites reader method. Adds the retryable snapshot-changed query failure. Adds mergeability-unknown to single and stack decisions and wait/timeout reasons.",
     "since": "0.9.15",
     "upstream": "not-proposed"
   },
