@@ -198,12 +198,21 @@ const VERDICT_FACTS: Record<Exclude<keyof T.PullRequestFacts, "context">, true> 
   headRefName: true,
   baseRefName: true,
 };
+const mergeabilityUnknown = (facts: T.PullRequestFacts): boolean =>
+  facts.mergeable === "UNKNOWN" || facts.mergeStateStatus === "UNKNOWN";
+const COMPUTED_ON_DEMAND: ReadonlySet<string> = new Set([
+  "mergeable",
+  "mergeStateStatus",
+]);
 const changedFacts = (
   before: T.PullRequestFacts,
   after: T.PullRequestFacts
 ): string[] =>
   (Object.keys(VERDICT_FACTS) as (keyof typeof VERDICT_FACTS)[])
     .filter((fact) => before[fact] !== after[fact])
+    .filter(
+      (fact) => !(mergeabilityUnknown(before) && COMPUTED_ON_DEMAND.has(fact))
+    )
     .map((fact) => `${fact} ${before[fact]} -> ${after[fact]}`);
 export async function readSnapshot(args: {
   readonly reader: T.GitHubReader;

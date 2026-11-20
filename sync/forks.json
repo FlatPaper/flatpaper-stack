@@ -145,7 +145,7 @@
   },
   "skills/flatpaper-mode/scripts/watch-pr/policy.ts": {
     "kind": "local-fix",
-    "why": "Confirms absence for the same PR head across at least 60 seconds with an injectable clock before ci-none, preserving history, mergeability, and existing blockers in single, stack, and queued runs. Reads suites for the same head before CI counts as clean or absent, so approval-gated Actions blocks as a failed check even beside another app's passing check. Re-reads verdict facts after CI assessment and retries changed snapshots or commit responses missing the expected head, including the no-checks path.",
+    "why": "Confirms absence for the same PR head across at least 60 seconds with an injectable clock before ci-none, preserving history, mergeability, and existing blockers in single, stack, and queued runs. Reads suites for the same head before CI counts as clean or absent, so approval-gated Actions blocks as a failed check even beside another app's passing check. Re-reads verdict facts after CI assessment and retries changed snapshots or commit responses missing the expected head, including the no-checks path. Exempts changes to mergeable and mergeStateStatus when either was UNKNOWN on the first read because GitHub computes them on demand. Other changed facts still retry, and the snapshot retains the first read's facts.",
     "since": "0.9.15",
     "upstream": "not-proposed"
   },
