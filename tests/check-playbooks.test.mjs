@@ -1,7 +1,7 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,14 +9,19 @@ import { checkPlaybooks } from "../skills/flatpaper-mode/scripts/check-playbooks
 
 const script = join(dirname(fileURLToPath(import.meta.url)), "../skills/flatpaper-mode/scripts/check-playbooks.mjs");
 
-function run(playbooks, { throughSymlink = false, cwd = ".", args = ["."] } = {}) {
+function writePlaybooks(dir, playbooks) {
+  mkdirSync(join(dir, ".agents/playbooks"), { recursive: true });
+  for (const [name, text] of Object.entries(playbooks)) writeFileSync(join(dir, ".agents/playbooks", name), text);
+}
+
+function run(playbooks, { throughSymlink = false, cwd = ".", args = ["."], home = null, rootIsHome = false } = {}) {
   // The script reports the resolved working directory; macOS tmpdir() sits behind the /var symlink.
   const root = realpathSync(mkdtempSync(join(tmpdir(), "flatpaper-check-playbooks-")));
+  // A throwaway home keeps the developer's own ~/.agents/playbooks out of every result.
+  const homeDir = rootIsHome ? root : realpathSync(mkdtempSync(join(tmpdir(), "flatpaper-check-playbooks-home-")));
   try {
-    if (playbooks) {
-      mkdirSync(join(root, ".agents/playbooks"), { recursive: true });
-      for (const [name, text] of Object.entries(playbooks)) writeFileSync(join(root, ".agents/playbooks", name), text);
-    }
+    if (playbooks) writePlaybooks(root, playbooks);
+    if (home) writePlaybooks(homeDir, home);
     const workingDirectory = join(root, cwd);
     mkdirSync(workingDirectory, { recursive: true });
     let entry = script;
@@ -24,10 +29,16 @@ function run(playbooks, { throughSymlink = false, cwd = ".", args = ["."] } = {}
       entry = join(root, "check-playbooks.mjs");
       symlinkSync(script, entry);
     }
-    const result = spawnSync(process.execPath, [entry, ...args.map((arg) => join(root, arg))], { encoding: "utf8", cwd: workingDirectory });
-    return { code: result.status, out: (result.stdout + result.stderr).replaceAll(root, "<root>") };
+    const result = spawnSync(process.execPath, [entry, ...args.map((arg) => join(root, arg))], {
+      encoding: "utf8",
+      cwd: workingDirectory,
+      env: { ...process.env, HOME: homeDir, USERPROFILE: homeDir },
+    });
+    const out = (result.stdout + result.stderr).replaceAll(root, "<root>");
+    return { code: result.status, out: out.replaceAll(homeDir, "<home>") };
   } finally {
     rmSync(root, { recursive: true, force: true });
+    rmSync(homeDir, { recursive: true, force: true });
   }
 }
 
@@ -71,6 +82,93 @@ describe("project playbooks", { timeout: 30_000 }, () => {
     assert.ok(result.out.includes(".agents/playbooks/bug-fix.md: a change has no straight-quoted step text to anchor on"));
   });
 
+  for (const [name, front] of [
+    ["a quoted extends and when", '---\nextends: "bug-fix"\nwhen: \'Use it for any bug report.\'\n---\n'],
+    ["an extends flow list", "---\nextends: [bug-fix, 'feature']\nwhen: Use it for any bug report.\n---\n"],
+    ["blanks after a delimiter", "--- \nextends: bug-fix\nwhen: Use it for any bug report.\n---\t\n"],
+    ["a closing delimiter at the end of the file", "---\nextends: bug-fix\nwhen: Use it for any bug report.\n---"],
+  ]) test(`frontmatter written as valid YAML passes: ${name}`, () => {
+    const result = run({ "bug-fix.md": `${front}${front.endsWith("---") ? "" : '- **In** "Binary-search the cause": compare with main.\n'}` });
+    assert.deepEqual(result, { code: 0, out: "Every project playbook matches this flatpaper-stack's playbooks.\n" });
+  });
+
+  for (const [name, fields, expected] of [
+    ["YAML comments follow flow-list values", "extends: [bug-fix, feature] # two bases\nwhen: 'Fix #42' # condition", { code: 0 }],
+    ["a YAML comment cannot supply the required condition", "extends: bug-fix # base\nwhen: # TODO", { problem: 'needs a "when:" line' }],
+    ["a hash inside a quoted YAML scalar stays literal", "extends: 'bug-fix # literal' # comment\nwhen: Fix it.", { problem: "extends `bug-fix # literal`" }],
+    ["an extends block list checks its base names", "extends:\n  - missing # base\nwhen: Fix it.", { problem: "extends `missing`" }],
+  ]) {
+    test(name, () => {
+      const result = run({ "sample.md": "---\n" + fields + "\n---\n" });
+      if (expected.problem) assert.ok(result.out.includes(expected.problem), result.out);
+      else assert.equal(result.code, expected.code, result.out);
+    });
+  }
+
+  for (const [name, anchor, examples, code] of [
+    ["fenced and indented changes are examples", "Binary-search the cause", true, 0],
+    ["words outside a numbered step cannot anchor changes", "Focused-fix exception", false, 1],
+    ["a wrapped numbered step can anchor changes", "failing test first and the fix on top", false, 0],
+  ]) {
+    test(name, () => {
+      const front = "---\nextends: bug-fix\nwhen: Fix it.\n---\n";
+      const change = (anchor) => '- **After** "' + anchor + '": verify.\n';
+      const example = "    " + change("indented code example") + "\n~~~~markdown\n" + change("example only") + "~~~\n" + change("still an example") + "~~~~\n";
+      const result = run({ "sample.md": front + (examples ? example : "") + change(anchor) });
+      assert.equal(result.code, code, result.out);
+    });
+  }
+
+  test("a base without numbered steps anchors changes on one paragraph or list item, never a heading", () => {
+    const root = mkdtempSync(join(tmpdir(), "flatpaper-check-playbooks-"));
+    try {
+      const bundled = join(root, "bundled");
+      mkdirSync(bundled);
+      writeFileSync(
+        join(bundled, "prose.md"),
+        "### Prose\n\n**Worktree.** Work off main. Subagents\ninherit it.\n\n- `## Why`: the problem.\n- `## Scope`: always.\n\nAfter the sections, attach screenshots.\n",
+      );
+      writeFileSync(join(bundled, "steps.md"), "### Steps\n\nRead this first.\n\n1. Reproduce it.\n2. Fix it.\n");
+      const unanchored = (base, ...quotes) => {
+        const changes = quotes.map((quote) => `- **In** "${quote}": check it.\n`).join("");
+        writePlaybooks(root, { "sample.md": `---\nextends: ${base}\nwhen: Any change.\n---\n${changes}` });
+        return checkPlaybooks(root, bundled).map((problem) => problem.match(/"(.*)" is not in any playbook/)[1]);
+      };
+      assert.deepEqual(unanchored("prose", "Work off main.", "Subagents inherit it.", "`## Scope`: always.", "attach screenshots"), []);
+      assert.deepEqual(unanchored("prose", "Prose", "inherit it. - `## Why`", "always. After"), ["Prose", "inherit it. - `## Why`", "always. After"]);
+      assert.deepEqual(unanchored("steps", "Reproduce it.", "Read this first."), ["Read this first."]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  // An upstream sync that adds one numbered list to either playbook turns every other line unanchorable.
+  test("every prose line of the bundled playbooks without numbered steps anchors a change", () => {
+    const bundled = join(dirname(fileURLToPath(import.meta.url)), "../skills/flatpaper-mode/playbooks");
+    const root = mkdtempSync(join(tmpdir(), "flatpaper-check-playbooks-"));
+    try {
+      for (const stem of ["opening-a-pr", "babysit"]) {
+        const changes = readFileSync(join(bundled, `${stem}.md`), "utf8")
+          .split("\n")
+          .filter((line) => line.trim() && !line.startsWith("#") && !line.includes('"'))
+          .map((line) => line.replace(/^ *(?:[-*+]|\d+[.)]) +/, "").trim().split(/\s+/).slice(-4).join(" "))
+          .map((quote) => `- **In** "${quote}": check it.\n`);
+        writePlaybooks(root, { [`${stem}.md`]: `---\nextends: ${stem}\nwhen: Any change.\n---\n${changes.join("")}` });
+      }
+      assert.deepEqual(checkPlaybooks(root), []);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a quoted flow list is one stem, as YAML reads it", () => {
+    const result = run({ "ship.md": '---\nextends: "[shipping]"\nwhen: Use it to ship.\n---\n' });
+    assert.deepEqual(result, {
+      code: 1,
+      out: ".agents/playbooks/ship.md: extends `[shipping]`, which this flatpaper-stack has no playbook for\n",
+    });
+  });
+
   test("a playbook saved with CRLF line endings passes", () => {
     const result = run({
       "bug-fix.md": '---\r\nextends: bug-fix\r\nwhen: Use it for any bug report.\r\n---\r\n- **In** "Binary-search the cause": compare with main.\r\n',
@@ -96,7 +194,7 @@ describe("project playbooks", { timeout: 30_000 }, () => {
   test("a root with no .agents/playbooks directory passes and the check says so", () => {
     assert.deepEqual(run(null), {
       code: 0,
-      out: "No project playbooks to check: <root>/.agents/playbooks does not exist.\n",
+      out: "No project playbooks to check: neither <root>/.agents/playbooks nor <home>/.agents/playbooks exists.\n",
     });
   });
 
@@ -104,7 +202,50 @@ describe("project playbooks", { timeout: 30_000 }, () => {
     const result = run({ "ship.md": "---\nextends: shipping-v2\nwhen: Use it to ship.\n---\n" }, { cwd: "src", args: [] });
     assert.deepEqual(result, {
       code: 0,
-      out: "No project playbooks to check: <root>/src/.agents/playbooks does not exist.\n",
+      out: "No project playbooks to check: neither <root>/src/.agents/playbooks nor <home>/.agents/playbooks exists.\n",
+    });
+  });
+
+  test("a playbook in the home folder is checked and named by its home path", () => {
+    const result = run(null, {
+      home: { "ship.md": '---\nextends: shipping\nwhen: Use it to ship.\n---\n- **After** "Ask the user to reproduce it": review the docs.\n' },
+    });
+    assert.deepEqual(result, {
+      code: 1,
+      out: '~/.agents/playbooks/ship.md: "Ask the user to reproduce it" is not in any playbook it extends\n',
+    });
+  });
+
+  test("a valid home playbook passes when the repository has none", () => {
+    const result = run(null, {
+      home: { "bug-fix.md": '---\nextends: bug-fix\nwhen: Use it for any bug report.\n---\n- **In** "Binary-search the cause": compare with main.\n' },
+    });
+    assert.deepEqual(result, { code: 0, out: "Every project playbook matches this flatpaper-stack's playbooks.\n" });
+  });
+
+  test("home playbooks are reported before the repository's own", () => {
+    const bad = "---\nextends: shipping-v2\nwhen: Use it to ship.\n---\n";
+    const result = run({ "ship.md": bad }, { home: { "ship.md": bad } });
+    assert.deepEqual(result, {
+      code: 1,
+      out:
+        "~/.agents/playbooks/ship.md: extends `shipping-v2`, which this flatpaper-stack has no playbook for\n" +
+        ".agents/playbooks/ship.md: extends `shipping-v2`, which this flatpaper-stack has no playbook for\n",
+    });
+  });
+
+  test("a repository at the home folder is checked once", () => {
+    const result = run({ "ship.md": "---\nextends: shipping-v2\nwhen: Use it to ship.\n---\n" }, { rootIsHome: true });
+    assert.deepEqual(result, {
+      code: 1,
+      out: ".agents/playbooks/ship.md: extends `shipping-v2`, which this flatpaper-stack has no playbook for\n",
+    });
+  });
+
+  test("a repository at the home folder with no playbooks names one directory", () => {
+    assert.deepEqual(run(null, { rootIsHome: true }), {
+      code: 0,
+      out: "No project playbooks to check: <root>/.agents/playbooks does not exist.\n",
     });
   });
 
