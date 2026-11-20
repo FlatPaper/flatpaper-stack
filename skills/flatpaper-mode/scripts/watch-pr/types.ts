@@ -87,10 +87,12 @@ export type Check =
     });
 export type FailedCheck = Extract<Check, { readonly kind: "failed" }>;
 export type PendingCheck = Extract<Check, { readonly kind: "pending" }>;
-export interface CheckRead {
+export interface ReportedChecks {
+  readonly kind: "reported";
   readonly source: "gh-pr-checks" | "graphql-rollup";
   readonly checks: NonEmpty<Check>;
 }
+export type CheckRead = ReportedChecks | { readonly kind: "no-checks" };
 export interface CommitRollup {
   readonly oid: string;
   readonly state: RollupState;
@@ -115,7 +117,7 @@ export type GitHubMergeAllowed =
     };
 export type GitHubMergeAssessment = GitHubMergeAllowed | GitHubMergeRefusal;
 interface CiBase {
-  readonly source: CheckRead["source"];
+  readonly source: ReportedChecks["source"];
   readonly all: NonEmpty<Check>;
   readonly hadPreviousPassingCi: boolean;
 }
@@ -142,7 +144,20 @@ export type CiClean = CiBase & {
   readonly pending: readonly [];
   readonly github: GitHubMergeAllowed;
 };
-export type CiState = CiFailing | CiGithubRejected | CiPending | CiClean;
+export interface CiNone {
+  readonly kind: "ci-none";
+  readonly failed: readonly [];
+  readonly pending: readonly [];
+  readonly hadPreviousPassingCi: false;
+  readonly github: GitHubMergeAllowed;
+}
+export interface CiUnreported {
+  readonly kind: "ci-unreported";
+  readonly failed: readonly [];
+  readonly pending: readonly [];
+  readonly hadPreviousPassingCi: false;
+}
+export type CiState = CiFailing | CiGithubRejected | CiPending | CiClean | CiNone | CiUnreported;
 export type PrSnapshot =
   | {
       readonly kind: "merged" | "closed";
@@ -163,7 +178,7 @@ export interface ReadyPr {
   readonly proof: {
     readonly mergeability: "clear";
     readonly threads: readonly [];
-    readonly ci: CiClean;
+    readonly ci: CiClean | CiNone;
     readonly gate: {
       readonly state: "OPEN";
       readonly reviewDecision: Exclude<ReviewDecision, "CHANGES_REQUESTED">;
@@ -246,14 +261,20 @@ export interface WaitingDecision {
   readonly frontier: PrContext;
   readonly pending: NonEmpty<PendingCheck>;
 }
+export interface ChecksUnreportedDecision {
+  readonly kind: "checks-unreported";
+  readonly frontier: PrContext;
+}
 export type PrDecision =
   | { readonly kind: "blocker"; readonly blocker: MergeBlocker }
   | WaitingDecision
+  | ChecksUnreportedDecision
   | { readonly kind: "ready"; readonly pr: ReadyPr }
   | { readonly kind: "merged"; readonly pr: MergedPr };
 export type StackDecision =
   | { readonly kind: "blocker"; readonly blocker: MergeBlocker }
   | WaitingDecision
+  | ChecksUnreportedDecision
   | { readonly kind: "clear"; readonly prs: NonEmpty<ReadyPr | MergedPr> };
 export type WatchMode = "single" | "stack" | "queued-stack";
 interface EventBase<K extends string, M extends WatchMode = WatchMode> {
@@ -286,6 +307,7 @@ export type ProgressVerdict =
   | (Progress<"WAITING"> & {
       readonly frontier: PrContext;
       readonly reason:
+        | { readonly kind: "checks-unreported" }
         | {
             readonly kind: "pending-checks";
             readonly pending: NonEmpty<PendingCheck>;
@@ -333,6 +355,7 @@ export type BlockerVerdict =
     });
 export type TimeoutVerdict = Terminal<"TIMEOUT", 5> & {
   readonly reason:
+    | { readonly kind: "checks-unreported" }
     | {
         readonly kind: "pending-checks";
         readonly pending: NonEmpty<PendingCheck>;
@@ -370,6 +393,7 @@ export type QueueTerminalVerdict =
   | BlockerVerdict
   | TimeoutVerdict;
 export type ChecksFastPath =
+  | { readonly kind: "none-reported" }
   | { readonly kind: "checks"; readonly checks: readonly Check[] }
   | {
       readonly kind: "unusable";
@@ -377,6 +401,7 @@ export type ChecksFastPath =
       readonly stderr: string;
     };
 export interface RollupPage {
+  readonly rollup?: "absent";
   readonly checks: readonly Check[];
   readonly endCursor: string | null;
 }

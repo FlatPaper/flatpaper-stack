@@ -113,6 +113,42 @@
     "since": "0.9.2",
     "upstream": "not-proposed"
   },
+  "skills/flatpaper-mode/scripts/watch-pr/github.test.ts": {
+    "kind": "local-fix",
+    "why": "Narrows existing check-read assertions to the reported variant so upstream tests type-check with the new union.",
+    "since": "0.9.15",
+    "upstream": "not-proposed"
+  },
+  "skills/flatpaper-mode/scripts/watch-pr/github.ts": {
+    "kind": "local-fix",
+    "why": "Distinguishes confirmed absent checks from unavailable checks and rejects unreported head suites that require action or have not finished cleanly.",
+    "since": "0.9.15",
+    "upstream": "not-proposed"
+  },
+  "skills/flatpaper-mode/scripts/watch-pr/cli.ts": {
+    "kind": "local-fix",
+    "why": "Explains that no checks requires 60 seconds of confirmation regardless of poll interval and that status-only can show an unconfirmed reading.",
+    "since": "0.9.15",
+    "upstream": "not-proposed"
+  },
+  "skills/flatpaper-mode/scripts/watch-pr/policy.ts": {
+    "kind": "local-fix",
+    "why": "Confirms absence for the same PR head across at least 60 seconds with an injectable clock before ci-none, preserving history, mergeability, suite guards, and existing blockers in single, stack, and queued runs.",
+    "since": "0.9.15",
+    "upstream": "not-proposed"
+  },
+  "skills/flatpaper-mode/scripts/watch-pr/render.ts": {
+    "kind": "local-fix",
+    "why": "Distinguishes unconfirmed no-checks sightings in status, waiting, and timeout output from confirmed absence in status and READY output.",
+    "since": "0.9.15",
+    "upstream": "not-proposed"
+  },
+  "skills/flatpaper-mode/scripts/watch-pr/types.ts": {
+    "kind": "local-fix",
+    "why": "Models reported and absent checks as tagged unions, separates ci-unreported from ci-none readiness proof, and adds checks-unreported decisions and wait/timeout reasons without changing existing pending-check shapes.",
+    "since": "0.9.15",
+    "upstream": "not-proposed"
+  },
   "skills/flatpaper-mode/scripts/worktree-audit.sh": {
     "kind": "port-feature",
     "why": "Reads PR state from gh only and greps Claude Code transcripts under ~/.claude/projects/<slug>* (worktree sessions included) instead of Cursor's agent-transcripts with rg.",

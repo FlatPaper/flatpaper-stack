@@ -17,6 +17,7 @@ import {
   statusQueryVerdict,
   verdictFactory,
   type WatchClock,
+  NO_CHECKS_CONFIRM_SECONDS,
 } from "./policy.ts";
 import { renderJson, renderPretty } from "./render.ts";
 import type * as T from "./types.ts";
@@ -107,7 +108,12 @@ export function parseArgs(
       "frozen bottom-to-top queue (queued mode only)",
       stackPrList
     )
-    .option("--interval <seconds>", "poll interval", positiveNumber, 60)
+    .option(
+      "--interval <seconds>",
+      `poll interval; no checks takes ${NO_CHECKS_CONFIRM_SECONDS} seconds to confirm whatever the interval`,
+      positiveNumber,
+      60
+    )
     .option(
       "--sweep-interval <seconds>",
       "whole-stack sweep interval",
@@ -126,7 +132,7 @@ export function parseArgs(
       positiveInteger,
       5
     )
-    .option("--status-only", "print one status table and exit 0", false)
+    .option("--status-only", "print one status table and exit 0; no checks can still be unconfirmed", false)
     .option("--allow-draft", "do not treat a draft as a merge gate", false)
     .option("--pretty", "render human text instead of JSON", false);
   program.parse(argv, { from: "user" });
