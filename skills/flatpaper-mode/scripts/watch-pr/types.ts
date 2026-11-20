@@ -218,6 +218,11 @@ export type MergeBlocker =
     };
 export type QueryFailure =
   | {
+      readonly kind: "snapshot-changed";
+      readonly retryable: true;
+      readonly detail: string;
+    }
+  | {
       readonly kind: "json-parse";
       readonly retryable: true;
       readonly detail: string;

@@ -36,11 +36,14 @@ async function mergeAssessment(
   facts: T.PullRequestFacts
 ) {
   const commits = await reader.commitRollups(facts.context);
-  const headRollupState =
-    facts.headRefOid === null
-      ? null
-      : (commits.find((commit) => commit.oid === facts.headRefOid)?.state ??
-        null);
+  const head = commits.find((commit) => commit.oid === facts.headRefOid);
+  if (facts.headRefOid !== null && head === undefined)
+    throw new WatcherQueryError({
+      kind: "snapshot-changed",
+      retryable: true,
+      detail: `commit response does not contain expected head ${facts.headRefOid}`,
+    });
+  const headRollupState = head?.state ?? null;
   return {
     anyCommitReported: commits.some((commit) => commit.state !== null),
     hadPreviousPassingCi: commits.some(
@@ -184,6 +187,24 @@ const AUTOMATION_TOKENS = [
   "pr review automation",
   "review automation",
 ] as const;
+const VERDICT_FACTS: Record<Exclude<keyof T.PullRequestFacts, "context">, true> = {
+  state: true,
+  mergedAt: true,
+  isDraft: true,
+  mergeable: true,
+  mergeStateStatus: true,
+  reviewDecision: true,
+  headRefOid: true,
+  headRefName: true,
+  baseRefName: true,
+};
+const changedFacts = (
+  before: T.PullRequestFacts,
+  after: T.PullRequestFacts
+): string[] =>
+  (Object.keys(VERDICT_FACTS) as (keyof typeof VERDICT_FACTS)[])
+    .filter((fact) => before[fact] !== after[fact])
+    .map((fact) => `${fact} ${before[fact]} -> ${after[fact]}`);
 export async function readSnapshot(args: {
   readonly reader: T.GitHubReader;
   readonly context: T.PrContext;
@@ -203,6 +224,14 @@ export async function readSnapshot(args: {
     checks.kind === "no-checks"
       ? await noChecksCi(args.reader, facts, args.confirmNoChecks)
       : await reportedCi(args.reader, facts, checks, args.pendingHistory);
+  const factsAfterChecks = await args.reader.pullRequest(args.context);
+  const changed = changedFacts(facts, factsAfterChecks);
+  if (changed.length > 0)
+    throw new WatcherQueryError({
+      kind: "snapshot-changed",
+      retryable: true,
+      detail: `PR changed while collecting ${facts.headRefOid} against ${facts.baseRefName}: ${changed.join(", ")}`,
+    });
   return {
     kind: "open",
     context: args.context,

@@ -137,21 +137,27 @@
     "since": "0.9.15",
     "upstream": "not-proposed"
   },
+  "skills/flatpaper-mode/scripts/watch-pr/policy.test.ts": {
+    "kind": "local-fix",
+    "why": "Updates two exact query timelines for the required facts re-read and delays the ADVANCE fixture's merge until after the first complete snapshot. These upstream cases encode single-read snapshots and cannot pass unchanged with the new consistency check; new snapshot-changed cases remain in port-only tests.",
+    "since": "0.9.15",
+    "upstream": "not-proposed"
+  },
   "skills/flatpaper-mode/scripts/watch-pr/policy.ts": {
     "kind": "local-fix",
-    "why": "Confirms absence for the same PR head across at least 60 seconds with an injectable clock before ci-none, preserving history, mergeability, and existing blockers in single, stack, and queued runs. Reads suites for the same head before CI counts as clean or absent, so approval-gated Actions blocks as a failed check even beside another app's passing check.",
+    "why": "Confirms absence for the same PR head across at least 60 seconds with an injectable clock before ci-none, preserving history, mergeability, and existing blockers in single, stack, and queued runs. Reads suites for the same head before CI counts as clean or absent, so approval-gated Actions blocks as a failed check even beside another app's passing check. Re-reads verdict facts after CI assessment and retries changed snapshots or commit responses missing the expected head, including the no-checks path.",
     "since": "0.9.15",
     "upstream": "not-proposed"
   },
   "skills/flatpaper-mode/scripts/watch-pr/render.ts": {
     "kind": "local-fix",
-    "why": "Distinguishes unconfirmed no-checks sightings in status, waiting, and timeout output from confirmed absence in status and READY output.",
+    "why": "Distinguishes unconfirmed no-checks sightings in status, waiting, and timeout output from confirmed absence in status and READY output. Explains snapshot-changed retries as a PR changing while its status was being read.",
     "since": "0.9.15",
     "upstream": "not-proposed"
   },
   "skills/flatpaper-mode/scripts/watch-pr/types.ts": {
     "kind": "local-fix",
-    "why": "Models reported and absent checks as tagged unions, separates ci-unreported from ci-none readiness proof, and adds checks-unreported decisions and wait/timeout reasons without changing existing pending-check shapes. Adds the check-suites source and the unsettledSuites reader method.",
+    "why": "Models reported and absent checks as tagged unions, separates ci-unreported from ci-none readiness proof, and adds checks-unreported decisions and wait/timeout reasons without changing existing pending-check shapes. Adds the check-suites source and the unsettledSuites reader method. Adds the retryable snapshot-changed query failure.",
     "since": "0.9.15",
     "upstream": "not-proposed"
   },
