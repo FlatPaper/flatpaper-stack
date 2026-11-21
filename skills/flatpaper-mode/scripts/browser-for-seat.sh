@@ -140,9 +140,10 @@ async function main() {
       const uncertain = () => { throw new Error(`a Chrome may still be running on ${profile}; state kept in ${dir}`); };
       if (existsSync(state)) {
         const text = readFileSync(state, "utf8");
+        if (text === "") throw new Error(`${dir} has an unfinished start; remove it by hand once its Chrome has exited`);
         target = endpoint(/^PORT=(.*)$/m.exec(text)?.[1], /^BROWSER=(.*)$/m.exec(text)?.[1]);
-        if (!target && text !== "") throw new Error(`invalid browser.env; state kept in ${dir}`);
-        const answer = target ? await version(target.port, cancellation.signal, deadline) : null;
+        if (!target) throw new Error(`invalid browser.env; state kept in ${dir}`);
+        const answer = await version(target.port, cancellation.signal, deadline);
         checkInterrupted();
         if (target && answer === target.url) {
           await closeBrowser(target, cancellation.signal, deadline);

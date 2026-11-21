@@ -322,9 +322,35 @@ setTimeout(() => process.exit(0), 1500);
   assert.doesNotThrow(() => process.kill(pid, 0));
   assert.ok(existsSync(join(dir, "browser.env")) || existsSync(join(dir, "profile")));
   await waitFor(() => existsSync(join(dir, "exited")));
-  assert.equal((await runAsync("stop", dir)).status, 0);
-  assert.equal(existsSync(join(dir, "profile")), false);
-  assert.equal(existsSync(join(dir, "browser.env")), false);
+  try {
+    const stop = await runAsync("stop", dir);
+    assert.equal(stop.status, 1);
+    assert.equal(stop.stderr, `error: ${dir} has an unfinished start; remove it by hand once its Chrome has exited\n`);
+    assert.equal(readFileSync(join(dir, "browser.env"), "utf8"), "");
+    assert.equal(existsSync(join(dir, "profile")), true);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("stop keeps an unfinished start without a lock while its browser is alive", async (t) => {
+  const { dir } = fixture(t);
+  mkdirSync(join(dir, "profile"));
+  writeFileSync(join(dir, "browser.env"), "");
+  const fake = spawn(process.execPath, ["-e", "setTimeout(() => process.exit(0), 1500)"]);
+  const closed = once(fake, "close");
+  try {
+    await once(fake, "spawn");
+    assert.equal(existsSync(join(dir, "profile", "SingletonLock")), false);
+    const stop = await runAsync("stop", dir);
+    assert.equal(stop.status, 1);
+    assert.equal(stop.stdout, "");
+    assert.equal(stop.stderr, `error: ${dir} has an unfinished start; remove it by hand once its Chrome has exited\n`);
+    assert.equal(readFileSync(join(dir, "browser.env"), "utf8"), "");
+    assert.equal(existsSync(join(dir, "profile")), true);
+    assert.doesNotThrow(() => process.kill(fake.pid, 0));
+  } finally {
+    await closed;
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test("SIGTERM during a pending readiness response fails start and cleans up", async (t) => {
@@ -384,7 +410,7 @@ server.on("upgrade", (req, socket) => {
   socket.on("data", (chunk) => {
     pending = Buffer.concat([pending, chunk]);
     if (pending.length < 2) return;
-    if (!(pending[0] & 128) || (pending[0] & 15) !== 1 || !(pending[1] & 128)) { socket.destroy(); return; }
+    if ((pending[0] & 0x70) || !(pending[0] & 128) || (pending[0] & 15) !== 1 || !(pending[1] & 128)) { socket.destroy(); return; }
     if (pending.length < 6) return;
     const length = pending[1] & 127;
     if (length > 125 || pending.length < length + 6) return;
@@ -419,7 +445,7 @@ test("starts and stops a fake DevTools browser with Chrome choosing its port", a
   assert.equal((await runAsync("stop", dir)).status, 0);
 });
 
-for (const invalid of ["unmasked", "fragmented", "binary", "wrong-path"]) test(`a ${invalid} request does not close the fake browser`, async (t) => {
+for (const invalid of ["unmasked", "fragmented", "binary", "wrong-path", "rsv1", "rsv2", "rsv3"]) test(`a ${invalid} request does not close the fake browser`, async (t) => {
   const { dir } = fixture(t);
   const { result } = startAsync(dir, devToolsChrome(dir));
   const start = await result;
@@ -440,7 +466,7 @@ for (const invalid of ["unmasked", "fragmented", "binary", "wrong-path"]) test(`
       socket.on("error", reject);
       socket.on("close", resolve);
       const body = Buffer.from(JSON.stringify({ id: 1, method: "Browser.close" }));
-      socket.end(Buffer.concat([Buffer.from([invalid === "fragmented" ? 0x01 : invalid === "binary" ? 0x82 : 0x81, body.length | (invalid === "unmasked" ? 0 : 0x80), 0, 0, 0, 0]), body]));
+      socket.end(Buffer.concat([Buffer.from([({ fragmented: 0x01, binary: 0x82, rsv1: 0xc1, rsv2: 0xa1, rsv3: 0x91 }[invalid] ?? 0x81), body.length | (invalid === "unmasked" ? 0 : 0x80), 0, 0, 0, 0]), body]));
     });
   });
   assert.doesNotThrow(() => process.kill(pid, 0));
