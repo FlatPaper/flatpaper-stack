@@ -26,8 +26,9 @@ if [ "$1" = start ]; then
 fi
 
 exec node - "$1" "$2" "$chrome" <<'NODE'
-const { execFileSync, spawn } = require("node:child_process");
-const { closeSync, existsSync, mkdirSync, openSync, readFileSync, rmSync, writeFileSync } = require("node:fs");
+const { spawn } = require("node:child_process");
+const { createHash, randomBytes } = require("node:crypto");
+const { closeSync, existsSync, lstatSync, mkdirSync, openSync, readFileSync, rmSync, writeFileSync } = require("node:fs");
 const { get } = require("node:http");
 const { join, resolve } = require("node:path");
 
@@ -37,76 +38,129 @@ const state = join(dir, "browser.env");
 const profile = join(dir, "profile");
 const pause = (ms) => new Promise((done) => setTimeout(done, ms));
 
-function alive(pid) {
-  try { process.kill(pid, 0); return true; }
-  catch (error) { if (error.code === "ESRCH") return false; throw error; }
+function locked() {
+  try { lstatSync(join(profile, "SingletonLock")); return true; }
+  catch (error) { if (error.code === "ENOENT") return false; throw error; }
 }
 
-function ownsProcess(pid) {
-  let command;
-  try { command = execFileSync("ps", ["-o", "command=", "-p", String(pid)], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim(); }
-  catch (error) { if (error.status === 1) return false; throw error; }
-  const argument = `--user-data-dir=${profile}`;
-  const index = command.indexOf(argument);
-  return index >= 0 && (index === 0 || /\s/.test(command[index - 1]))
-    && (index + argument.length === command.length || /\s/.test(command[index + argument.length]));
+function endpoint(port, browser) {
+  if (!/^\d+$/.test(port ?? "") || Number(port) < 1 || Number(port) > 65535
+      || !/^\/devtools\/browser\/[A-Za-z0-9-]+$/.test(browser ?? "")) return;
+  return { port: Number(port), browser, url: `ws://127.0.0.1:${Number(port)}${browser}` };
 }
 
-async function terminate(pid) {
-  const signal = (name) => {
-    if (!ownsProcess(pid)) return false;
-    try { process.kill(pid, name); return true; }
-    catch (error) { if (error.code !== "ESRCH") throw error; return false; }
-  };
-  if (!signal("SIGTERM")) return;
-  for (let i = 0; i < 50 && alive(pid); i++) await pause(100);
-  if (alive(pid) && !signal("SIGKILL")) return;
-  for (let i = 0; i < 10 && alive(pid); i++) await pause(100);
-  if (alive(pid) && ownsProcess(pid)) throw new Error("Chrome did not stop");
-}
-
-function versionAnswers(port, signal) {
+function version(port, signal, deadline) {
   return new Promise((done) => {
     const request = get(`http://127.0.0.1:${port}/json/version`, { signal }, (response) => {
       let body = "";
       response.setEncoding("utf8");
-      response.on("data", (chunk) => { body += chunk; });
-      response.on("error", () => done(false));
+      response.on("data", (chunk) => {
+        body += chunk;
+        if (body.length > 65536) request.destroy();
+      });
+      response.on("error", () => done(null));
       response.on("end", () => {
-        try {
-          const url = JSON.parse(body).webSocketDebuggerUrl;
-          done(response.statusCode === 200 && typeof url === "string" && url.startsWith(`ws://127.0.0.1:${port}/`));
-        } catch { done(false); }
+        try { done(response.statusCode === 200 ? JSON.parse(body).webSocketDebuggerUrl ?? null : null); }
+        catch { done(null); }
       });
     });
-    const timer = setTimeout(() => request.destroy(), 250);
+    const timer = setTimeout(() => request.destroy(), Math.max(1, Math.min(250, deadline - Date.now())));
     request.once("close", () => clearTimeout(timer));
-    request.on("error", () => done(false));
+    request.on("error", () => done(null));
   });
 }
 
-async function main() {
-  if (action === "stop") {
-    if (existsSync(state)) {
-      const text = readFileSync(state, "utf8");
-      const pid = Number(/^PID=(\d+)$/m.exec(text)?.[1]);
-      if (!Number.isSafeInteger(pid) || pid <= 1) throw new Error("invalid PID in browser.env");
-      await terminate(pid);
-      rmSync(state);
-    }
-    rmSync(profile, { recursive: true, force: true });
-    return;
-  }
+function closeBrowser(target, signal, deadline) {
+  if (signal?.aborted || Date.now() >= deadline) return Promise.resolve();
+  return new Promise((done) => {
+    const key = randomBytes(16).toString("base64");
+    let socket;
+    let settled = false;
+    const request = get(`http://127.0.0.1:${target.port}${target.browser}`, {
+      signal,
+      headers: { Connection: "Upgrade", Upgrade: "websocket", "Sec-WebSocket-Version": "13", "Sec-WebSocket-Key": key },
+    });
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", finish);
+      socket?.destroy();
+      request.destroy();
+      done();
+    };
+    const timer = setTimeout(finish, Math.max(1, Math.min(500, deadline - Date.now())));
+    signal?.addEventListener("abort", finish, { once: true });
+    request.on("error", finish);
+    request.on("response", (response) => { response.destroy(); finish(); });
+    request.on("upgrade", (response, connection) => {
+      socket = connection;
+      socket.on("error", finish);
+      socket.on("close", finish);
+      const accept = createHash("sha1").update(key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").digest("base64");
+      if (settled || response.statusCode !== 101 || response.headers["sec-websocket-accept"] !== accept) {
+        socket.destroy();
+        finish();
+        return;
+      }
+      const body = Buffer.from(JSON.stringify({ id: 1, method: "Browser.close" }));
+      const mask = randomBytes(4);
+      const frame = Buffer.alloc(6 + body.length);
+      frame[0] = 0x81;
+      frame[1] = 0x80 | body.length;
+      mask.copy(frame, 2);
+      for (let i = 0; i < body.length; i++) frame[6 + i] = body[i] ^ mask[i % 4];
+      socket.write(frame, finish);
+    });
+  });
+}
 
-  let record;
-  let child;
+function removeState() {
+  rmSync(profile, { recursive: true, force: true });
+  rmSync(state, { force: true });
+}
+
+async function main() {
   let interrupted = false;
   const cancellation = new AbortController();
   const onSignal = () => { interrupted = true; cancellation.abort(); };
-  const checkInterrupted = () => { if (interrupted) throw new Error("browser start interrupted"); };
+  const checkInterrupted = () => { if (interrupted) throw new Error(`browser ${action} interrupted`); };
   process.on("SIGINT", onSignal);
   process.on("SIGTERM", onSignal);
+  let record;
+  let child;
+  let exited = false;
+  let target;
+  let timeout;
   try {
+    timeout = Number(process.env.BROWSER_FOR_SEAT_TIMEOUT_MS ?? 15000);
+    if (!Number.isFinite(timeout) || timeout <= 0) throw new Error("invalid BROWSER_FOR_SEAT_TIMEOUT_MS");
+    const deadline = Date.now() + timeout;
+    if (action === "stop") {
+      const uncertain = () => { throw new Error(`a Chrome may still be running on ${profile}; state kept in ${dir}`); };
+      if (existsSync(state)) {
+        const text = readFileSync(state, "utf8");
+        target = endpoint(/^PORT=(.*)$/m.exec(text)?.[1], /^BROWSER=(.*)$/m.exec(text)?.[1]);
+        if (!target) throw new Error(`invalid browser.env; state kept in ${dir}`);
+        const answer = await version(target.port, cancellation.signal, deadline);
+        checkInterrupted();
+        if (answer === target.url) {
+          await closeBrowser(target, cancellation.signal, deadline);
+          while (Date.now() < deadline) {
+            const answer = await version(target.port, cancellation.signal, deadline);
+            checkInterrupted();
+            if (answer === null && !locked()) { removeState(); return; }
+            await pause(Math.min(50, Math.max(1, deadline - Date.now())));
+          }
+          uncertain();
+        }
+      }
+      checkInterrupted();
+      if (locked()) uncertain();
+      removeState();
+      return;
+    }
+
     mkdirSync(dir, { recursive: true });
     try { record = openSync(state, "wx", 0o600); }
     catch (error) {
@@ -123,41 +177,45 @@ async function main() {
         { detached: true, stdio: ["ignore", log, log] });
     } finally { closeSync(log); }
     let launchError;
-    child.on("error", (error) => { launchError = error; });
-    child.unref();
-    if (child.pid) writeFileSync(record, `PID=${child.pid}\n`);
-    const timeout = Number(process.env.BROWSER_FOR_SEAT_TIMEOUT_MS ?? 15000);
-    if (!Number.isFinite(timeout) || timeout <= 0) throw new Error("invalid BROWSER_FOR_SEAT_TIMEOUT_MS");
-    const deadline = Date.now() + timeout;
+    child.on("exit", () => { exited = true; });
+    child.on("error", (error) => { launchError = error; if (!child.pid) exited = true; });
     while (Date.now() < deadline) {
       checkInterrupted();
-      if (launchError || child.exitCode !== null || child.signalCode !== null) throw new Error("Chrome exited before DevTools was ready; see browser.log");
-      let port;
-      if (existsSync(activePort)) {
-        const line = readFileSync(activePort, "utf8").split("\n")[0];
-        if (/^\d+$/.test(line) && Number(line) > 0 && Number(line) <= 65535) port = Number(line);
-      }
-      if (port) {
-        const ready = await versionAnswers(port, cancellation.signal);
+      if (launchError || exited) throw new Error("Chrome exited before DevTools was ready; see browser.log");
+      let candidate;
+      try { candidate = endpoint(...readFileSync(activePort, "utf8").split("\n")); }
+      catch (error) { if (error.code !== "ENOENT") throw error; }
+      if (candidate) {
+        const answer = await version(candidate.port, cancellation.signal, deadline);
+        if (answer === candidate.url) target = candidate;
         checkInterrupted();
-        if (ready && child.exitCode === null && child.signalCode === null && ownsProcess(child.pid)) {
-          writeFileSync(state, `PORT=${port}\nPID=${child.pid}\n`, { mode: 0o600 });
+        if (target && !exited) {
+          writeFileSync(record, `PORT=${target.port}\nBROWSER=${target.browser}\n`);
           checkInterrupted();
-          console.log(`port=${port}`);
+          console.log(`port=${target.port}`);
+          child.unref();
           return;
         }
       }
-      await pause(100);
-      checkInterrupted();
+      await pause(Math.min(50, Math.max(1, deadline - Date.now())));
     }
     throw new Error(`Chrome DevTools did not answer within ${timeout} milliseconds; see browser.log`);
   } catch (error) {
-    if (record !== undefined) {
-      try { if (child?.pid) await terminate(child.pid); }
-      finally {
-        rmSync(profile, { recursive: true, force: true });
-        rmSync(state, { force: true });
+    if (action === "start" && record !== undefined) {
+      if (child && !exited && child.exitCode === null) {
+        const deadline = Date.now() + timeout;
+        if (target) await closeBrowser(target, undefined, deadline);
+        else child.kill("SIGTERM");
+        const escalation = Date.now() + Math.max(0, deadline - Date.now()) * 0.8;
+        while (!exited && child.exitCode === null && Date.now() < escalation) await pause(25);
+        if (!exited && child.exitCode === null) child.kill("SIGKILL");
+        while (!exited && child.exitCode === null && Date.now() < deadline) await pause(25);
       }
+      if (child && !exited && child.exitCode === null) {
+        child.unref();
+        throw new Error(`${error.message}; could not confirm Chrome exited; state kept in ${dir}`);
+      }
+      removeState();
     }
     throw error;
   } finally {
