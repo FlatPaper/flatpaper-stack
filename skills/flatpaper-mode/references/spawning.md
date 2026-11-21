@@ -23,6 +23,8 @@ A role that checks other agents' work lists its reviewers in order of preference
 2. If there is none, take the first available entry from an author family, preferring a model that did not write the work. With no such entry in the list, use `parent`. Report it as a same-family review and name the model.
 3. The reviewer is always a fresh subagent. A review by the agent that wrote the work never counts.
 
+The `pr critical reviewer`, `pr deep reviewer`, and `pr triage reviewer` roles take the model their line names. Steps 1 and 2 do not apply to them. Step 3 still applies, so each review uses a fresh subagent and never the author. Other reviewer roles keep the cross-family rule.
+
 A model the user names (`sonnet`, `opus`, `haiku`, `fable`, or a Codex model) wins over all of this.
 
 ## Run a Codex seat
@@ -46,3 +48,9 @@ Use the role line's effort, or the default's effort when the line has none. Neve
 ## Codex sandbox
 
 `codex-run.sh` runs Codex with `--write` unless you pass `read-only`. The read-only sandbox refuses git on macOS and any temp-file write, so a Codex reviewer keeps `--write`. Pass a throwaway detached worktree at the head under review as the reviewer's `<cwd>`, so its writes stay out of the real worktree. `--write` still refuses localhost servers and the network unless `~/.codex/config.toml` sets `network_access = true` under `[sandbox_workspace_write]`, and even then Claude Code's own sandbox limits outbound hosts to its allowlist. Without that setting, a review that must run those uses a Claude reviewer in place of the role's Codex model. If the user named Codex for that review, report that the sandbox blocks it and keep the review gate closed until they choose. Never run Codex with full access.
+
+## Browser for a Codex seat
+
+On macOS the Codex sandbox refuses to launch Chromium. A seat with `network_access = true` can drive a Chrome the session started over its DevTools port. `browser-for-seat.sh start` refuses inside a Codex sandbox, because each launch attempt there crashes Chrome and raises a macOS crash dialog.
+
+The session runs `scripts/browser-for-seat.sh start <dir>` and puts the printed port in the brief, with the URL of any page server the session started. Tell the seat to connect with Node's built-in WebSocket or any CDP client and never launch a browser. Run `scripts/browser-for-seat.sh stop <dir>` after the seat's report to close Chrome through DevTools and keep the directory if Chrome cannot be confirmed stopped. `start` refuses a profile another Chrome holds locked. Without `network_access`, use a Claude reviewer for browser checks.

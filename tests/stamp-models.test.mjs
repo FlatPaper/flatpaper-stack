@@ -130,6 +130,22 @@ test("architect no longer restates the implicit effort", () => {
   assert.ok(!read(repo, SPAWNING).includes("which means `high`"), "hardest tasks exception now comes from its default");
 });
 
+test("PR review tiers keep their single model defaults in prose and template", () => {
+  const mode = read(repo, MODE);
+  const fence = templateFence(read(repo, SETUP));
+  for (const [role, value, prose] of [
+    ["pr critical reviewer", "parent:high", "parent:high"],
+    ["pr deep reviewer", "codex/matched:high", "codex/matched:high"],
+    ["pr triage reviewer", "codex/matched:medium", "codex/matched"],
+  ]) {
+    const entry = catalog.roles.find((r) => r.role === role);
+    assert.equal(entry.kind, "single");
+    assert.deepEqual(entry.default, [value]);
+    assert.ok(mode.includes(`the \`${role}\` role (default \`${prose}\`)`));
+    assert.ok(fence.includes(`${role}: ${value}`));
+  }
+});
+
 test("invalid prose exits 2 and a write run touches no file", async (t) => {
   const cases = [
     ["unknown role", "Use the `how explorers` role (default `parent`).", /unknown role `how explorers`/],
