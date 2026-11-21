@@ -13,7 +13,7 @@ Use that role's line in `~/.claude/flatpaper-stack/models.md`, which `/flatpaper
 - `gemini/<name>`: the Gemini agent or MCP tool that the name refers to.
 - A list runs one subagent per entry, so its length sets the fan-out.
 
-If a value's provider is missing or the spawn rejects it, use the role's default and say so. If the default's provider is missing too, use `parent` and say so, unless the skill says to skip the seat. A role that needs MCP tools, which only Claude subagents have, treats a `codex` or `gemini` value as missing.
+If a value's provider is missing or the spawn rejects it, use the role's default and say so. If the default's provider is missing too, use `parent` and say so, unless the skill says to skip the seat. A role that needs something only a Claude subagent has, such as MCP tools, messages through `SendMessage` while it runs, or its own wake-ups through `/loop` or `Monitor`, treats a `codex` or `gemini` value as missing.
 
 ## Cross-family reviewer
 

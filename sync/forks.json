@@ -61,7 +61,7 @@
   },
   "skills/flatpaper-mode/playbooks/autopilot-full.md": {
     "kind": "policy",
-    "why": "Uses gh for every PR (the Origin forge is dropped), runs each owner as a local worktree Agent instead of a cloud VM, and keeps the trail store at ~/.claude/orchestrate/<program>/.",
+    "why": "Uses gh for every PR (the Origin forge is dropped), runs each owner as a local worktree Agent on the parent model at high effort instead of a cloud VM, and keeps the trail store at ~/.claude/orchestrate/<program>/.",
     "since": "0.9.2",
     "upstream": "not-proposed"
   },
