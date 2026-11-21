@@ -49,6 +49,8 @@ The default role-to-model mapping is the file shape shown in step 5 below. If `~
 
 For panel roles (arena runners, interrogate reviewers) the value is a list, and one subagent runs per entry, `parent` included, so the list length sets the count. A panel is for diverse review, so warn when every entry is from one provider. `arena cross-judge pool` is also a list, but Arena runs one judge. It tries only values from a provider other than the parent's (Claude), in list order, so order it by preference. A `parent` value never judges. `trail reviewer` is an ordered list too. Each review takes the first entry from a family that did not write the work, and falls back to a labelled same-family review when none is available, per **Cross-family reviewer** in `../flatpaper-mode/references/spawning.md`. Order each by preference, and include a family your code-writing roles don't use when one is detected. `swarm workers` runs a swarm's easy pieces and `swarm hard workers` runs the pieces that need judgment, unless a race or comparison assigns another model per arm.
 
+The `pr critical reviewer`, `pr deep reviewer`, and `pr triage reviewer` roles cover critical, logic, and routine PR changes and name models directly, without the cross-family rule.
+
 **(d) Ask about the session hook.** The plugin's `SessionStart` hook tells the agent to invoke flatpaper-mode for multi-file, design, and unknown-cause bug or perf work. It runs on startup, resume, clear, and compact. Use AskUserQuestion to ask whether to keep it. The default is on. The answer is the `session hook` line, `on` or `off`. With no file or no line, the hook runs.
 
 ### 4. Validate
@@ -71,6 +73,9 @@ hillclimb: parent:medium
 trivial edits: claude/haiku:medium
 judgment and prose: parent:medium
 hardest tasks: parent:high
+pr critical reviewer: parent:high
+pr deep reviewer: codex/matched:high
+pr triage reviewer: codex/matched:medium
 thermos reviewers: parent:medium
 how explorer: claude/sonnet:medium
 how explainer: parent:medium

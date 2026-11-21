@@ -17,6 +17,31 @@ const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 const rules = [
   {
+    source: "review tiers group ready edits in one brief",
+    file: "skills/flatpaper-mode/SKILL.md",
+    phrase: "Edits that are ready at the same time and touch the same files go to one delegate in one brief.",
+  },
+  {
+    source: "review tiers review every diff at its highest risk tier",
+    file: "skills/flatpaper-mode/SKILL.md",
+    phrase: "Every independent PR review, including a review of commits added after an earlier verdict, goes to the highest tier anything in the diff under review qualifies for.",
+  },
+  {
+    source: "review tiers lower tier verdict does not count",
+    file: "skills/flatpaper-mode/SKILL.md",
+    phrase: "A verdict from a lower tier on such a diff does not count.",
+  },
+  {
+    source: "review tiers PR reviewers skip cross-family selection",
+    file: "skills/flatpaper-mode/references/spawning.md",
+    phrase: "Steps 1 and 2 do not apply to them.",
+  },
+  {
+    source: "review tiers seat connects through CDP and never launches browser",
+    file: "skills/flatpaper-mode/references/spawning.md",
+    phrase: "Tell the seat to connect with Node's built-in WebSocket or any CDP client and never launch a browser.",
+  },
+  {
     source: "e58dd04 sync: bullet-only playbooks still copy one task per item",
     file: "skills/flatpaper-mode/SKILL.md",
     phrase: "In a playbook with no numbered steps, each paragraph and each list item is a step.",
@@ -35,6 +60,11 @@ const rules = [
     source: "#40 Codex flatpaper-agent reads unslop before its hand-back",
     file: "skills/flatpaper-mode/codex-agents/flatpaper-agent.md",
     phrase: "Before you hand back, read `${CLAUDE_PLUGIN_ROOT}/skills/unslop/SKILL.md` in full and write the hand-back through it, per flatpaper-mode's **Writing the reply**.",
+  },
+  {
+    source: "follow-up rounds took the playbook's printed default instead of the models file",
+    file: "skills/flatpaper-mode/SKILL.md",
+    phrase: "Read the line in the models file again before each spawn.",
   },
   {
     source: "#22 load the deferred task tools with ToolSearch",
