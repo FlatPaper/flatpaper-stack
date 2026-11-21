@@ -141,10 +141,10 @@ async function main() {
       if (existsSync(state)) {
         const text = readFileSync(state, "utf8");
         target = endpoint(/^PORT=(.*)$/m.exec(text)?.[1], /^BROWSER=(.*)$/m.exec(text)?.[1]);
-        if (!target) throw new Error(`invalid browser.env; state kept in ${dir}`);
-        const answer = await version(target.port, cancellation.signal, deadline);
+        if (!target && text !== "") throw new Error(`invalid browser.env; state kept in ${dir}`);
+        const answer = target ? await version(target.port, cancellation.signal, deadline) : null;
         checkInterrupted();
-        if (answer === target.url) {
+        if (target && answer === target.url) {
           await closeBrowser(target, cancellation.signal, deadline);
           while (Date.now() < deadline) {
             const answer = await version(target.port, cancellation.signal, deadline);
@@ -161,6 +161,7 @@ async function main() {
       return;
     }
 
+    if (locked()) throw new Error(`${profile} is locked by a running Chrome; run stop first`);
     mkdirSync(dir, { recursive: true });
     try { record = openSync(state, "wx", 0o600); }
     catch (error) {

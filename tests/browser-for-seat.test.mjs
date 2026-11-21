@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { accessSync, constants, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { createServer } from "node:http";
+import { createServer, get } from "node:http";
 import { once } from "node:events";
 import { setTimeout as pause } from "node:timers/promises";
 import { tmpdir } from "node:os";
@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const script = join(root, "skills/flatpaper-mode/scripts/browser-for-seat.sh");
+const fixtures = new Map();
 function chromeAvailable() {
   const candidates = process.env.CHROME !== undefined ? [process.env.CHROME] : [
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
@@ -33,21 +34,46 @@ function hostEnv() {
 function fixture(t) {
   const dir = mkdtempSync(join(tmpdir(), "flatpaper-browser-seat-"));
   const pids = new Set();
+  const children = new Set();
+  fixtures.set(dir, children);
   t.after(async () => {
-    const result = spawnSync("/bin/bash", [script, "stop", dir], { env: hostEnv(), encoding: "utf8", timeout: 20000 });
-    const survivors = [...pids].filter((pid) => {
-      try { process.kill(pid, 0); return true; }
-      catch (error) { if (error.code === "ESRCH") return false; throw error; }
-    });
-    for (const pid of survivors) process.kill(pid, "SIGKILL");
-    if (survivors.length) await waitFor(() => survivors.every((pid) => {
-      try { process.kill(pid, 0); return false; }
-      catch (error) { if (error.code === "ESRCH") return true; throw error; }
-    }));
-    assert.ifError(result.error);
+    let result;
+    let survivors = [];
+    const cleanupErrors = [];
+    try {
+      result = await runAsync("stop", dir, { ...hostEnv(), BROWSER_FOR_SEAT_TIMEOUT_MS: "300" });
+    } finally {
+      try {
+        const marker = join(dir, "child-pid");
+        if (existsSync(marker)) pids.add(Number(readFileSync(marker, "utf8")));
+        survivors = [...pids].filter((pid) => {
+          try { process.kill(pid, 0); return true; }
+          catch (error) {
+            if (error.code === "ESRCH") return false;
+            cleanupErrors.push(error);
+            return true;
+          }
+        });
+        for (const child of children) {
+          if (child.exitCode === null && child.signalCode === null) {
+            const closed = once(child, "close");
+            try { child.kill("SIGKILL"); }
+            catch (error) { cleanupErrors.push(error); }
+            await closed;
+          }
+        }
+        for (const pid of survivors) {
+          try { process.kill(pid, "SIGKILL"); }
+          catch (error) { if (error.code !== "ESRCH") cleanupErrors.push(error); }
+        }
+      } finally {
+        fixtures.delete(dir);
+        rmSync(dir, { recursive: true, force: true });
+      }
+    }
+    assert.deepEqual(cleanupErrors, []);
     assert.equal(result.status, 0, result.stderr);
     assert.deepEqual(survivors, [], "stop left test browsers running");
-    rmSync(dir, { recursive: true, force: true });
   });
   const run = (action, env = hostEnv()) => {
     const result = spawnSync("/bin/bash", [script, action, dir], { env, encoding: "utf8", timeout: 25000 });
@@ -75,7 +101,7 @@ test("starts Chrome, serves DevTools on the printed port, refuses a second start
   assert.equal((await response.json()).webSocketDebuggerUrl, `ws://127.0.0.1:${port}${/^BROWSER=(.+)$/m.exec(state)[1]}`);
   const duplicate = run("start");
   assert.notEqual(duplicate.status, 0);
-  assert.match(duplicate.stderr, /stop this directory before starting again/);
+  assert.match(duplicate.stderr, /is locked by a running Chrome; run stop first/);
   assert.equal(readFileSync(join(dir, "browser.env"), "utf8"), state);
   assert.equal(run("stop").status, 0);
   await assert.rejects(fetch(`http://127.0.0.1:${port}/json/version`, { signal: AbortSignal.timeout(1000) }));
@@ -128,6 +154,28 @@ test("stop removes a stale process record and profile and can run again", (t) =>
   assert.equal(run("stop").status, 0);
 });
 
+for (const state of [false, true]) test(`start refuses a locked profile without changing state, browser.env=${state}`, (t) => {
+  const { dir, run } = fixture(t);
+  const profile = join(dir, "profile");
+  mkdirSync(profile);
+  symlinkSync("host-123", join(profile, "SingletonLock"));
+  writeFileSync(join(profile, "DevToolsActivePort"), "existing port");
+  writeFileSync(join(profile, "keep"), "existing profile");
+  if (state) writeFileSync(join(dir, "browser.env"), "PORT=1\nBROWSER=/devtools/browser/ours\n");
+  const chrome = join(dir, "chrome");
+  writeFileSync(chrome, `#!/bin/bash\necho launched > "${dir}/launched"\nexit 7\n`, { mode: 0o755 });
+  try {
+    const result = run("start", { ...hostEnv(), CHROME: chrome });
+    assert.equal(result.status, 1);
+    assert.equal(result.stderr, `error: ${profile} is locked by a running Chrome; run stop first\n`);
+    assert.equal(existsSync(join(dir, "launched")), false);
+    assert.equal(readFileSync(join(profile, "keep"), "utf8"), "existing profile");
+    assert.equal(readFileSync(join(profile, "DevToolsActivePort"), "utf8"), "existing port");
+    assert.equal(existsSync(join(dir, "browser.env")), state);
+    if (state) assert.equal(readFileSync(join(dir, "browser.env"), "utf8"), "PORT=1\nBROWSER=/devtools/browser/ours\n");
+  } finally { rmSync(join(profile, "SingletonLock"), { force: true }); }
+});
+
 async function waitFor(check) {
   for (let i = 0; i < 1000; i++) {
     if (check()) return;
@@ -141,9 +189,10 @@ function fakeChrome(dir, body) {
   writeFileSync(path, `#!${process.execPath}
 const { writeFileSync, symlinkSync, rmSync } = require("node:fs");
 const { join } = require("node:path");
+writeFileSync(${JSON.stringify(join(dir, "child-pid"))}, String(process.pid));
+setTimeout(() => process.exit(0), 5000);
 const profile = process.argv.find((arg) => arg.startsWith("--user-data-dir=")).slice(16);
 const port = Number(process.argv.find((arg) => arg.startsWith("--remote-debugging-port=")).split("=")[1]);
-writeFileSync(join(profile, "..", "child-pid"), String(process.pid));
 symlinkSync("fake-" + process.pid, join(profile, "SingletonLock"));
 process.on("exit", () => rmSync(join(profile, "SingletonLock"), { force: true }));
 ${body}
@@ -152,9 +201,60 @@ ${body}
 }
 
 function startAsync(dir, chrome, extra = {}) {
-  const child = spawn("/bin/bash", [script, "start", dir], {
-    env: { ...hostEnv(), CHROME: chrome, ...extra }, stdio: ["ignore", "pipe", "pipe"],
+  const launched = join(dir, "launch");
+  const exited = join(dir, "exited");
+  const signals = join(dir, "signals");
+  const adapter = join(dir, "launch.cjs");
+  writeFileSync(adapter, `
+const { EventEmitter } = require("node:events");
+const fs = require("node:fs");
+require("node:child_process").spawn = () => {
+  const child = new EventEmitter();
+  child.exitCode = null;
+  child.kill = (signal) => {
+    fs.appendFileSync(${JSON.stringify(signals)}, signal + "\\n");
+    return false;
+  };
+  const timer = setInterval(() => {
+    if (fs.existsSync(${JSON.stringify(exited)})) {
+      child.exitCode = 0;
+      clearInterval(timer);
+      child.emit("exit", 0);
+    }
+  }, 5);
+  child.unref = () => clearInterval(timer);
+  fs.writeFileSync(${JSON.stringify(launched)}, "yes");
+  return child;
+};
+`);
+  const fake = spawn(process.execPath, ["-e", `
+const fs = require("node:fs");
+fs.writeFileSync(${JSON.stringify(join(dir, "child-pid"))}, String(process.pid));
+setTimeout(() => process.exit(0), 5000);
+const timer = setInterval(() => {
+  if (!fs.existsSync(${JSON.stringify(launched)})) return;
+  clearInterval(timer);
+  require(${JSON.stringify(chrome)});
+}, 5);
+`, "--", `--user-data-dir=${join(dir, "profile")}`, "--remote-debugging-port=0"]);
+  fixtures.get(dir).add(fake);
+  const polling = setInterval(() => {
+    if (!existsSync(signals)) return;
+    const pending = readFileSync(signals, "utf8").trim().split("\n");
+    rmSync(signals, { force: true });
+    for (const signal of pending) {
+      if (signal === "SIGKILL" && extra.DENY_SIGKILL) continue;
+      fake.kill(signal);
+    }
+  }, 5);
+  fake.once("exit", () => {
+    clearInterval(polling);
+    if (existsSync(dir)) writeFileSync(exited, "yes");
   });
+  const child = spawn("/bin/bash", [script, "start", dir], {
+    env: { ...hostEnv(), CHROME: chrome, ...extra, NODE_OPTIONS: `--require=${adapter}` }, stdio: ["ignore", "pipe", "pipe"],
+  });
+  fixtures.get(dir).add(child);
   let stdout = "";
   let stderr = "";
   child.stdout.on("data", (data) => { stdout += data; });
@@ -168,7 +268,7 @@ test("stop never signals an unrelated process whose argv contains the profile", 
   const foreign = createServer((req, res) => res.end(JSON.stringify({ webSocketDebuggerUrl: "ws://127.0.0.1/foreign" })));
   await new Promise((done) => foreign.listen(0, "127.0.0.1", done));
   t.after(() => new Promise((done) => foreign.close(done)));
-  const unrelated = spawn("/bin/bash", ["-c", 'exec -a "$1" sleep 30', "seat-test", `--user-data-dir=${join(dir, "profile")}`]);
+  const unrelated = spawn("/bin/bash", ["-c", 'exec -a "$1" sleep 2', "seat-test", `--user-data-dir=${join(dir, "profile")}`]);
   const closed = once(unrelated, "close");
   try {
     mkdirSync(join(dir, "profile"));
@@ -206,22 +306,25 @@ function runAsync(action, dir, env = hostEnv()) {
   return once(child, "close").then(([status]) => ({ status, stdout, stderr }));
 }
 
-test("start failure retains state until its child exits after SIGTERM", async (t) => {
+test("start failure keeps state when child termination cannot be confirmed", async (t) => {
   const { dir, record } = fixture(t);
   const chrome = fakeChrome(dir, `
-process.on("SIGTERM", () => { writeFileSync(join(profile, "..", "terminating"), "yes"); setTimeout(() => process.exit(0), 2000); });
-setInterval(() => {}, 1000);
+process.on("SIGTERM", () => {});
+setTimeout(() => process.exit(0), 1500);
 `);
-  const { result } = startAsync(dir, chrome, { BROWSER_FOR_SEAT_TIMEOUT_MS: "3000" });
+  const { result } = startAsync(dir, chrome, { BROWSER_FOR_SEAT_TIMEOUT_MS: "150", DENY_SIGKILL: "1" });
   await waitFor(() => existsSync(join(dir, "child-pid")));
-  record(Number(readFileSync(join(dir, "child-pid"), "utf8")));
-  await waitFor(() => existsSync(join(dir, "terminating")));
-  await pause(1000);
-  assert.equal(existsSync(join(dir, "browser.env")), true);
-  assert.equal(existsSync(join(dir, "profile")), true);
-  assert.notEqual((await result).status, 0);
-  assert.equal(existsSync(join(dir, "browser.env")), false);
+  const pid = Number(readFileSync(join(dir, "child-pid"), "utf8"));
+  record(pid);
+  const start = await result;
+  assert.notEqual(start.status, 0);
+  assert.ok(start.stderr.includes(`state kept in ${dir}`), start.stderr);
+  assert.doesNotThrow(() => process.kill(pid, 0));
+  assert.ok(existsSync(join(dir, "browser.env")) || existsSync(join(dir, "profile")));
+  await waitFor(() => existsSync(join(dir, "exited")));
+  assert.equal((await runAsync("stop", dir)).status, 0);
   assert.equal(existsSync(join(dir, "profile")), false);
+  assert.equal(existsSync(join(dir, "browser.env")), false);
 });
 
 test("SIGTERM during a pending readiness response fails start and cleans up", async (t) => {
@@ -268,18 +371,20 @@ setInterval(() => {}, 1000);
   assert.equal(existsSync(join(dir, "profile")), false);
 });
 
-test("starts and stops a fake DevTools browser with Chrome choosing its port", async (t) => {
-  const { dir, run, record } = fixture(t);
-  const chrome = fakeChrome(dir, `
+function devToolsChrome(dir) {
+  return fakeChrome(dir, `
 const server = require("node:http").createServer((req, res) => res.end(JSON.stringify({
   webSocketDebuggerUrl: "ws://127.0.0.1:" + server.address().port + "/devtools/browser/test",
 })));
 server.on("upgrade", (req, socket) => {
+  if (req.url !== "/devtools/browser/test") { socket.destroy(); return; }
   const accept = require("node:crypto").createHash("sha1").update(req.headers["sec-websocket-key"] + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").digest("base64");
   socket.write("HTTP/1.1 101 Switching Protocols\\r\\nUpgrade: websocket\\r\\nConnection: Upgrade\\r\\nSec-WebSocket-Accept: " + accept + "\\r\\n\\r\\n");
   let pending = Buffer.alloc(0);
   socket.on("data", (chunk) => {
     pending = Buffer.concat([pending, chunk]);
+    if (pending.length < 2) return;
+    if (!(pending[0] & 128) || (pending[0] & 15) !== 1 || !(pending[1] & 128)) { socket.destroy(); return; }
     if (pending.length < 6) return;
     const length = pending[1] & 127;
     if (length > 125 || pending.length < length + 6) return;
@@ -290,6 +395,11 @@ server.on("upgrade", (req, socket) => {
 });
 server.listen(port, "127.0.0.1", () => writeFileSync(join(profile, "DevToolsActivePort"), String(server.address().port) + "\\n/devtools/browser/test"));
 `);
+}
+
+test("starts and stops a fake DevTools browser with Chrome choosing its port", async (t) => {
+  const { dir, run, record } = fixture(t);
+  const chrome = devToolsChrome(dir);
   const { result } = startAsync(dir, chrome);
   const start = await result;
   const pid = Number(readFileSync(join(dir, "child-pid"), "utf8"));
@@ -302,11 +412,39 @@ server.listen(port, "127.0.0.1", () => writeFileSync(join(profile, "DevToolsActi
   const duplicate = run("start", { ...hostEnv(), CHROME: chrome });
   assert.notEqual(duplicate.status, 0);
   assert.equal(readFileSync(join(dir, "browser.env"), "utf8"), `PORT=${port}\nBROWSER=/devtools/browser/test\n`);
-  assert.equal(run("stop").status, 0);
+  assert.equal((await runAsync("stop", dir)).status, 0);
   assert.throws(() => process.kill(pid, 0), { code: "ESRCH" });
   assert.equal(existsSync(join(dir, "browser.env")), false);
   assert.equal(existsSync(join(dir, "profile")), false);
-  assert.equal(run("stop").status, 0);
+  assert.equal((await runAsync("stop", dir)).status, 0);
+});
+
+for (const invalid of ["unmasked", "fragmented", "binary", "wrong-path"]) test(`a ${invalid} request does not close the fake browser`, async (t) => {
+  const { dir } = fixture(t);
+  const { result } = startAsync(dir, devToolsChrome(dir));
+  const start = await result;
+  assert.equal(start.status, 0, start.stderr);
+  const port = Number(start.stdout.trim().slice(5));
+  const pid = Number(readFileSync(join(dir, "child-pid"), "utf8"));
+  await new Promise((resolve, reject) => {
+    const request = get(`http://127.0.0.1:${port}/devtools/browser/${invalid === "wrong-path" ? "other" : "test"}`, { headers: {
+      Connection: "Upgrade", Upgrade: "websocket", "Sec-WebSocket-Version": "13",
+      "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
+    } });
+    request.setTimeout(1000, () => request.destroy(new Error("fake did not reject request")));
+    request.on("socket", (socket) => {
+      if (invalid === "wrong-path") socket.on("close", resolve);
+    });
+    request.on("error", (error) => { if (invalid !== "wrong-path") reject(error); });
+    request.on("upgrade", (response, socket) => {
+      socket.on("error", reject);
+      socket.on("close", resolve);
+      const body = Buffer.from(JSON.stringify({ id: 1, method: "Browser.close" }));
+      socket.end(Buffer.concat([Buffer.from([invalid === "fragmented" ? 0x01 : invalid === "binary" ? 0x82 : 0x81, body.length | (invalid === "unmasked" ? 0 : 0x80), 0, 0, 0, 0]), body]));
+    });
+  });
+  assert.doesNotThrow(() => process.kill(pid, 0));
+  assert.equal((await fetch(`http://127.0.0.1:${port}/json/version`)).status, 200);
 });
 
 for (const response of ["different", "ours", "ours-open"]) test(`stop keeps state when ${response} browser answers and SingletonLock remains`, { timeout: 3000 }, async (t) => {
@@ -323,7 +461,7 @@ for (const response of ["different", "ours", "ours-open"]) test(`stop keeps stat
     socket.on("data", () => {});
   });
   await new Promise((done) => server.listen(0, "127.0.0.1", done));
-  t.after(() => { for (const socket of sockets) socket.destroy(); server.close(); });
+
   mkdirSync(join(dir, "profile"));
   symlinkSync("host-123", join(dir, "profile", "SingletonLock"));
   writeFileSync(join(dir, "browser.env"), `PORT=${server.address().port}\nBROWSER=/devtools/browser/ours\n`);
@@ -333,5 +471,9 @@ for (const response of ["different", "ours", "ours-open"]) test(`stop keeps stat
     assert.match(result.stderr, /a Chrome may still be running/);
     assert.equal(existsSync(join(dir, "browser.env")), true);
     assert.equal(existsSync(join(dir, "profile")), true);
-  } finally { rmSync(join(dir, "profile", "SingletonLock"), { force: true }); }
+  } finally {
+    rmSync(join(dir, "profile", "SingletonLock"), { force: true });
+    for (const socket of sockets) socket.destroy();
+    await new Promise((done) => server.close(done));
+  }
 });
