@@ -4,12 +4,13 @@ import { homedir, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { advanceModeScan } from "./mode-scan.mjs";
+
 const FULL_MARGIN = 40000;
 const DEFAULT_WINDOW = 967000;
 const PHASE_STALE_MS = 5 * 60 * 1000;
 const WAKE_POLL_MS = 200;
 const WAKE_WAIT_MS = 5000;
-const MODE_SKILL = "flatpaper-stack:flatpaper-mode";
 
 const checks = [
   {
@@ -89,29 +90,6 @@ function currentTokens(path) {
   } finally {
     closeSync(fd);
   }
-}
-
-function invokesMode(line) {
-  if (!line.includes(MODE_SKILL)) return false;
-  if (line.includes(`<command-name>/${MODE_SKILL}</command-name>`)) return true;
-  const content = parseLine(line)?.message?.content;
-  return Array.isArray(content) && content.some((c) => c.type === "tool_use" && c.name === "Skill" && c.input?.skill === MODE_SKILL);
-}
-
-function advanceModeScan(path, state) {
-  if (state.usedMode) return true;
-  const from = state.scannedTo ?? 0;
-  const fd = openSync(path, "r");
-  try {
-    const buf = Buffer.alloc(Math.max(0, fstatSync(fd).size - from));
-    readSync(fd, buf, 0, buf.length, from);
-    const end = buf.lastIndexOf(0x0a) + 1;
-    state.scannedTo = from + end;
-    state.usedMode = buf.subarray(0, end).toString("utf8").split("\n").some(invokesMode);
-  } finally {
-    closeSync(fd);
-  }
-  return state.usedMode;
 }
 
 function sessionHookOff() {

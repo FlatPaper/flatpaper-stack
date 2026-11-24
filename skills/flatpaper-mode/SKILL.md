@@ -92,7 +92,16 @@ Read the leaf skill in full for any principle you apply. Each entry names when i
 
 **Model and effort.** Before your first spawn, read `references/spawning.md` in full and follow it for every spawn.
 
-**Delegated steps stay delegated.** Before the first edit of a playbook step that delegates implementation, read the step's role line in the models file and `references/spawning.md`, then spawn the delegate. In those steps, the chat running the playbook changes no product file by any route, Bash heredocs and scripts included. It writes briefs, reviews diffs, runs verification, commits, and opens PRs.
+**Delegated steps stay delegated.** Before the first edit of a playbook step that delegates implementation, read the step's role line in the models file and `references/spawning.md`, then spawn the delegate. In those steps, the chat running the playbook changes no product file by any route, Bash heredocs and scripts included. Cleanup passes and review fix rounds stay delegated too. The chat lists the edits, and a delegate makes them. Use the `trivial edits` role for mechanical cleanup and the step's role otherwise. The chat's own prose, such as PR bodies, commit messages, and story or ticket text, is not a product file. It writes briefs, reviews diffs, runs verification, commits, and opens PRs.
+
+**Tracing goes to an explorer.** Any step in any playbook that traces, investigates, or inventories code goes to a `how explorer` seat. A Codex seat is read-only. Give the explorer the question and the paths. It returns file:line findings. The chat reads only the lines it will cite, change, or review, plus instruction files its project requires it to read. In the main session, the delegation guard hook blocks product-file edits through `Edit`, `Write`, and `NotebookEdit`. It blocks `Grep` without a path or with a directory path. For Bash, the guard splits the command into words at whitespace and shell separators, ignores quotes and backslashes, and denies the command when any of these holds anywhere in it:
+
+- a word is `find`, `rg`, or `fd`;
+- the words `git` and `grep` both appear;
+- `grep` appears with a single-dash flag whose leading letters and digits contain `r` or `R`, a flag starting with `--rec` or `--deref`, or a word equal to `recurse` or ending in `=recurse`;
+- `ls` appears with a single-dash flag whose leading letters and digits contain `R`, or a flag starting with `--rec`.
+
+Some commands that do not search are denied, and the denial explains how to delegate, read one file, pass message text through a file, or split commands into separate Bash calls. It also blocks unbounded `Read` calls on text files over 300 lines. The hook does not enforce shell writes or reads through `cat` or `sed -n`. The delegation rules still apply to those operations. A human turns the hook off by starting Claude Code with `FLATPAPER_DELEGATION_GUARD=off` or setting it in the settings `env`.
 
 You own every subagent's work. Review the diff and write your own summary. A second opinion is the same prompt on another vendor's model.
 
