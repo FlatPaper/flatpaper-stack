@@ -28,7 +28,7 @@ export class CatalogError extends Error {
   }
 }
 
-function parseRef(text) {
+export function parseRef(text) {
   const m = new RegExp(`^(?:(parent)|(${PROVIDERS.join("|")})/([^\\s:,\`]+)):([a-z]+)$`).exec(text);
   if (!m) return `\`${text}\` is not provider/model:effort or parent:effort`;
   if (!EFFORTS.includes(m[4])) return `\`${text}\` has effort \`${m[4]}\`, not one of ${EFFORTS.join(", ")}`;

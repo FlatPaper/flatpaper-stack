@@ -12,7 +12,7 @@ If the scope is ambiguous, state your interpretation and explore. The user can r
 
 ## 1. Explain
 
-Spawn one Agent subagent with `subagent_type: Explore`, which is read-only, on the `how explainer` role (default `parent`) from its line in `~/.claude/flatpaper-stack/models.md`, or the default when the file or the line is missing. It explores and explains in one pass. Before you spawn, read `../flatpaper-mode/references/spawning.md` in full and follow it for the spawn's model and effort. Give it the user's question and this brief:
+Spawn one Agent subagent with `subagent_type: Explore`, which is read-only, on the `how explainer` role (default `parent`) from the resolved table per `../flatpaper-mode/references/spawning.md`. It explores and explains in one pass. Before you spawn, read `../flatpaper-mode/references/spawning.md` in full and follow it for the spawn's model and effort. Give it the user's question and this brief:
 
 > You are writing an architectural explanation for a senior engineer. Explore the codebase and write an explanation that a senior engineer unfamiliar with this area could read and walk away with a solid mental model. They should understand the architecture well enough to start working in it confidently. You have read-only access to the codebase.
 

@@ -62,6 +62,12 @@ More: [commands](docs/commands.md), [principles](docs/principles.md).
 
 To pick your own models, run `/flatpaper-stack:setup-flatpaper-stack`.
 
+Role choices use three layers, in order of increasing precedence: bundled `models.json`, user `~/.claude/flatpaper-stack/models.md`, and repository `.agents/models.md`. The repository root is the nearest ancestor of the current directory containing a `.git` file or directory. Missing files leave the lower layers in effect.
+
+For a repo override, add role lines to `.agents/models.md` with the same format as the user file, for example `how explorer: claude/sonnet:medium`. An empty value selects no entries. A repo can restrict providers with `providers: claude`. `parent` is always allowed. If any entry is unusable, the resolver skips the whole line and tries the next layer. Codex entries require both the `codex-seats` and `codex` plugins. Named Codex models and efforts are checked against the local Codex cache when it is readable.
+
+Run `node scripts/resolve-models.mjs` to see the effective table and skipped lines. Run `node scripts/resolve-models.mjs --check` to validate configuration. The check reports provider restrictions only for repository lines. User lines blocked by repository providers still appear as skipped in the effective table. The check exits 0 in both cases. Valid configuration prints nothing. Problems print one JSON object with a `systemMessage` warning. The SessionStart hook runs this check on startup, resume, and clear, even with `session hook: off`. Its JSON warning does not enter the model context.
+
 To change the shipped defaults, edit `models.json`, then run `node scripts/stamp-models.mjs` to rewrite every copy in the skills.
 
 ## Pull upstream pstack changes
