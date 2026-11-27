@@ -16,7 +16,7 @@ Run the two thermo review passes as async background subagents in parallel, then
    - `subagent_type: "flatpaper-stack:thermo-nuclear-review-subagent"` for bugs, breakages, security, devex regressions, feature-flag leaks, and other branch-audit risks.
    - `subagent_type: "flatpaper-stack:thermo-nuclear-code-quality-review-subagent"` for maintainability, structure, file-size growth, spaghetti, abstractions, and codebase-health risks.
 
-   Both reviewers use the `thermos reviewers` role (default `parent`). Before you spawn, read `../flatpaper-mode/references/spawning.md` in full and follow it for each spawn's model and effort.
+   Both reviewers use the `thermos reviewers` role. Before you spawn, read `../flatpaper-mode/references/spawning.md` in full and follow it for each spawn's model and effort.
 4. Pass each subagent the same scoped diff/file context and ask it to return prioritized findings with file references and evidence.
 5. After both finish, synthesize the results with findings first, deduplicated across reviewers. Weight overlapping findings more heavily, resolve disagreements with your own judgment, and keep summaries brief.
 

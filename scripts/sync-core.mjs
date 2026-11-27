@@ -72,7 +72,7 @@ export function parseUpstream(jsonText) {
 
 const ROLE_TOKEN = /\{\{role:([^}]+)\}\}/g;
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-const rolePlaceholder = (name) => `\`${name}\` role (default \`?\`)`;
+const rolePlaceholder = (name) => `\`${name}\` role`;
 const skillsFrom = (path) => posix.relative(posix.dirname(path), "skills") || ".";
 const expand = (replacement, path) => replacement.replaceAll("{{skills}}", skillsFrom(path)).replace(ROLE_TOKEN, (_, name) => rolePlaceholder(name));
 
@@ -319,7 +319,7 @@ const prefixes = (path) => path.split("/").map((_, i, parts) => parts.slice(0, i
 const fold = (s) => s.normalize("NFC").toLowerCase();
 
 function findingSay(f) {
-  return { "unknown-role": `unknown role \`${f.role}\``, "loose-default": `loose default \`${f.text}\``, "loose-effort": `loose effort \`${f.text}\``, stale: `stale \`${f.role}\` default \`${f.found}\``, "stale-template": "stale template fence" }[f.kind] ?? f.kind;
+  return { "unknown-role": `unknown role \`${f.role}\``, "printed-default": 'leftover "(default " text', "stale-template": "stale template fence" }[f.kind] ?? f.kind;
 }
 
 function stampRepoSay(f) {
@@ -446,7 +446,7 @@ export function plan({ config, forks, oldTree, newTree, localTree, stampOnly = n
     const s = stampDoc(e.path, e.write.text, catalog);
     docs.set(e.path, s);
     for (const f of s.findings) {
-      problems.push({ kind: "stamp", path: e.path, line: f.at?.line, say: `${findingSay(f)}; map it with a {{role:...}} rule or write "the \`<role>\` role (default \`<value>\`)".` });
+      problems.push({ kind: "stamp", path: e.path, line: f.at?.line, say: `${findingSay(f)}; map it with a {{role:...}} rule or write "the \`<role>\` role".` });
     }
   }
   const spawning = after.get(SPAWNING);

@@ -5,12 +5,10 @@ import { fileURLToPath } from "node:url";
 
 const EFFORTS = ["low", "medium", "high", "xhigh", "max"];
 const PROVIDERS = ["claude", "codex", "gemini"];
-const IMPLICIT_EFFORT = "medium";
 const EFFORT_RULE = "A default written without an effort means `medium`.";
 export const SPAWNING = "skills/flatpaper-mode/references/spawning.md";
-const SPAN = /`([^`]+)` role \(default `([^`]+)`\)/g;
-const LOOSE_DEFAULT = new RegExp(`default \`((?:parent|${PROVIDERS.map((p) => `${p}/`).join("|")})[^\`]*)\``, "g");
-const LOOSE_EFFORT = new RegExp(`\`(${EFFORTS.join("|")})\` by default`, "g");
+const ROLE = /`([^`]+)` role\b/g;
+const PRINTED_DEFAULT = /\(default /g;
 const TEMPLATE_FIRST_LINE = "# flatpaper-stack model configuration.";
 export const SCAN_DIRS = ["skills", "agents", "hooks"];
 
@@ -95,16 +93,13 @@ export function parseCatalog(jsonText) {
 }
 
 const refText = (ref) => (ref.provider === "parent" ? "parent" : `${ref.provider}/${ref.model}`);
-const proseValue = (role) => role.value.map((r) => refText(r) + (r.effort === IMPLICIT_EFFORT ? "" : `:${r.effort}`)).join(", ") || "none";
 const templateLine = (role) => `${role.name}: ${role.value.map((r) => `${refText(r)}:${r.effort}`).join(", ")}`.trimEnd();
 const templateBody = (c) => [...c.templateHead, ...[...c.roles.values()].map(templateLine)];
 
 const FINDINGS = {
-  "stale": { fixable: true, say: (f) => `${at(f)} stale \`${f.role}\` default: found \`${f.found}\`, models.json says \`${f.expected}\`` },
   "stale-template": { fixable: true, say: (f) => `${at(f)} template fence is stale` },
   "unknown-role": { fixable: false, say: (f) => `${at(f)} unknown role \`${f.role}\` (models.json has no such role)` },
-  "loose-default": { fixable: false, say: (f) => `${at(f)} loose default \`${f.text}\`; write it as "the \`<role>\` role (default \`<value>\`)"` },
-  "loose-effort": { fixable: false, say: (f) => `${at(f)} loose effort \`${f.text}\` by default; the effort belongs in models.json` },
+  "printed-default": { fixable: false, say: (f) => `${at(f)} leftover "(default " text; defaults belong in models.json` },
   "missing-role": { fixable: false, say: (f) => `models.json: role \`${f.role}\` is stated in no skill prose` },
   "template-count": { fixable: false, say: (f) => `found ${f.fences.length} models.md template fences (want exactly 1, starting "${TEMPLATE_FIRST_LINE}")${f.fences.map((w) => ` ${at({ at: w })}`).join("")}` },
   "effort-rule": { fixable: false, say: () => `${SPAWNING}: no longer says "${EFFORT_RULE}"` },
@@ -132,29 +127,13 @@ function templateFences(lines) {
 export function stampDoc(file, text, c) {
   const findings = [];
   const rolesSeen = new Set();
-  const spans = [...text.matchAll(SPAN)];
-  const edits = [];
-
-  for (const m of spans) {
-    const role = c.roles.get(m[1]);
-    if (!role) { findings.push({ kind: "unknown-role", at: whereAt(file, text, m.index), role: m[1] }); continue; }
-    rolesSeen.add(role.name);
-    const expected = proseValue(role);
-    if (m[2] === expected) continue;
-    findings.push({ kind: "stale", at: whereAt(file, text, m.index), role: role.name, found: m[2], expected });
-    const end = m.index + m[0].length - "`)".length;
-    edits.push({ start: end - m[2].length, end, text: expected });
+  for (const m of text.matchAll(ROLE)) {
+    if (!c.roles.has(m[1])) findings.push({ kind: "unknown-role", at: whereAt(file, text, m.index), role: m[1] });
+    else rolesSeen.add(m[1]);
   }
-  for (const m of text.matchAll(LOOSE_DEFAULT)) {
-    const inside = spans.some((s) => s.index <= m.index && m.index + m[0].length <= s.index + s[0].length);
-    if (!inside) findings.push({ kind: "loose-default", at: whereAt(file, text, m.index), text: m[1] });
-  }
-  for (const m of text.matchAll(LOOSE_EFFORT)) findings.push({ kind: "loose-effort", at: whereAt(file, text, m.index), text: m[1] });
+  for (const m of text.matchAll(PRINTED_DEFAULT)) findings.push({ kind: "printed-default", at: whereAt(file, text, m.index) });
 
-  let out = text;
-  for (const e of edits.reverse()) out = out.slice(0, e.start) + e.text + out.slice(e.end);
-
-  const lines = out.split("\n");
+  const lines = text.split("\n");
   const fences = templateFences(lines);
   if (fences.length === 1) {
     const { open, close } = fences[0];

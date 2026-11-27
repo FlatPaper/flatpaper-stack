@@ -72,6 +72,11 @@ const rules = [
     phrase: "Before you hand back, read `${CLAUDE_PLUGIN_ROOT}/skills/unslop/SKILL.md` in full and write the hand-back through it, per flatpaper-mode's **Writing the reply**.",
   },
   {
+    source: "PR2b resolver failure uses parent for every role",
+    file: "skills/flatpaper-mode/references/spawning.md",
+    phrase: "If the resolver cannot run, use `parent` for every role and say so.",
+  },
+  {
     source: "follow-up rounds took the playbook's printed default instead of the models file",
     file: "skills/flatpaper-mode/SKILL.md",
     phrase: "Read the line in the resolved table again before each spawn.",

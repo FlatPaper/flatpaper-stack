@@ -16,7 +16,7 @@ This skill orchestrates three others: an inline mining pass (see step 1), the **
 
 Look for `.claude/skills/*-mode/SKILL.md` and `~/.claude/skills/*-mode/SKILL.md` matching the user's handle. Claude Code loads skills only one level down, so a mode skill in a nested category folder never loads. If you find one there, offer to move it up. If one exists, confirm intent with `AskUserQuestion` (unless they already said "update my skill" or similar):
 
-- Update the existing skill (default for repeat runs)
+- Update the existing skill. Use this by default for repeat runs.
 - Start fresh (rare, ask why before doing it)
 
 Update mode changes the rest of the flow:
@@ -28,7 +28,7 @@ Update mode changes the rest of the flow:
 
 Locate the active workspace's transcripts before fanning out. They live at `~/.claude/projects/<slug>/*.jsonl`, where `<slug>` is the workspace path with each character that is not a letter or digit turned into "-". Use only that folder. Don't glob across `~/.claude/projects/*/`. That crosses workspace boundaries and reads private chats from unrelated projects.
 
-Survey recent agent conversations within that scope for recurring patterns. Run multiple parallel Agent subagents with `subagent_type: Explore` and the `history explorers` role (default `claude/sonnet`) from the resolved table per `../flatpaper-mode/references/spawning.md`, across slices of history (e.g. last 2-4 weeks, split into 3 slices so each has enough material). Before you spawn, read `../flatpaper-mode/references/spawning.md` in full and follow it for each spawn's model and effort. Each slice mining subagent reads transcripts from the workspace-scoped path the parent provides, looks for the signals below, and returns a short structured list of patterns it saw with evidence pointers. Default signals worth hunting:
+Survey recent agent conversations within that scope for recurring patterns. Run multiple parallel Agent subagents with `subagent_type: Explore` and the `history explorers` role from the resolved table per `../flatpaper-mode/references/spawning.md`, across slices of history (e.g. last 2-4 weeks, split into 3 slices so each has enough material). Before you spawn, read `../flatpaper-mode/references/spawning.md` in full and follow it for each spawn's model and effort. Each slice mining subagent reads transcripts from the workspace-scoped path the parent provides, looks for the signals below, and returns a short structured list of patterns it saw with evidence pointers. Default signals worth hunting:
 
 - Response preferences (length, tone, format, "dumb it down" corrections)
 - Delegation habits (subagents, models, specialized workflows, parallelism)
