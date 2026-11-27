@@ -19,6 +19,7 @@
     { "role": "pr deep reviewer",                         "default": ["codex/matched:high"], "kind": "single" },
     { "role": "pr triage reviewer",                       "default": ["codex/matched:medium"], "kind": "single" },
     { "role": "thermos reviewers",                        "default": ["parent:medium"] },
+    { "role": "comment sicko",                            "default": ["claude/sonnet:medium"] },
     { "role": "how explorer",                             "default": ["claude/sonnet:medium"] },
     { "role": "how explainer",                            "default": ["parent:medium"] },
     { "role": "history explorers",                        "default": ["claude/sonnet:medium"] },
