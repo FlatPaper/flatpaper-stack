@@ -77,6 +77,7 @@ pr critical reviewer: parent:high
 pr deep reviewer: codex/matched:high
 pr triage reviewer: codex/matched:medium
 thermos reviewers: parent:medium
+comment sicko: claude/sonnet:medium
 how explorer: claude/sonnet:medium
 how explainer: parent:medium
 history explorers: claude/sonnet:medium
