@@ -12,8 +12,6 @@ A value is `<provider>/<model>:<effort>`, a list of them, or `parent:<effort>`. 
 
 - `parent`: leave `model` unset, so the subagent runs on the parent model.
 - `claude/<alias>`: set the Agent `model` to the alias.
-- `codex/<model>`: run a Codex seat, per **Run a Codex seat** below, with `<model>` as the model argument, even when the skill says to spawn an `Agent` subagent. `codex/default` passes `default`, so Codex uses its own default model.
-- `codex/matched`: the Codex model at the parent's tier: Fable → `gpt-6-astra`, Opus → `gpt-6.1-sol`, Sonnet → `gpt-6.1-terra`, Haiku → `gpt-6-luna`. If that model isn't available, use `codex/default`.
 - `gemini/<name>`: the Gemini agent or MCP tool that the name refers to.
 - A list runs one subagent per entry, so its length sets the fan-out.
 
@@ -31,30 +29,17 @@ The `pr critical reviewer`, `pr deep reviewer`, and `pr triage reviewer` roles t
 
 A model the user names (`sonnet`, `opus`, `haiku`, `fable`, or a Codex model) wins over all of this.
 
-## Run a Codex seat
+## Codex seats
 
-A Codex seat is a background Bash command, not an `Agent` call. The `Agent` defaults (`subagent_type`, the Agent `model` and `effort`, and `isolation`) do not apply to it.
+A `codex/*` value runs as a Codex seat through the codex-seats plugin. Load its `codex-seat` skill and follow it. The resolver drops `codex/*` lines when codex-seats is missing.
 
-1. Write the brief to a file, such as `<scratchpad>/codex-<task>.md`. Leave out the `worker.md` line, because the script adds it.
-2. Run `<plugin>/skills/flatpaper-mode/scripts/codex-run.sh <cwd> <model> <effort> <prompt-file>` with Bash `run_in_background: true` and the description `Codex: <task>`. `<cwd>` is the directory Codex works in. Add `read-only` as a fifth argument for a seat that must not write. This includes every seat for a role that the skill spawns with `subagent_type: Explore`, such as `how explainer`, `how explorer`, and `history explorers`. A writing seat that runs beside other writers gets a worktree of its own as `<cwd>`.
-3. Pass `--agent flatpaper-agent` whenever the same step on Claude would use `subagent_type: "flatpaper-stack:flatpaper-agent"`. This covers code-writing delegates and helpers inside a playbook step. Panel reviewers, judges, and workers whose skill sets its own agent type pass no `--agent`. Those skills include `arena`, `interrogate`, `architect`, `swarm`, `reflect`, and `thermos`.
-4. For a list of N Codex seats, send N background commands in one message.
-5. End your turn. When the completion notification arrives, read the command's output file. Stdout holds only Codex's final answer.
-6. To watch progress, read `<prompt-file without its extension>.codex.log`. The script prints that path on stderr when it starts.
-7. To stop a seat, call `TaskStop` on its command.
+- Pass `read-only` for every seat whose Claude spawn would use `subagent_type: Explore`.
+- When the Claude spawn would use `subagent_type: "flatpaper-stack:<name>"`, pass `--agent <plugin>/skills/flatpaper-mode/codex-agents/<name>.md`. Here `<plugin>` is flatpaper-stack's absolute plugin path.
+- Panel reviewers, judges, and workers whose skill sets its own agent type pass no `--agent`. These exceptions include `arena`, `interrogate`, `architect`, `swarm`, `reflect`, and `thermos`.
+- Start every Codex brief with `Read <path>/worker.md before anything else.`, just like an Agent kickoff. Here `<path>` is the absolute path to flatpaper-stack's `skills/flatpaper-mode` folder. The codex-seats runner adds no preamble.
 
 ## Effort
 
-**Always pass an effort.** For a Claude subagent, set the Agent `effort` (`low`, `medium`, `high`, `xhigh`, or `max`). For a Codex seat, pass the effort as the third argument to `codex-run.sh`. If the seat's log shows `Unsupported reasoning effort` (the stock Codex plugin stops at `xhigh`), rerun at its highest accepted effort and say so.
+**Always pass an effort.** For a Claude subagent, set the Agent `effort` (`low`, `medium`, `high`, `xhigh`, or `max`). For a Codex seat, pass the effort per the codex-seats plugin's `codex-seat` skill.
 
 Use the role line's effort, or the default's effort when the line has none. Never go below that. Raise it one step, up to `max`, when the user asks or the work is very hard (cross-cutting design, subtle concurrency, a bug that resisted earlier attempts), and say so. On a panel, raise every seat together, so no seat wins just by thinking longer. Change only the effort, and keep the model or agent the role names, so a diverse panel stays diverse. Verification is the exception and stays on the `swarm workers` role's model and effort.
-
-## Codex sandbox
-
-`codex-run.sh` runs Codex with `--write` unless you pass `read-only`. The read-only sandbox refuses git on macOS and any temp-file write, so a Codex reviewer keeps `--write`. Pass a throwaway detached worktree at the head under review as the reviewer's `<cwd>`, so its writes stay out of the real worktree. `--write` still refuses localhost servers and the network unless `~/.codex/config.toml` sets `network_access = true` under `[sandbox_workspace_write]`, and even then Claude Code's own sandbox limits outbound hosts to its allowlist. Without that setting, a review that must run those uses a Claude reviewer in place of the role's Codex model. If the user named Codex for that review, report that the sandbox blocks it and keep the review gate closed until they choose. Never run Codex with full access.
-
-## Browser for a Codex seat
-
-On macOS the Codex sandbox refuses to launch Chromium. A seat with `network_access = true` can drive a Chrome the session started over its DevTools port. `browser-for-seat.sh start` refuses inside a Codex sandbox, because each launch attempt there crashes Chrome and raises a macOS crash dialog.
-
-The session runs `scripts/browser-for-seat.sh start <dir>` and puts the printed port in the brief, with the URL of any page server the session started. Tell the seat to connect with Node's built-in WebSocket or any CDP client and never launch a browser. Run `scripts/browser-for-seat.sh stop <dir>` after the seat's report to close Chrome through DevTools and keep the directory if Chrome cannot be confirmed stopped. `start` refuses a profile another Chrome holds locked. Without `network_access`, use a Claude reviewer for browser checks.

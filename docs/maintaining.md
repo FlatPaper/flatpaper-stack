@@ -4,6 +4,8 @@
 
 Bundled role defaults live in `models.json`. `node scripts/resolve-models.mjs` prints the effective table after user and repository overrides.
 
+Codex models require the [codex-seats plugin](https://github.com/FlatPaper/codex-seats), which owns the runtime and its `codex-seat` skill. Keep flatpaper-stack's agent prompts in `skills/flatpaper-mode/codex-agents/` and its seat policy in `skills/flatpaper-mode/references/spawning.md`.
+
 In skill prose, name only the role as "the `<role>` role". To change a bundled default, edit `models.json`, then run `node scripts/stamp-models.mjs` to update the models.md template in `setup-flatpaper-stack`.
 
 `node --test tests/*.test.mjs` runs `stamp-models.mjs --check`. The check rejects unknown role references, leftover printed defaults, and a stale setup template. It also validates the catalog.

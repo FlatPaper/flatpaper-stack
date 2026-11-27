@@ -38,7 +38,7 @@
     {
       "pattern": "subagent_type: \"comment-sicko\"",
       "replacement": "subagent_type: \"flatpaper-stack:comment-sicko\"",
-      "rationale": "Claude Code dispatches plugin agents by their namespaced name"
+      "rationale": "Claude Code dispatches plugin agents by their namespaced name; spawning.md maps the same agent to a Codex prompt path through codex-seats"
     },
     {
       "regex": "\\bpoteto-mode\\b",

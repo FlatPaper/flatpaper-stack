@@ -12,11 +12,11 @@ Write `~/.claude/flatpaper-stack/models.md`, the user layer that the resolver re
 Each value is `<provider>/<model>:<effort>`, or `parent:<effort>`.
 
 - `claude/<alias>`: an Agent subagent with `model` set to the alias. The aliases are the ones the Agent tool's `model` parameter offers (today `sonnet`, `opus`, `haiku`, `fable`). Each alias runs the newest model in that family. The Agent tool does not take full model IDs, so the file stores the alias.
-- `codex/<model>`: a Codex seat that runs `../flatpaper-mode/scripts/codex-run.sh` with `<model>` and `<effort>`, per **Run a Codex seat** in `../flatpaper-mode/references/spawning.md`. `codex/default` passes `default`, so Codex uses its own default.
-- `codex/matched`: the Codex model at the parent's tier: Fable → `gpt-6-astra`, Opus → `gpt-6.1-sol`, Sonnet → `gpt-6.1-terra`, Haiku → `gpt-6-luna`, per `../flatpaper-mode/references/spawning.md`. It is the default for every Codex seat.
+- `codex/<model>`: a Codex seat through the codex-seats plugin, per `../flatpaper-mode/references/spawning.md`.
+- `codex/matched`: the Codex model at the parent's tier, as defined by the codex-seats plugin's `codex-seat` skill.
 - `gemini/<name>`: the agent or MCP tool that the detected Gemini plugin or MCP provides.
 - `parent`: leave `model` unset, so the role runs on the parent chat model.
-- `<effort>` is the reasoning level: the Agent `effort` for `claude` and `parent`, the effort argument to `codex-run.sh` for `codex`. The ladder is `max` > `xhigh` > `high` > `medium` > `low`.
+- `<effort>` is the reasoning level: the Agent `effort` for `claude` and `parent`, the effort passed per the codex-seats plugin's `codex-seat` skill for `codex`. The ladder is `max` > `xhigh` > `high` > `medium` > `low`.
 
 ## Steps
 
@@ -43,7 +43,7 @@ The default role-to-model mapping is the file shape shown in step 5 below. If `~
 - `medium — high reasoning`
 - `small — medium reasoning`
 
-**(b) Apply it.** Build the working table from the skill defaults, and on a re-run keep any role whose model the user changed. `unlimited`, `large`, `medium`, and `small` set the effort of every value, panel entries included, to `max`, `xhigh`, `high`, or `medium`. The `hardest tasks` role goes one step higher, up to `max`. If a model does not support that effort, use its highest supported effort below the target. So `unlimited` turns `parent:xhigh` into `parent:max`, and keeps `codex/gpt-6.1-sol:xhigh` at `xhigh` when the plugin caps Codex there (step 1). `small` turns them into `parent:medium` and `codex/gpt-6.1-sol:medium`.
+**(b) Apply it.** Build the working table from the skill defaults, and on a re-run keep any role whose model the user changed. `unlimited`, `large`, `medium`, and `small` set the effort of every value, panel entries included, to `max`, `xhigh`, `high`, or `medium`. The `hardest tasks` role goes one step higher, up to `max`. If a model does not support that effort, use its highest supported effort below the target. So `unlimited` turns `parent:xhigh` into `parent:max`, and keeps `codex/default:xhigh` at `xhigh` when the plugin caps Codex there (step 1). `small` turns them into `parent:medium` and `codex/default:medium`.
 
 **(c) Show the roles and confirm.** Show every role with its value as a table. Mark any value whose provider or model was not detected as needing a choice. Also list each line step 2 dropped, and one line per skipped provider. Ask whether to accept as-is or change specific roles, offering the detected models plus `parent` as the options. Use AskUserQuestion, which takes at most four options per question, so offer the most likely models and let "Other" take the rest.
 

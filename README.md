@@ -20,7 +20,7 @@ Three ideas carry it:
 | Tool | Used for | Without it |
 |---|---|---|
 | [`gh`](https://cli.github.com), logged in | Reading PRs, issues, and history in `why`, `recall`, and PR work | Those steps say they couldn't check GitHub |
-| [Codex plugin](https://github.com/openai/codex-plugin-cc) | A second opinion from a different model family in `arena`, `interrogate`, `architect`, and `show-me-your-work` | Those seats fall back to Claude or are skipped, and the skill says so |
+| [codex-seats](https://github.com/FlatPaper/codex-seats) and the [Codex plugin](https://github.com/openai/codex-plugin-cc) | Codex models for roles, including cross-family reviews in `arena`, `interrogate`, `architect`, and `show-me-your-work` | Those seats fall back to Claude or are skipped, and the skill says so |
 | Node 22.18+ (or 23.6+), Bun 1.1.5+, or Deno 2.0+ | `statechart` and the formal-verification skills | Those skills can't run |
 | [`mise`](https://mise.jdx.dev) | `statechart` installs TLC and Java through it on first run, which needs the network | `statechart` can't run |
 | `ffmpeg` and a headless Chromium | `ketchup-video` | It gives the text catch-up only |
@@ -44,6 +44,8 @@ claude plugin install flatpaper-stack@flatpaper-stack --scope user
 ```
 
 Optional: run `/flatpaper-stack:setup-flatpaper-stack` once to pick a model for each role. Without it, skills use the defaults in [`models.json`](models.json).
+
+To add Codex models, install the [codex-seats plugin](https://github.com/FlatPaper/codex-seats) and its Codex companion. Flatpaper-stack ships no Codex runtime. The codex-seats `codex-seat` skill documents how to run seats and configure their sandbox and browser access.
 
 ## How to use it
 

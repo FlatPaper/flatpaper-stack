@@ -20,6 +20,8 @@ Start real work with `/flatpaper-stack:flatpaper-mode`. It picks a playbook and 
 
 For the best code, run the session on Opus at `high` effort: `claude --model opus --effort high`.
 
+Codex models require the [codex-seats plugin](https://github.com/FlatPaper/codex-seats) and its Codex companion. Follow its `codex-seat` skill to run a seat. Flatpaper-stack keeps role and agent policy in [spawning.md](../skills/flatpaper-mode/references/spawning.md).
+
 ## Session hook
 
 A session hook starts flatpaper-mode for work that touches more than one file, makes a design choice, or chases a bug or slowdown with an unknown cause. To turn it off, put `session hook: off` in `~/.claude/flatpaper-stack/models.md`.
