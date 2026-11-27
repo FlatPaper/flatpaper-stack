@@ -24,7 +24,7 @@ Infer the need from the message and the conversation. A named situation, such as
 
 Check the state that changes the answer, and mention it only when it does:
 
-- No `~/.claude/flatpaper-stack/models.md` means `/flatpaper-stack:setup-flatpaper-stack` hasn't run for this user, so every role uses its default model.
+- No `~/.claude/flatpaper-stack/models.md` means `/flatpaper-stack:setup-flatpaper-stack` hasn't run for this user, so role choices come from bundled defaults and any repo `.agents/models.md` overrides.
 - No `verify-*` skill or other app harness in the project means agents have no scripted way to drive the app. Mention `/flatpaper-stack:create-verification-skill` when the question is about proving a change works.
 - No formal verification skill in the project means no property is checked past what tests reach. Mention `/flatpaper-stack:create-formal-verification-skill` when the question is about a race, an invariant, or another case tests rarely hit. When one exists and the code it covers changed after the commit it records as last in sync, mention `/flatpaper-stack:maintain-formal-verification-skill` if the question touches that code.
 
@@ -36,7 +36,7 @@ When the models file is missing and it matters, ask whether the user wants to pi
 ## Get set up
 
 1. Install per the [README](../../README.md), then start a new session so the skills load.
-2. Run [`/flatpaper-stack:setup-flatpaper-stack`](../setup-flatpaper-stack/SKILL.md). It finds the Claude, Codex, and Gemini models this Claude Code can use, asks for a reasoning budget, maps a model to each role, and writes the models file. Skills read the file each time they spawn a subagent. Then it offers once each to generate a verification skill and a formal verification skill for the project, unless the project already has one.
+2. Run [`/flatpaper-stack:setup-flatpaper-stack`](../setup-flatpaper-stack/SKILL.md). It finds the Claude, Codex, and Gemini models this Claude Code can use, asks for a reasoning budget, maps a model to each role, and writes the models file. Skills use the resolved table per `../flatpaper-mode/references/spawning.md` before they spawn subagents. Then it offers once each to generate a verification skill and a formal verification skill for the project, unless the project already has one.
 3. Start a real task with `/flatpaper-stack:flatpaper-mode`, a goal, and a check that can pass or fail.
 
 Installing changes nothing until the user invokes a skill. Only `setup-flatpaper-stack`, `control-cli`, `control-ui`, `verify-this`, and `deslop` load from the user's words. Offer to word their first prompt with them, per [`references/prompting.md`](references/prompting.md).
@@ -133,7 +133,7 @@ Principles are one-rule skills that `/flatpaper-stack:flatpaper-mode` reads and 
 |---|---|
 | The mode stopped applying after a few turns | Start each task with `/flatpaper-stack:flatpaper-mode`. |
 | A question got treated as the next step of the last task | Say "new task", or say the turn doesn't need the mode. |
-| A new model choice had no effect | Check that `~/.claude/flatpaper-stack/models.md` has a line for that role. A model named in the chat beats the file. A provider that went missing falls back to the role's default, and the reply says so. |
+| A new model choice had no effect | Check the resolved table per `../flatpaper-mode/references/spawning.md`, including skipped lines. Repo overrides beat user choices. A model named in the chat wins. An unusable line falls through to the next layer. |
 | Runs cost more than expected | See the cost paragraph under Get set up. |
 | A skill didn't load on its own | Only `setup-flatpaper-stack`, `control-cli`, `control-ui`, `verify-this`, and `deslop` load from the user's words. The others load when the user types them or when `/flatpaper-stack:flatpaper-mode` runs them, and it doesn't run every skill. |
 | Parallel agents overwrote each other | Give each agent its own worktree (`isolation: "worktree"` on the Agent call). |

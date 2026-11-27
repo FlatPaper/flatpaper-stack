@@ -4,7 +4,9 @@ Follow this for every subagent spawn, an `Agent` call or a Codex seat. A skill n
 
 ## Model
 
-Use that role's line in `~/.claude/flatpaper-stack/models.md`, which `/flatpaper-stack:setup-flatpaper-stack` writes, or the default when the file or the line is missing. A value is `<provider>/<model>:<effort>`, a list of them, or `parent:<effort>`. A default written without an effort means `medium`.
+Before your first spawn, run `node <plugin>/scripts/resolve-models.mjs` once and use the role lines in its resolved table. The layers are bundled `models.json`, user `~/.claude/flatpaper-stack/models.md`, and repo `.agents/models.md`, with the most specific usable line winning. If any entry is unusable, the whole line falls through to the next layer, so panel sizes stay intact.
+
+A value is `<provider>/<model>:<effort>`, a list of them, or `parent:<effort>`. `none` means no entries. A default written without an effort means `medium`.
 
 - `parent`: leave `model` unset, so the subagent runs on the parent model.
 - `claude/<alias>`: set the Agent `model` to the alias.

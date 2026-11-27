@@ -9,7 +9,7 @@
     {
       "pattern": "Spawn one Task subagent with `subagent_type: generalPurpose` and `readonly: true` that explores and explains in one pass.",
       "files": "^skills/how/SKILL\\.md$",
-      "replacement": "Spawn one Agent subagent with `subagent_type: Explore`, which is read-only, on the {{role:how explainer}} from its line in `~/.claude/flatpaper-stack/models.md`, or the default when the file or the line is missing. It explores and explains in one pass. Before you spawn, read `{{skills}}/flatpaper-mode/references/spawning.md` in full and follow it for the spawn's model and effort.",
+      "replacement": "Spawn one Agent subagent with `subagent_type: Explore`, which is read-only, on the {{role:how explainer}} from the resolved table per `{{skills}}/flatpaper-mode/references/spawning.md`. It explores and explains in one pass. Before you spawn, read `{{skills}}/flatpaper-mode/references/spawning.md` in full and follow it for the spawn's model and effort.",
       "rationale": "Claude Code's read-only spawn is the Explore agent; the role default comes from models.json through the stamp, and model/effort choice lives in spawning.md"
     },
     {

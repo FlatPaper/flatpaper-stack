@@ -5,7 +5,7 @@ description: Configure which models flatpaper-stack uses per role and at what re
 
 # Setup flatpaper-stack
 
-Write `~/.claude/flatpaper-stack/models.md`, the file every flatpaper-stack skill reads to pick its model per role.
+Write `~/.claude/flatpaper-stack/models.md`, the user layer that the resolver reads to pick each role per `../flatpaper-mode/references/spawning.md`.
 
 ## Value format
 

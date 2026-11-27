@@ -17,6 +17,16 @@ const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 const rules = [
   {
+    source: "PR2 resolve model layers before the first spawn",
+    file: "skills/flatpaper-mode/references/spawning.md",
+    phrase: "run `node <plugin>/scripts/resolve-models.mjs` once and use the role lines in its resolved table.",
+  },
+  {
+    source: "PR2 keep panels intact during fallback",
+    file: "skills/flatpaper-mode/references/spawning.md",
+    phrase: "If any entry is unusable, the whole line falls through to the next layer, so panel sizes stay intact.",
+  },
+  {
     source: "review tiers group ready edits in one brief",
     file: "skills/flatpaper-mode/SKILL.md",
     phrase: "Edits that are ready at the same time and touch the same files go to one delegate in one brief.",
@@ -64,7 +74,7 @@ const rules = [
   {
     source: "follow-up rounds took the playbook's printed default instead of the models file",
     file: "skills/flatpaper-mode/SKILL.md",
-    phrase: "Read the line in the models file again before each spawn.",
+    phrase: "Read the line in the resolved table again before each spawn.",
   },
   {
     source: "#22 load the deferred task tools with ToolSearch",
