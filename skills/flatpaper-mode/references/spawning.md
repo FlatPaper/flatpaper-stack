@@ -1,10 +1,12 @@
 # Spawning subagents
 
-Follow this for every subagent spawn, an `Agent` call or a Codex seat. A skill names a role, such as `how explorer`, and a default for it.
+Follow this for every subagent spawn, an `Agent` call or a Codex seat. A skill names a role, such as the `how explorer` role.
 
 ## Model
 
 Before your first spawn, run `node <plugin>/scripts/resolve-models.mjs` once and use the role lines in its resolved table. The layers are bundled `models.json`, user `~/.claude/flatpaper-stack/models.md`, and repo `.agents/models.md`, with the most specific usable line winning. If any entry is unusable, the whole line falls through to the next layer, so panel sizes stay intact.
+
+If the resolver cannot run, use `parent` for every role and say so.
 
 A value is `<provider>/<model>:<effort>`, a list of them, or `parent:<effort>`. `none` means no entries. A default written without an effort means `medium`.
 

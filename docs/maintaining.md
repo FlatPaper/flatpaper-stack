@@ -2,11 +2,11 @@
 
 ## Model defaults
 
-Role defaults live only in `models.json`. `node scripts/stamp-models.mjs` copies them into the skills and the models.md template in `setup-flatpaper-stack`. Don't edit those copies by hand.
+Bundled role defaults live in `models.json`. `node scripts/resolve-models.mjs` prints the effective table after user and repository overrides.
 
-In skill prose, write a default as "the `<role>` role (default `<value>`)". The script stamps only that shape.
+In skill prose, name only the role as "the `<role>` role". To change a bundled default, edit `models.json`, then run `node scripts/stamp-models.mjs` to update the models.md template in `setup-flatpaper-stack`.
 
-`node --test tests/*.test.mjs` runs `stamp-models.mjs --check`. It fails on a stale copy, or on "default `<value>`" outside that shape. It can't see a default in plain words, such as "the parent model", so review has to catch those.
+`node --test tests/*.test.mjs` runs `stamp-models.mjs --check`. The check rejects unknown role references, leftover printed defaults, and a stale setup template. It also validates the catalog.
 
 ## Upstream sync
 

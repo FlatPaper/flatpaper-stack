@@ -64,7 +64,7 @@ Correct the log, not the story. The audit never edits or removes a row, even an 
 
 ## Cross-model review of the trail
 
-Before handing back, spawn a reviewer from the `trail reviewer` role (default `parent`), picked per **Cross-family reviewer** in `../flatpaper-mode/references/spawning.md`. Take its line from the resolved table per `../flatpaper-mode/references/spawning.md`. The authors are this run's chat and every subagent that wrote part of the work. Self-review is not a substitute. The subagent reads the audit trail and the run's transcript, then flags what the user should pay attention to. Not a redo of the work, a scan for what's suboptimal or risky. Before you spawn, read `../flatpaper-mode/references/spawning.md` in full and follow it for each spawn's model and effort.
+Before handing back, spawn a reviewer from the `trail reviewer` role, picked per **Cross-family reviewer** in `../flatpaper-mode/references/spawning.md`. Take its line from the resolved table per `../flatpaper-mode/references/spawning.md`. The authors are this run's chat and every subagent that wrote part of the work. Self-review is not a substitute. The subagent reads the audit trail and the run's transcript, then flags what the user should pay attention to. Not a redo of the work, a scan for what's suboptimal or risky. Before you spawn, read `../flatpaper-mode/references/spawning.md` in full and follow it for each spawn's model and effort.
 
 - Decisions logged with weak or absent evidence.
 - Verification steps skipped or claimed without proof in the transcript.

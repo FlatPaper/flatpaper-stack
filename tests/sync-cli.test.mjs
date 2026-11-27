@@ -10,7 +10,7 @@ const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
 const HEAD = ["# flatpaper-stack model configuration. Test head.", "session hook: on"];
 const MODELS = JSON.stringify({ template: { head: HEAD }, roles: [{ role: "feature, refactoring", default: ["claude/sonnet:medium"] }] }, null, 2) + "\n";
 const BASE_LOCAL = {
-  "skills/flatpaper-mode/references/spawning.md": "A default written without an effort means `medium`. Code delegates use the `feature, refactoring` role (default `claude/sonnet`).\n",
+  "skills/flatpaper-mode/references/spawning.md": "A default written without an effort means `medium`. Code delegates use the `feature, refactoring` role.\n",
   "skills/setup-flatpaper-stack/SKILL.md": ["Write this:", "", "```", ...HEAD, "feature, refactoring: claude/sonnet:medium", "```", ""].join("\n"),
 };
 const BODY = ["one", "two", "three", "four", "five", "six", "seven", "eight", ""].join("\n");
@@ -348,15 +348,30 @@ test("upstream deleting a file we changed is undeclared unless forks.json keeps 
   assert.equal(pin(declared.root), declared.shaB);
 });
 
-test("a loose model default under hooks/ blocks like one under skills/", () => {
+test("upstream unparenthesized defaults block sync without writes", async (t) => {
+  for (const sentence of ["Use default `claude/opus`.", "Spawn each at `high` by default."]) {
+    await t.test(sentence, () => {
+      const { root, shaA, shaB } = fixture({
+        a: { "pstack/skills/arena/SKILL.md": "v1\n", "pstack/skills/clean/SKILL.md": "v1\n" },
+        b: { "pstack/skills/arena/SKILL.md": `${sentence}\n`, "pstack/skills/clean/SKILL.md": "v2\n" },
+      });
+      const before = snapshot(root);
+      const r = sync(root, shaB);
+      assertBlocked(root, shaA, r, /stamp\s+skills\/arena\/SKILL\.md:1\s+leftover/);
+      assert.deepEqual(snapshot(root), before, "the unrelated clean update also stays unwritten");
+    });
+  }
+});
+
+test("a printed default under hooks/ blocks like one under skills/", () => {
   const { root, shaA, shaB } = fixture({
     a: { "pstack/skills/arena/SKILL.md": "v1\n" },
     b: { "pstack/skills/arena/SKILL.md": "v2\n" },
-    local: { "hooks/policy.md": "Use default `claude/sonnet`.\n" },
+    local: { "hooks/policy.md": "Use (default `claude/sonnet`).\n" },
   });
   const before = snapshot(root);
   const r = sync(root, shaB);
-  assertBlocked(root, shaA, r, /local-unstamped\s+hooks\/policy\.md:1\s+loose default/);
+  assertBlocked(root, shaA, r, /local-unstamped\s+hooks\/policy\.md:1\s+leftover/);
   assert.deepEqual(snapshot(root), before);
 });
 

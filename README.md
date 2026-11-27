@@ -68,7 +68,7 @@ For a repo override, add role lines to `.agents/models.md` with the same format 
 
 Run `node scripts/resolve-models.mjs` to see the effective table and skipped lines. Run `node scripts/resolve-models.mjs --check` to validate configuration. The check reports provider restrictions only for repository lines. User lines blocked by repository providers still appear as skipped in the effective table. The check exits 0 in both cases. Valid configuration prints nothing. Problems print one JSON object with a `systemMessage` warning. The SessionStart hook runs this check on startup, resume, and clear, even with `session hook: off`. Its JSON warning does not enter the model context.
 
-To change the shipped defaults, edit `models.json`, then run `node scripts/stamp-models.mjs` to rewrite every copy in the skills.
+To change the shipped defaults, edit `models.json`, then run `node scripts/stamp-models.mjs` to update the setup template. Skills name roles without copying their defaults.
 
 ## Pull upstream pstack changes
 

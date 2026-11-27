@@ -67,24 +67,19 @@ test("the checked-in tree is in sync with models.json", () => {
   assert.deepEqual(stamp(null, ["--check"]), { status: 0, out: "" });
 });
 
-test("one models.json edit reaches every prose copy and the template", () => {
+test("one models.json edit updates only the setup template", () => {
   const root = sandbox();
+  const before = snapshot(root);
   setDefault(root, "how explorer", ["claude/opus:medium"]);
-
   const check = stamp(root, ["--check"]);
-  assert.equal(check.status, 1, "stale copies exit 1");
-  for (const file of ["skills/maintain-verification-skill/SKILL.md"]) {
-    assert.match(check.out, new RegExp(`${file}:\\d+:\\d+ stale \`how explorer\` default: found \`claude/sonnet\`, models.json says \`claude/opus\``), `names ${file}`);
+  assert.equal(check.status, 1);
+  assert.match(check.out, new RegExp(`${SETUP}:\\d+ template fence is stale`));
+  assert.equal(stamp(root).status, 0);
+  assert.ok(templateFence(read(root, SETUP)).includes("how explorer: claude/opus:medium"));
+  for (const [file, text] of before) {
+    if (file !== SETUP && file !== "models.json") assert.equal(read(root, file), text, `${file} is unchanged`);
   }
-  assert.match(check.out, new RegExp(`${SETUP}:\\d+ template fence is stale`), "names the setup template");
-
-  assert.equal(stamp(root).status, 0, "write run succeeds");
-  for (const file of ["skills/maintain-verification-skill/SKILL.md"]) {
-    assert.ok(read(root, file).includes("the `how explorer` role (default `claude/opus`)"), `${file} carries the new value`);
-    assert.ok(!read(root, file).includes("`how explorer` role (default `claude/sonnet`)"), `${file} lost the old value`);
-  }
-  assert.ok(templateFence(read(root, SETUP)).includes("how explorer: claude/opus:medium"), "template carries the new value");
-  assert.deepEqual(stamp(root, ["--check"]), { status: 0, out: "" }, "check passes after the write");
+  assert.deepEqual(stamp(root, ["--check"]), { status: 0, out: "" });
 });
 
 test("a second write run changes no bytes", () => {
@@ -96,26 +91,24 @@ test("a second write run changes no bytes", () => {
   assert.deepEqual(snapshot(root), once);
 });
 
-test("a hand edit to a stamped value is reported, and a write restores it", () => {
+test("a hand edit to the setup template drifts and a write restores it", () => {
   const root = sandbox();
-  const original = read(root, MODE);
-  edit(root, MODE, (t) => replaceOnce(t, "the `trivial edits` role (default `claude/haiku`)", "the `trivial edits` role (default `claude/opus`)"));
-
+  const original = read(root, SETUP);
+  edit(root, SETUP, (t) => replaceOnce(t, "trivial edits: claude/haiku:medium", "trivial edits: claude/opus:medium"));
   const check = stamp(root, ["--check"]);
   assert.equal(check.status, 1);
-  assert.match(check.out, new RegExp(`${MODE}:\\d+:\\d+ stale \`trivial edits\` default: found \`claude/opus\``));
-
+  assert.match(check.out, new RegExp(`${SETUP}:\\d+ template fence is stale`));
   assert.equal(stamp(root).status, 0);
-  assert.equal(read(root, MODE), original, "write restores the stamped text");
+  assert.equal(read(root, SETUP), original);
 });
 
-test("the new and unchanged defaults read correctly in prose and template", () => {
+test("skills name roles and the template carries defaults", () => {
   const mode = read(repo, MODE);
-  assert.ok(mode.includes("the `feature, refactoring` role (default `claude/sonnet`)"), "feature, refactoring defaults to sonnet");
+  assert.ok(mode.includes("the `feature, refactoring` role"), "feature, refactoring names its role");
   for (const role of ["bug-fix", "perf-issue", "hillclimb", "judgment and prose"]) {
-    assert.ok(mode.includes(`the \`${role}\` role (default \`parent\`)`), `${role} defaults to parent`);
+    assert.ok(mode.includes(`the \`${role}\` role`), `${role} names its role`);
   }
-  assert.ok(mode.includes("the `hardest tasks` role (default `parent:high`)"), "hardest tasks prose carries its effort");
+  assert.ok(mode.includes("the `hardest tasks` role"), "hardest tasks names its role");
   assert.ok(!mode.includes("at a raised reasoning level,"), "effort is no longer restated in words");
 
   const fence = templateFence(read(repo, SETUP));
@@ -130,27 +123,29 @@ test("architect no longer restates the implicit effort", () => {
   assert.ok(!read(repo, SPAWNING).includes("which means `high`"), "hardest tasks exception now comes from its default");
 });
 
-test("PR review tiers keep their single model defaults in prose and template", () => {
+test("PR review tiers name roles and keep single model defaults in the template", () => {
   const mode = read(repo, MODE);
   const fence = templateFence(read(repo, SETUP));
-  for (const [role, value, prose] of [
-    ["pr critical reviewer", "parent:high", "parent:high"],
-    ["pr deep reviewer", "parent:high", "parent:high"],
-    ["pr triage reviewer", "claude/sonnet:medium", "claude/sonnet"],
+  for (const [role, value] of [
+    ["pr critical reviewer", "parent:high"],
+    ["pr deep reviewer", "parent:high"],
+    ["pr triage reviewer", "claude/sonnet:medium"],
   ]) {
     const entry = catalog.roles.find((r) => r.role === role);
     assert.equal(entry.kind, "single");
     assert.deepEqual(entry.default, [value]);
-    assert.ok(mode.includes(`the \`${role}\` role (default \`${prose}\`)`));
+    assert.ok(mode.includes(`the \`${role}\` role`));
     assert.ok(fence.includes(`${role}: ${value}`));
   }
 });
 
 test("invalid prose exits 2 and a write run touches no file", async (t) => {
   const cases = [
-    ["unknown role", "Use the `how explorers` role (default `parent`).", /unknown role `how explorers`/],
-    ["loose default", "Verify it (the `trail reviewer` role, default `codex/matched`, per the models file).", /loose default `codex\/matched`/],
-    ["loose effort", "Spawn each at `high` by default.", /loose effort `high`/],
+    ["unknown role", "Use the `how explorers` role.", /unknown role `how explorers`/],
+    ["printed model default", "Use the `how explainer` role (default `parent`).", /leftover/],
+    ["other printed default", "Use the base (default main).", /leftover/],
+    ["unparenthesized model default", "Use default `claude/opus`.", /leftover/],
+    ["unparenthesized effort default", "Spawn each at `high` by default.", /leftover/],
   ];
   for (const [name, sentence, expected] of cases) {
     await t.test(name, () => {
@@ -160,18 +155,18 @@ test("invalid prose exits 2 and a write run touches no file", async (t) => {
       const before = snapshot(root);
 
       const check = stamp(root, ["--check"]);
-      assert.equal(check.status, 2, "invalid input exits 2 even alongside stale copies");
+      assert.equal(check.status, 2, "invalid input exits 2 even alongside a stale template");
       assert.match(check.out, new RegExp(`skills/how/SKILL.md:\\d+:\\d+ ${expected.source}`));
 
       assert.equal(stamp(root).status, 2);
-      assert.deepEqual(snapshot(root), before, "the stale trivial edits copy stays unstamped");
+      assert.deepEqual(snapshot(root), before, "the stale template stays unstamped");
     });
   }
 });
 
 test("a role stated in no skill prose exits 2", () => {
   const root = sandbox();
-  edit(root, "skills/show-me-your-work/SKILL.md", (t) => replaceOnce(t, "the `trail reviewer` role (default `parent`)", "the trail reviewer"));
+  edit(root, "skills/show-me-your-work/SKILL.md", (t) => replaceOnce(t, "the `trail reviewer` role", "the trail reviewer"));
   const check = stamp(root, ["--check"]);
   assert.equal(check.status, 2);
   assert.match(check.out, /models\.json: role `trail reviewer` is stated in no skill prose/);
@@ -233,22 +228,15 @@ test("empty defaults pass only for family other, regardless of kind", async (t) 
   }
 });
 
-test("an empty pool stamps none in prose and a blank template value", () => {
+test("an empty pool stamps a blank template value", () => {
   const root = sandbox();
-  const arena = "skills/arena/SKILL.md";
-  edit(root, arena, (text) => replaceOnce(text, "the `arena cross-judge pool` role (default `none`)", "the `arena cross-judge pool` role (default `codex/matched`)"));
   edit(root, SETUP, (text) => replaceOnce(text, "arena cross-judge pool:\n", "arena cross-judge pool: codex/matched:medium\n"));
   const check = stamp(root, ["--check"]);
   assert.equal(check.status, 1);
-  assert.match(check.out, /stale `arena cross-judge pool` default: found `codex\/matched`, models.json says `none`/);
+  assert.match(check.out, /template fence is stale/);
   assert.equal(stamp(root).status, 0);
-  assert.ok(read(root, arena).includes("the `arena cross-judge pool` role (default `none`)"));
-  assert.ok(read(root, arena).includes("If no entry from another family is available, skip the judge"));
   assert.ok(templateFence(read(root, SETUP)).includes("arena cross-judge pool:"));
-  const once = snapshot(root);
   assert.deepEqual(stamp(root, ["--check"]), { status: 0, out: "" });
-  assert.deepEqual(stamp(root), { status: 0, out: "" });
-  assert.deepEqual(snapshot(root), once);
 });
 
 test("unknown catalog keys are rejected instead of ignored", () => {
@@ -287,10 +275,10 @@ test("an unknown flag exits 2", () => {
   assert.equal(stamp(sandbox(), ["--bogus"]).status, 2);
 });
 
-test("text that is not a default span survives a stamping write byte for byte", () => {
+test("prose survives a template stamping write byte for byte", () => {
   const root = sandbox();
   const keep = [
-    [SPAWNING, "A skill names a role, such as `how explorer`, and a default for it."],
+    [SPAWNING, "A skill names a role, such as the `how explorer` role."],
     [SETUP, "For panel roles (arena runners, interrogate reviewers) the value is a list"],
     ["skills/no-comments/SKILL.md", "default `main`"],
   ];
@@ -299,7 +287,7 @@ test("text that is not a default span survives a stamping write byte for byte", 
 
   assert.equal(stamp(root).status, 0);
   for (const [file, text] of keep) assert.ok(read(root, file).includes(text), `${file} keeps: ${text}`);
-  assert.ok(read(root, "skills/swarm/SKILL.md").includes("the `swarm workers` role (default `claude/haiku`)"), "the swarm span was stamped");
+  assert.ok(read(root, "skills/swarm/SKILL.md").includes("the `swarm workers` role"), "the swarm role is unchanged");
 });
 
 test("the template keeps the head lines first and one parseable line per catalog role", () => {

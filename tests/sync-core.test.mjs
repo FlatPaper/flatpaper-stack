@@ -19,7 +19,7 @@ const tree = (obj) => new Map(Object.entries(obj).sort(([a], [b]) => (a < b ? -1
 const SPAWNING = "skills/flatpaper-mode/references/spawning.md";
 const SETUP = "skills/setup-flatpaper-stack/SKILL.md";
 const STAMPED = {
-  [SPAWNING]: text(`${EFFORT_RULE} Code delegates use the \`feature, refactoring\` role (default \`claude/sonnet\`).\n`),
+  [SPAWNING]: text(`${EFFORT_RULE} Code delegates use the \`feature, refactoring\` role.\n`),
   [SETUP]: text(["Write this:", "", "```", ...HEAD, "feature, refactoring: claude/sonnet:medium", "```", ""].join("\n")),
 };
 const lines = (...l) => l.join("\n") + "\n";
@@ -137,7 +137,7 @@ test("every problem blocks every write, including an unrelated clean update", as
     ["unlisted", { old: {}, neu: { "skills/a/PLAN.md": text("y\n") }, disk: (p) => (p === "skills/a/PLAN.md" ? "file" : p === "skills" || p === "skills/a" ? "dir" : "missing") }],
     ["path-collision", { old: {}, neu: { "skills/a/node_modules": text("y\n") }, disk: (p) => (p === "skills/a/node_modules" || p === "skills" || p === "skills/a" ? "dir" : "missing") }],
     ["path-collision", { old: {}, neu: { "skills/a/x/y.md": text("y\n") }, disk: (p) => (p === "skills/a/x" ? "file" : p === "skills" || p === "skills/a" ? "dir" : "missing") }],
-    ["local-unstamped", { stampOnly: { "hooks/policy.md": text("Use default `claude/sonnet`.\n") } }],
+    ["local-unstamped", { stampOnly: { "hooks/policy.md": text("Use (default `claude/sonnet`).\n") } }],
     ["stale-at-pin", { target: PIN, old: { [F]: text("x\n") }, neu: { [F]: text("x\n") }, local: { [F]: text("x\n") }, forks: { [F]: "policy" } }],
     ["conflicted", { old: { [F]: text(BODY) }, neu: { [F]: text(BODY.replace("four", "UPSTREAM")) }, local: { [F]: text(BODY.replace("four", "LOCAL")) }, forks: { [F]: "policy" } }],
     ["binary-conflict", { old: { "skills/a/x.png": binary([1, 0, 1]) }, neu: { "skills/a/x.png": binary([1, 0, 2]) }, local: { "skills/a/x.png": binary([1, 0, 3]) }, forks: { "skills/a/x.png": "policy" } }],
@@ -145,7 +145,7 @@ test("every problem blocks every write, including an unrelated clean update", as
     ["path-collision", { old: {}, neu: { "skills/A/SKILL.md": text("y\n") }, local: { "skills/a/SKILL.md": text("ours\n") } }],
     ["path-collision", { old: {}, neu: { "skills/a/SKILL.md/x.md": text("y\n") }, local: { [F]: text("ours\n") } }],
     ["denylist", { cfg: config({ denylist: [{ token: "grok-", hint: "map it to a role" }] }), old: { [F]: text("x\n") }, neu: { [F]: text("default `grok-4.7`\n") }, local: { [F]: text("x\n") } }],
-    ["stamp", { old: { [F]: text("x\n") }, neu: { [F]: text("Use default `claude/opus` here.\n") }, local: { [F]: text("x\n") } }],
+    ["stamp", { old: { [F]: text("x\n") }, neu: { [F]: text("Use (default `claude/opus`) here.\n") }, local: { [F]: text("x\n") } }],
     ["stamp-repo", { old: {}, neu: { "skills/b/SKILL.md": text(["```", ...HEAD, "feature, refactoring: claude/sonnet:medium", "```", ""].join("\n")) } }],
     ["local-unstamped", { local: { "skills/b/SKILL.md": text("the `feature, refactoring` role (default `claude/opus`)\n") } }],
     ["markers", { local: { "skills/b/SKILL.md": text("a\n<<<<<<< local\nb\n=======\nc\n>>>>>>> upstream\n") } }],
@@ -259,19 +259,19 @@ test("rules", async (t) => {
     assert.equal(derive(cfg, "skills/flatpaper-mode/playbooks/y.md", "READ\n"), "../../unslop/SKILL.md\n");
   });
 
-  await t.test("{{role:}} is filled from models.json by stampDoc", () => {
+  await t.test("{{role:}} expands to a role reference without a default", () => {
     const cfg = config({ rules: [rule({ pattern: "your feature model (default `grok-4.7`)", replacement: "the {{role:feature, refactoring}}" })] });
-    assert.equal(derive(cfg, "skills/x/SKILL.md", "Use your feature model (default `grok-4.7`).\n"), "Use the `feature, refactoring` role (default `claude/sonnet`).\n");
+    assert.equal(derive(cfg, "skills/x/SKILL.md", "Use your feature model (default `grok-4.7`).\n"), "Use the `feature, refactoring` role.\n");
   });
 
-  await t.test("a models.json change moves old and new together, so local reads unstamped, not forked", () => {
-    const opus = parseCatalog(CATALOG.replace("claude/sonnet:medium", "claude/opus:medium"));
-    const cfg = { ...config({ rules: [rule({ pattern: "MODEL", replacement: "the {{role:feature, refactoring}}" })] }), catalog: opus };
+  await t.test("changing a catalog default leaves derived role references unchanged", () => {
+    const cfg = config({ rules: [rule({ pattern: "MODEL", replacement: "the {{role:feature, refactoring}}" })] });
     const raw = tree({ [`pstack/${F}`]: text("Use MODEL.\n") });
-    const { tree: derived } = core.deriveTree(cfg, raw);
-    assert.equal(derived.get(F).text, "Use the `feature, refactoring` role (default `claude/opus`).\n");
-    const p = core.plan({ config: cfg, forks: new Map(), oldTree: derived, newTree: derived, localTree: tree({ ...STAMPED, [F]: text("Use the `feature, refactoring` role (default `claude/sonnet`).\n") }), stampOnly: new Map(), target: NEXT, version: "0.9.2", merge3, preProblems: [] });
-    assert.ok(kinds(p.problems).includes("local-unstamped"));
+    const before = core.deriveTree(cfg, raw).tree;
+    const opus = parseCatalog(CATALOG.replace("claude/sonnet:medium", "claude/opus:medium"));
+    const after = core.deriveTree({ ...cfg, catalog: opus }, raw).tree;
+    assert.equal(after.get(F).text, "Use the `feature, refactoring` role.\n");
+    assert.deepEqual(after, before);
   });
 
   await t.test("renames and excludes map upstream paths into local names", () => {
