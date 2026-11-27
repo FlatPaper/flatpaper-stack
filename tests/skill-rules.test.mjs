@@ -328,6 +328,49 @@ const rules = [
   },
 ];
 
+test("setup offers Codex only with both installed plugins and reads the local model cache", () => {
+  const setup = readFileSync(join(repo, "skills/setup-flatpaper-stack/SKILL.md"), "utf8");
+  assert.ok(setup.includes("`plugins` object in `~/.claude/plugins/installed_plugins.json`"));
+  assert.ok(setup.includes("only when both a `codex-seats@...` key and a `codex@...` key exist"));
+  assert.ok(setup.includes("`models[].slug` and `supported_reasoning_levels[].effort`"));
+  assert.ok(setup.includes("Without both plugins, offer only `parent` and `claude/*`"));
+  assert.ok(!setup.includes("claude plugin list"));
+  assert.ok(!setup.includes("VALID_REASONING_EFFORTS"));
+});
+
+test("setup offers the installed codex-seats preset over bundled defaults", () => {
+  const setup = readFileSync(join(repo, "skills/setup-flatpaper-stack/SKILL.md"), "utf8");
+  assert.ok(setup.includes("codex-seats' `installPath`"));
+  assert.ok(setup.includes("read `<installPath>/models.md`"));
+  assert.ok(setup.includes('"use Codex where codex-seats recommends"'));
+  assert.ok(setup.includes("If the preset is missing, report its path"));
+});
+
+test("setup validates the written file with the SessionStart check until output is empty", () => {
+  const setup = readFileSync(join(repo, "skills/setup-flatpaper-stack/SKILL.md"), "utf8");
+  const writeAt = setup.indexOf("### 4. Write the file");
+  const validateAt = setup.indexOf("### 5. Validate the written file");
+  assert.ok(writeAt > 0 && validateAt > writeAt);
+  const validation = setup.slice(validateAt, setup.indexOf("### 6. Confirm"));
+  assert.ok(validation.includes("From the directory containing the file just written"));
+  assert.ok(validation.includes("`node <plugin>/scripts/resolve-models.mjs --check`"));
+  assert.ok(validation.includes("same check the SessionStart hook runs"));
+  assert.ok(validation.includes("Empty output means valid"));
+  assert.ok(validation.includes("JSON `systemMessage`"));
+  assert.ok(validation.includes("correct the file, and rerun until output is empty"));
+});
+
+test("setup --repo writes only differences from the effective user layer", () => {
+  const setup = readFileSync(join(repo, "skills/setup-flatpaper-stack/SKILL.md"), "utf8");
+  assert.ok(setup.includes("With `--repo`, write `<repo root>/.agents/models.md` instead"));
+  assert.ok(setup.includes("from your home directory to read the effective user layer"));
+  assert.ok(setup.includes("only role lines that differ from the effective user layer"));
+  assert.ok(setup.includes("plus the optional `providers:` line"));
+  assert.ok(setup.includes("Offer no restriction or `providers: claude`"));
+  assert.ok(setup.includes("repo file is meant to be committed and overrides the user file for that repo only"));
+  assert.ok(setup.includes("Omit `session hook` and the budget comment from the repo file"));
+});
+
 test("Claude and Codex flatpaper agents keep the same required skill paths", () => {
   for (const file of ["agents/flatpaper-agent.md", "skills/flatpaper-mode/codex-agents/flatpaper-agent.md"]) {
     const agent = readFileSync(join(repo, file), "utf8");
