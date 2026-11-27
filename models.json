@@ -16,18 +16,18 @@
     { "role": "judgment and prose",                       "default": ["parent:medium"] },
     { "role": "hardest tasks",                            "default": ["parent:high"] },
     { "role": "pr critical reviewer",                     "default": ["parent:high"], "kind": "single" },
-    { "role": "pr deep reviewer",                         "default": ["codex/matched:high"], "kind": "single" },
-    { "role": "pr triage reviewer",                       "default": ["codex/matched:medium"], "kind": "single" },
+    { "role": "pr deep reviewer",                         "default": ["parent:high"], "kind": "single" },
+    { "role": "pr triage reviewer",                       "default": ["claude/sonnet:medium"], "kind": "single" },
     { "role": "thermos reviewers",                        "default": ["parent:medium"] },
     { "role": "comment sicko",                            "default": ["claude/sonnet:medium"] },
     { "role": "how explorer",                             "default": ["claude/sonnet:medium"] },
     { "role": "how explainer",                            "default": ["parent:medium"] },
     { "role": "history explorers",                        "default": ["claude/sonnet:medium"] },
-    { "role": "trail reviewer",                           "default": ["codex/matched:medium"], "kind": "pool" },
-    { "role": "arena runners",                            "default": ["parent:medium", "codex/matched:medium"], "kind": "panel" },
-    { "role": "arena cross-judge pool",                   "default": ["codex/matched:medium"], "kind": "pool", "family": "other" },
+    { "role": "trail reviewer",                           "default": ["parent:medium"], "kind": "pool" },
+    { "role": "arena runners",                            "default": ["parent:medium", "claude/sonnet:medium"], "kind": "panel" },
+    { "role": "arena cross-judge pool",                   "default": [], "kind": "pool", "family": "other" },
     { "role": "swarm workers",                            "default": ["claude/sonnet:medium"] },
     { "role": "swarm hard workers",                       "default": ["claude/opus:medium"] },
-    { "role": "interrogate reviewers",                    "default": ["parent:medium", "codex/matched:medium"], "kind": "panel" }
+    { "role": "interrogate reviewers",                    "default": ["parent:medium", "claude/sonnet:medium"], "kind": "panel" }
   ]
 }

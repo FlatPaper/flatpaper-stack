@@ -119,7 +119,7 @@ test("the new and unchanged defaults read correctly in prose and template", () =
   assert.ok(!mode.includes("at a raised reasoning level,"), "effort is no longer restated in words");
 
   const fence = templateFence(read(repo, SETUP));
-  for (const line of ["feature, refactoring: claude/sonnet:medium", "bug-fix: parent:medium", "hardest tasks: parent:high", "arena runners: parent:medium, codex/matched:medium"]) {
+  for (const line of ["feature, refactoring: claude/sonnet:medium", "bug-fix: parent:medium", "hardest tasks: parent:high", "arena runners: parent:medium, claude/sonnet:medium"]) {
     assert.ok(fence.includes(line), `template has ${line}`);
   }
 });
@@ -135,8 +135,8 @@ test("PR review tiers keep their single model defaults in prose and template", (
   const fence = templateFence(read(repo, SETUP));
   for (const [role, value, prose] of [
     ["pr critical reviewer", "parent:high", "parent:high"],
-    ["pr deep reviewer", "codex/matched:high", "codex/matched:high"],
-    ["pr triage reviewer", "codex/matched:medium", "codex/matched"],
+    ["pr deep reviewer", "parent:high", "parent:high"],
+    ["pr triage reviewer", "claude/sonnet:medium", "claude/sonnet"],
   ]) {
     const entry = catalog.roles.find((r) => r.role === role);
     assert.equal(entry.kind, "single");
@@ -171,7 +171,7 @@ test("invalid prose exits 2 and a write run touches no file", async (t) => {
 
 test("a role stated in no skill prose exits 2", () => {
   const root = sandbox();
-  edit(root, "skills/show-me-your-work/SKILL.md", (t) => replaceOnce(t, "the `trail reviewer` role (default `codex/matched`)", "the trail reviewer"));
+  edit(root, "skills/show-me-your-work/SKILL.md", (t) => replaceOnce(t, "the `trail reviewer` role (default `parent`)", "the trail reviewer"));
   const check = stamp(root, ["--check"]);
   assert.equal(check.status, 2);
   assert.match(check.out, /models\.json: role `trail reviewer` is stated in no skill prose/);
@@ -192,6 +192,63 @@ test("a bad catalog lists every problem, one per line, and writes nothing", () =
     assert.equal(lines.filter((l) => l.startsWith("models.json:") && l.includes(role)).length, 1, `one line names ${role}`);
   }
   assert.deepEqual(snapshot(root), before);
+});
+
+test("non-Anthropic bundled defaults fail check and write without changing files", async (t) => {
+  for (const provider of ["codex", "gemini"]) {
+    await t.test(provider, () => {
+      const root = sandbox();
+      setDefault(root, "trail reviewer", [`${provider}/matched:medium`]);
+      const before = snapshot(root);
+      for (const args of [["--check"], []]) {
+        const r = stamp(root, args);
+        assert.equal(r.status, 2);
+        assert.match(r.out, /models\.json: role `trail reviewer`.*bundled defaults allow only parent or claude/);
+        assert.deepEqual(snapshot(root), before);
+      }
+    });
+  }
+});
+
+test("empty defaults pass only for family other, regardless of kind", async (t) => {
+  for (const kind of ["single", "panel", "pool"]) {
+    for (const family of [undefined, "any", "other"]) {
+      await t.test(`${kind}, ${family ?? "implicit any"}`, () => {
+        const root = sandbox();
+        edit(root, "models.json", (text) => {
+          const json = JSON.parse(text);
+          const role = json.roles.find((r) => r.role === "arena cross-judge pool");
+          role.kind = kind;
+          role.family = family;
+          return JSON.stringify(json, null, 2);
+        });
+        const r = stamp(root, ["--check"]);
+        if (family === "other") assert.deepEqual(r, { status: 0, out: "" });
+        else {
+          assert.equal(r.status, 2);
+          assert.match(r.out, /models\.json: role `arena cross-judge pool` has an empty default but family is not `other`/);
+        }
+      });
+    }
+  }
+});
+
+test("an empty pool stamps none in prose and a blank template value", () => {
+  const root = sandbox();
+  const arena = "skills/arena/SKILL.md";
+  edit(root, arena, (text) => replaceOnce(text, "the `arena cross-judge pool` role (default `none`)", "the `arena cross-judge pool` role (default `codex/matched`)"));
+  edit(root, SETUP, (text) => replaceOnce(text, "arena cross-judge pool:\n", "arena cross-judge pool: codex/matched:medium\n"));
+  const check = stamp(root, ["--check"]);
+  assert.equal(check.status, 1);
+  assert.match(check.out, /stale `arena cross-judge pool` default: found `codex\/matched`, models.json says `none`/);
+  assert.equal(stamp(root).status, 0);
+  assert.ok(read(root, arena).includes("the `arena cross-judge pool` role (default `none`)"));
+  assert.ok(read(root, arena).includes("If no entry from another family is available, skip the judge"));
+  assert.ok(templateFence(read(root, SETUP)).includes("arena cross-judge pool:"));
+  const once = snapshot(root);
+  assert.deepEqual(stamp(root, ["--check"]), { status: 0, out: "" });
+  assert.deepEqual(stamp(root), { status: 0, out: "" });
+  assert.deepEqual(snapshot(root), once);
 });
 
 test("unknown catalog keys are rejected instead of ignored", () => {
@@ -250,7 +307,7 @@ test("the template keeps the head lines first and one parseable line per catalog
   assert.deepEqual(fence.slice(0, catalog.template.head.length), catalog.template.head);
   assert.ok(catalog.template.head.includes("session hook: on"));
   const roles = fence.slice(catalog.template.head.length).map((line) => {
-    const at = line.indexOf(": ");
+    const at = line.search(/: |:$/);
     return [line.slice(0, at), line.slice(at + 2)];
   });
   assert.deepEqual(roles, catalog.roles.map((r) => [r.role, r.default.join(", ")]));

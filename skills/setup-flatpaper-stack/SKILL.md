@@ -74,19 +74,19 @@ trivial edits: claude/haiku:medium
 judgment and prose: parent:medium
 hardest tasks: parent:high
 pr critical reviewer: parent:high
-pr deep reviewer: codex/matched:high
-pr triage reviewer: codex/matched:medium
+pr deep reviewer: parent:high
+pr triage reviewer: claude/sonnet:medium
 thermos reviewers: parent:medium
 comment sicko: claude/sonnet:medium
 how explorer: claude/sonnet:medium
 how explainer: parent:medium
 history explorers: claude/sonnet:medium
-trail reviewer: codex/matched:medium
-arena runners: parent:medium, codex/matched:medium
-arena cross-judge pool: codex/matched:medium
+trail reviewer: parent:medium
+arena runners: parent:medium, claude/sonnet:medium
+arena cross-judge pool:
 swarm workers: claude/sonnet:medium
 swarm hard workers: claude/opus:medium
-interrogate reviewers: parent:medium, codex/matched:medium
+interrogate reviewers: parent:medium, claude/sonnet:medium
 ```
 
 `history explorers` covers the chat-history fan-out in `recall` and `automate-me`. `trail reviewer` is the cross-model reviewer in `show-me-your-work`.

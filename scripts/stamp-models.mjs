@@ -75,16 +75,18 @@ export function parseCatalog(jsonText) {
     const family = entry.family ?? "any";
     if (!KINDS.includes(kind)) fail(`has kind \`${kind}\`, not one of ${KINDS.join(", ")}`);
     if (!(family in FAMILIES)) fail(`has family \`${family}\`, not one of ${Object.keys(FAMILIES).join(", ")}`);
-    if (!isStrings(entry.default)) { fail("needs `default`, a non-empty array of strings"); continue; }
+    if (!Array.isArray(entry.default) || !entry.default.every((s) => typeof s === "string")) { fail("needs `default`, an array of strings"); continue; }
+    if (entry.default.length === 0 && family !== "other") fail("has an empty default but family is not `other`");
 
     const value = [];
     for (const text of entry.default) {
       const ref = parseRef(text);
       if (typeof ref === "string") fail(`default ${ref}`);
+      else if (ref.provider !== "parent" && ref.provider !== "claude") fail(`default \`${text}\` uses provider \`${ref.provider}\`; bundled defaults allow only parent or claude`);
       else if (FAMILIES[family] && !FAMILIES[family](ref)) fail(`default \`${text}\` breaks family \`${family}\` (${FAMILY_RULE[family]})`);
       else value.push(ref);
     }
-    if (kind === "single" && entry.default.length !== 1) fail(`is kind single but has ${entry.default.length} default entries`);
+    if (kind === "single" && entry.default.length > 1) fail(`is kind single but has ${entry.default.length} default entries`);
     if (typeof entry.role === "string") roles.set(entry.role, { name: entry.role, value });
   }
 
@@ -93,8 +95,8 @@ export function parseCatalog(jsonText) {
 }
 
 const refText = (ref) => (ref.provider === "parent" ? "parent" : `${ref.provider}/${ref.model}`);
-const proseValue = (role) => role.value.map((r) => refText(r) + (r.effort === IMPLICIT_EFFORT ? "" : `:${r.effort}`)).join(", ");
-const templateLine = (role) => `${role.name}: ${role.value.map((r) => `${refText(r)}:${r.effort}`).join(", ")}`;
+const proseValue = (role) => role.value.map((r) => refText(r) + (r.effort === IMPLICIT_EFFORT ? "" : `:${r.effort}`)).join(", ") || "none";
+const templateLine = (role) => `${role.name}: ${role.value.map((r) => `${refText(r)}:${r.effort}`).join(", ")}`.trimEnd();
 const templateBody = (c) => [...c.templateHead, ...[...c.roles.values()].map(templateLine)];
 
 const FINDINGS = {
