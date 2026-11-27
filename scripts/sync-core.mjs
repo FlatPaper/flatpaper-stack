@@ -319,7 +319,7 @@ const prefixes = (path) => path.split("/").map((_, i, parts) => parts.slice(0, i
 const fold = (s) => s.normalize("NFC").toLowerCase();
 
 function findingSay(f) {
-  return { "unknown-role": `unknown role \`${f.role}\``, "printed-default": 'leftover "(default " text', "stale-template": "stale template fence" }[f.kind] ?? f.kind;
+  return { "unknown-role": `unknown role \`${f.role}\``, "printed-default": "leftover printed default", "stale-template": "stale template fence" }[f.kind] ?? f.kind;
 }
 
 function stampRepoSay(f) {

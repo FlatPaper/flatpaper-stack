@@ -8,7 +8,9 @@ const PROVIDERS = ["claude", "codex", "gemini"];
 const EFFORT_RULE = "A default written without an effort means `medium`.";
 export const SPAWNING = "skills/flatpaper-mode/references/spawning.md";
 const ROLE = /`([^`]+)` role\b/g;
-const PRINTED_DEFAULT = /\(default /g;
+const LOOSE_DEFAULT = new RegExp(`default \`((?:parent|${PROVIDERS.map((p) => `${p}/`).join("|")})[^\`]*)\``, "g");
+const LOOSE_EFFORT = new RegExp(`\`(${EFFORTS.join("|")})\` by default`, "g");
+const PRINTED_DEFAULT = new RegExp(`\\(default |${LOOSE_DEFAULT.source}|${LOOSE_EFFORT.source}`, "g");
 const TEMPLATE_FIRST_LINE = "# flatpaper-stack model configuration.";
 export const SCAN_DIRS = ["skills", "agents", "hooks"];
 
@@ -99,7 +101,7 @@ const templateBody = (c) => [...c.templateHead, ...[...c.roles.values()].map(tem
 const FINDINGS = {
   "stale-template": { fixable: true, say: (f) => `${at(f)} template fence is stale` },
   "unknown-role": { fixable: false, say: (f) => `${at(f)} unknown role \`${f.role}\` (models.json has no such role)` },
-  "printed-default": { fixable: false, say: (f) => `${at(f)} leftover "(default " text; defaults belong in models.json` },
+  "printed-default": { fixable: false, say: (f) => `${at(f)} leftover printed default; defaults belong in models.json` },
   "missing-role": { fixable: false, say: (f) => `models.json: role \`${f.role}\` is stated in no skill prose` },
   "template-count": { fixable: false, say: (f) => `found ${f.fences.length} models.md template fences (want exactly 1, starting "${TEMPLATE_FIRST_LINE}")${f.fences.map((w) => ` ${at({ at: w })}`).join("")}` },
   "effort-rule": { fixable: false, say: () => `${SPAWNING}: no longer says "${EFFORT_RULE}"` },

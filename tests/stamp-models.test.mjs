@@ -144,6 +144,8 @@ test("invalid prose exits 2 and a write run touches no file", async (t) => {
     ["unknown role", "Use the `how explorers` role.", /unknown role `how explorers`/],
     ["printed model default", "Use the `how explainer` role (default `parent`).", /leftover/],
     ["other printed default", "Use the base (default main).", /leftover/],
+    ["unparenthesized model default", "Use default `claude/opus`.", /leftover/],
+    ["unparenthesized effort default", "Spawn each at `high` by default.", /leftover/],
   ];
   for (const [name, sentence, expected] of cases) {
     await t.test(name, () => {

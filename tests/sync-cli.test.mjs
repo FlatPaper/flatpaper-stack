@@ -348,6 +348,21 @@ test("upstream deleting a file we changed is undeclared unless forks.json keeps 
   assert.equal(pin(declared.root), declared.shaB);
 });
 
+test("upstream unparenthesized defaults block sync without writes", async (t) => {
+  for (const sentence of ["Use default `claude/opus`.", "Spawn each at `high` by default."]) {
+    await t.test(sentence, () => {
+      const { root, shaA, shaB } = fixture({
+        a: { "pstack/skills/arena/SKILL.md": "v1\n", "pstack/skills/clean/SKILL.md": "v1\n" },
+        b: { "pstack/skills/arena/SKILL.md": `${sentence}\n`, "pstack/skills/clean/SKILL.md": "v2\n" },
+      });
+      const before = snapshot(root);
+      const r = sync(root, shaB);
+      assertBlocked(root, shaA, r, /stamp\s+skills\/arena\/SKILL\.md:1\s+leftover/);
+      assert.deepEqual(snapshot(root), before, "the unrelated clean update also stays unwritten");
+    });
+  }
+});
+
 test("a printed default under hooks/ blocks like one under skills/", () => {
   const { root, shaA, shaB } = fixture({
     a: { "pstack/skills/arena/SKILL.md": "v1\n" },
