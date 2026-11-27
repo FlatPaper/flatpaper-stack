@@ -63,6 +63,7 @@ More: [commands](docs/commands.md), [principles](docs/principles.md).
 ## Change a model default
 
 To pick your own models, run `/flatpaper-stack:setup-flatpaper-stack`.
+Run `/flatpaper-stack:setup-flatpaper-stack --repo` to write only repo overrides to `.agents/models.md`, which is meant to be committed.
 
 Role choices use three layers, in order of increasing precedence: bundled `models.json`, user `~/.claude/flatpaper-stack/models.md`, and repository `.agents/models.md`. The repository root is the nearest ancestor of the current directory containing a `.git` file or directory. Missing files leave the lower layers in effect.
 

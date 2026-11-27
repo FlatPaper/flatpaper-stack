@@ -5,7 +5,7 @@ description: Configure which models flatpaper-stack uses per role and at what re
 
 # Setup flatpaper-stack
 
-Write `~/.claude/flatpaper-stack/models.md`, the user layer that the resolver reads to pick each role per `../flatpaper-mode/references/spawning.md`.
+Write `~/.claude/flatpaper-stack/models.md`, the user layer read by the resolver per `../flatpaper-mode/references/spawning.md`. With `--repo`, write `<repo root>/.agents/models.md` instead. For `--repo`, find the nearest ancestor with a `.git` file or directory. Stop if there is none. Explain that the repo file is meant to be committed and overrides the user file for that repo only.
 
 ## Value format
 
@@ -14,7 +14,6 @@ Each value is `<provider>/<model>:<effort>`, or `parent:<effort>`.
 - `claude/<alias>`: an Agent subagent with `model` set to the alias. The aliases are the ones the Agent tool's `model` parameter offers (today `sonnet`, `opus`, `haiku`, `fable`). Each alias runs the newest model in that family. The Agent tool does not take full model IDs, so the file stores the alias.
 - `codex/<model>`: a Codex seat through the codex-seats plugin, per `../flatpaper-mode/references/spawning.md`.
 - `codex/matched`: the Codex model at the parent's tier, as defined by the codex-seats plugin's `codex-seat` skill.
-- `gemini/<name>`: the agent or MCP tool that the detected Gemini plugin or MCP provides.
 - `parent`: leave `model` unset, so the role runs on the parent chat model.
 - `<effort>` is the reasoning level: the Agent `effort` for `claude` and `parent`, the effort passed per the codex-seats plugin's `codex-seat` skill for `codex`. The ladder is `max` > `xhigh` > `high` > `medium` > `low`.
 
@@ -25,14 +24,16 @@ Each value is `<provider>/<model>:<effort>`, or `parent:<effort>`.
 Check each provider. A provider that is missing gets one line in the step 3 summary and is skipped. Never ask for an API key, and never install anything.
 
 - **Claude.** The aliases the Agent tool's `model` parameter offers in this session. That is the dependable source.
-- **Codex.** Present when `claude plugin list` shows the `codex` plugin enabled. Its models are the entries in `~/.codex/models_cache.json` with `visibility: "list"`, read by `slug`. Each entry's `supported_reasoning_levels` gives its efforts, but the plugin passes only the efforts in `VALID_REASONING_EFFORTS` in `scripts/codex-companion.mjs` under its `installPath` in `~/.claude/plugins/installed_plugins.json`, so cap Codex efforts at the highest level both lists share. The stock plugin (1.0.6) stops at `xhigh`. Going higher takes a local edit that adds `max` to that list, and a plugin update removes the edit. If the plugin is present but the cache is missing, offer only `codex/default`.
-- **Gemini.** Present only when an installed plugin provides a Gemini agent (a `subagent_type` containing `gemini`) or an MCP server exposes Gemini tools (`mcp__<server>__<tool>` names containing `gemini`, deferred tools included). A `gemini` CLI with no plugin or MCP around it does not count, because no skill can spawn it as a subagent. Say so in one line if you find one.
+- **Codex.** Read the `plugins` object in `~/.claude/plugins/installed_plugins.json`. Codex is available only when both a `codex-seats@...` key and a `codex@...` key exist. Read codex-seats' `installPath` from its entry in the key's array. Read models from `~/.codex/models_cache.json`, using `models[].slug` and `supported_reasoning_levels[].effort`. Offer only efforts on the routing ladder above. If the cache is missing, offer only `codex/default` and `codex/matched` through the `codex-seat` skill. Without both plugins, offer only `parent` and `claude/*`. Say that codex-seats adds Codex models.
+- **Preset.** When Codex is available, read `<installPath>/models.md`. Offer its role lines over the bundled defaults as "use Codex where codex-seats recommends". Never embed preset values in this skill. If the preset is missing, report its path and keep the bundled defaults available.
 
 Never write a value you have not confirmed is available. `parent` is always valid.
 
 ### 2. Load current state
 
-The default role-to-model mapping is the file shape shown in step 5 below. If `~/.claude/flatpaper-stack/models.md` already exists, read it and treat its `# budget` line, its `session hook` line, and its role values as the current choices. Otherwise start from those defaults. A line whose role is not in step 5, such as `architect runners`, `reflect tooling`, or `pr verifier`, is from a retired role. Drop it.
+The default role-to-model mapping is the file shape shown in step 4 below. If `~/.claude/flatpaper-stack/models.md` already exists, read it and treat its `# budget` line, its `session hook` line, and its role values as the current choices. Otherwise start from those defaults. A line whose role is not in step 4, such as `architect runners`, `reflect tooling`, or `pr verifier`, is from a retired role. Drop it.
+
+For `--repo`, run `node <plugin>/scripts/resolve-models.mjs` from your home directory to read the effective user layer over bundled defaults, without repo overrides. Use those role values as the baseline. Read any existing repo file as the current choices. Preserve its `providers:` restriction unless the user changes it.
 
 ### 3. Budget, map, and confirm
 
@@ -43,7 +44,7 @@ The default role-to-model mapping is the file shape shown in step 5 below. If `~
 - `medium — high reasoning`
 - `small — medium reasoning`
 
-**(b) Apply it.** Build the working table from the skill defaults, and on a re-run keep any role whose model the user changed. `unlimited`, `large`, `medium`, and `small` set the effort of every value, panel entries included, to `max`, `xhigh`, `high`, or `medium`. The `hardest tasks` role goes one step higher, up to `max`. If a model does not support that effort, use its highest supported effort below the target. So `unlimited` turns `parent:xhigh` into `parent:max`, and keeps `codex/default:xhigh` at `xhigh` when the plugin caps Codex there (step 1). `small` turns them into `parent:medium` and `codex/default:medium`.
+**(b) Apply it.** Build the working table from the bundled defaults, or the effective user layer for `--repo`. Apply the preset only if accepted. On a re-run, keep role models the user changed unless they accept the preset for those roles. `unlimited`, `large`, `medium`, and `small` set the effort of every value, panel entries included, to `max`, `xhigh`, `high`, or `medium`. The `hardest tasks` role goes one step higher, up to `max`. If a model does not support that effort, use its highest supported effort below the target. For example, `unlimited` turns `parent:xhigh` into `parent:max`. Cap a named Codex model at its supported effort from step 1. For `codex/default` and `codex/matched`, follow the `codex-seat` skill for supported efforts.
 
 **(c) Show the roles and confirm.** Show every role with its value as a table. Mark any value whose provider or model was not detected as needing a choice. Also list each line step 2 dropped, and one line per skipped provider. Ask whether to accept as-is or change specific roles, offering the detected models plus `parent` as the options. Use AskUserQuestion, which takes at most four options per question, so offer the most likely models and let "Other" take the rest.
 
@@ -51,15 +52,15 @@ For panel roles (arena runners, interrogate reviewers) the value is a list, and 
 
 The `pr critical reviewer`, `pr deep reviewer`, and `pr triage reviewer` roles cover critical, logic, and routine PR changes and name models directly, without the cross-family rule.
 
-**(d) Ask about the session hook.** The plugin's `SessionStart` hook tells the agent to invoke flatpaper-mode for multi-file, design, and unknown-cause bug or perf work. It runs on startup, resume, clear, and compact. Use AskUserQuestion to ask whether to keep it. The default is on. The answer is the `session hook` line, `on` or `off`. With no file or no line, the hook runs.
+**(d) Ask about the session hook.** Skip this question for `--repo`. The hook reads only the user file. The plugin's `SessionStart` hook tells the agent to invoke flatpaper-mode for multi-file, design, and unknown-cause bug or perf work. It runs on startup, resume, clear, and compact. Use AskUserQuestion to ask whether to keep it. The default is on. The answer is the `session hook` line, `on` or `off`. With no file or no line, the hook runs.
 
-### 4. Validate
+For `--repo`, also ask whether to restrict providers. Offer no restriction or `providers: claude`. Keep `parent` available under any restriction. Offer only permitted providers for repo role overrides.
 
-Every role value written must use a detected provider and model, and an effort that model supports. `parent` always passes, and `codex/matched` passes whenever Codex is present. If a chosen value is not available, stop and ask again.
+### 4. Write the file
 
-### 5. Write the file
+For the user layer, create `~/.claude/flatpaper-stack/` if needed, then write `models.md` with a `# budget` line holding the chosen label and its target effort, a `session hook` line, and one line per role, using the same role names the skills use. Overwrite the whole file so re-runs stay idempotent. For `--repo`, create `.agents/` if needed and overwrite `.agents/models.md` with only role lines that differ from the effective user layer, plus the optional `providers:` line. Compare whole ordered lists, including efforts and empty values. Omit `session hook` and the budget comment from the repo file. Use the template below for the user file only.
 
-Create `~/.claude/flatpaper-stack/` if needed, then write `models.md` with a `# budget` line holding the chosen label and its target effort, a `session hook` line, and one line per role, using the same role names the skills use. Overwrite the whole file so re-runs stay idempotent. Shape:
+Shape:
 
 ```
 # flatpaper-stack model configuration. One line per role, plus the `session hook` line. Delete a line to fall back to the skill default.
@@ -90,6 +91,10 @@ interrogate reviewers: parent:medium, claude/sonnet:medium
 ```
 
 `history explorers` covers the chat-history fan-out in `recall` and `automate-me`. `trail reviewer` is the cross-model reviewer in `show-me-your-work`.
+
+### 5. Validate the written file
+
+From the directory containing the file just written, run `node <plugin>/scripts/resolve-models.mjs --check`. Use flatpaper-stack's absolute plugin path for `<plugin>`. This is the same check the SessionStart hook runs. Empty output means valid. A JSON `systemMessage` lists problems. Show them, correct the file, and rerun until output is empty. Exit 0 alone does not mean valid.
 
 ### 6. Confirm
 
