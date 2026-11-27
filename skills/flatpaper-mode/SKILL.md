@@ -30,6 +30,7 @@ The remaining triggers live only here:
 - A number you measured → **benchmark-checklist**.
 - PR status → the **Babysit** playbook. Landing a green stack → the **Shipping** playbook.
 - Bot review comments → judge each on its merits.
+- Every API call re-reads the whole context, so spend fewer calls. Send independent tool calls together in one message. Put each `TaskCreate` or `TaskUpdate` in the same message as the next real tool call, never in a message of its own. Join independent read-only shell commands (`git status`, `git log`, `gh pr view`, a story read) into one Bash call, with an `echo` label before each output. Split calls only when one result decides the next, or when the delegation guard denies the combined command. Then send the split calls together in one message.
 - Long or unattended work → **show-me-your-work**.
 
 ## Principles
