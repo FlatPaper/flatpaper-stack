@@ -307,6 +307,11 @@ const rules = [
     phrase: "Spawn Comment Sicko, the `comment-sicko` agent, on the `comment sicko` role per `../flatpaper-mode/references/spawning.md`.",
   },
   {
+    source: "PR3b Comment Sicko edits the session's own checkout",
+    file: "skills/no-comments/SKILL.md",
+    phrase: "A Codex seat gets the session's own checkout as `<cwd>`",
+  },
+  {
     source: "PR3b Codex swarm workers follow spawning.md",
     file: "skills/swarm/SKILL.md",
     phrase: "A Codex worker is a Codex seat per spawning.md.",
