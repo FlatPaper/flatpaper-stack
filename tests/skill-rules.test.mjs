@@ -344,6 +344,7 @@ test("setup offers the installed codex-seats preset over bundled defaults", () =
   assert.ok(setup.includes("read `<installPath>/models.md`"));
   assert.ok(setup.includes('"use Codex where codex-seats recommends"'));
   assert.ok(setup.includes("If the preset is missing, report its path"));
+  assert.ok(setup.includes("The budget then sets the effort of every line, preset lines included."));
 });
 
 test("setup validates the written file with the SessionStart check until output is empty", () => {
