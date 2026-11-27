@@ -9,7 +9,7 @@
 // there, and they are pinned for the same reason.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -47,9 +47,9 @@ const rules = [
     phrase: "Steps 1 and 2 do not apply to them.",
   },
   {
-    source: "review tiers seat connects through CDP and never launches browser",
+    source: "PR3b Codex seats load the owning plugin skill",
     file: "skills/flatpaper-mode/references/spawning.md",
-    phrase: "Tell the seat to connect with Node's built-in WebSocket or any CDP client and never launch a browser.",
+    phrase: "Load its `codex-seat` skill and follow it.",
   },
   {
     source: "e58dd04 sync: bullet-only playbooks still copy one task per item",
@@ -57,14 +57,14 @@ const rules = [
     phrase: "In a playbook with no numbered steps, each paragraph and each list item is a step.",
   },
   {
-    source: "e58dd04 sync: codex-run.sh carries the worker.md line",
+    source: "PR3b every brief carries the worker.md line",
     file: "skills/flatpaper-mode/SKILL.md",
-    phrase: "`scripts/codex-run.sh` puts the same line first in every Codex seat's prompt, so a Codex brief leaves it out.",
+    phrase: "Every brief, Agent or Codex, starts with this line.",
   },
   {
-    source: "#40 Codex delegates select flatpaper-agent like Claude delegates",
+    source: "PR3b Codex seats use the matching flatpaper agent path",
     file: "skills/flatpaper-mode/references/spawning.md",
-    phrase: 'Pass `--agent flatpaper-agent` whenever the same step on Claude would use `subagent_type: "flatpaper-stack:flatpaper-agent"`.',
+    phrase: "When the Claude spawn would use `subagent_type: \"flatpaper-stack:<name>\"`, pass `--agent <plugin>/skills/flatpaper-mode/codex-agents/<name>.md`.",
   },
   {
     source: "#40 Codex flatpaper-agent reads unslop before its hand-back",
@@ -247,14 +247,14 @@ const rules = [
     phrase: "A small patch alone never qualifies.",
   },
   {
-    source: "#29 a Codex reviewer runs with --write in a throwaway worktree",
+    source: "PR3b Explore seats stay read-only",
     file: "skills/flatpaper-mode/references/spawning.md",
-    phrase: "Pass a throwaway detached worktree at the head under review as the reviewer's `<cwd>`",
+    phrase: "Pass `read-only` for every seat whose Claude spawn would use `subagent_type: Explore`.",
   },
   {
-    source: "#29 localhost and network reviews go to a Claude reviewer unless Codex has network_access",
+    source: "PR3b custom agent exceptions stay in flatpaper policy",
     file: "skills/flatpaper-mode/references/spawning.md",
-    phrase: "Without that setting, a review that must run those uses a Claude reviewer",
+    phrase: "These exceptions include `arena`, `interrogate`, `architect`, `swarm`, `reflect`, and `thermos`.",
   },
   {
     source: "#21 shipping uses gh and never requires Graphite",
@@ -282,9 +282,9 @@ const rules = [
     phrase: "In those steps, the chat running the playbook changes no product file by any route, Bash heredocs and scripts included.",
   },
   {
-    source: "#38 a Codex role runs codex-run.sh",
+    source: "PR3b Codex roles follow spawning.md",
     file: "skills/flatpaper-mode/SKILL.md",
-    phrase: "A role that calls for a Codex model runs `scripts/codex-run.sh` in the background",
+    phrase: "A role that calls for a Codex model runs a Codex seat per `references/spawning.md`.",
   },
   {
     source: "#38 the pause resume note records the work split",
@@ -292,24 +292,24 @@ const rules = [
     phrase: "Record the work split too: each open piece of work with its role, model, and effort",
   },
   {
-    source: "#38 a Codex seat is a background command, not an Agent call",
+    source: "PR3b missing codex-seats drops Codex lines",
     file: "skills/flatpaper-mode/references/spawning.md",
-    phrase: "A Codex seat is a background Bash command, not an `Agent` call.",
+    phrase: "The resolver drops `codex/*` lines when codex-seats is missing.",
   },
   {
-    source: "#38 a Codex seat runs in the background with a Codex description",
+    source: "PR3b Codex briefs carry the worker preamble",
     file: "skills/flatpaper-mode/references/spawning.md",
-    phrase: "with Bash `run_in_background: true` and the description `Codex: <task>`",
+    phrase: "Start every Codex brief with `Read <path>/worker.md before anything else.`, just like an Agent kickoff.",
   },
   {
-    source: "#38 codex-run.sh writes unless told read-only",
-    file: "skills/flatpaper-mode/references/spawning.md",
-    phrase: "`codex-run.sh` runs Codex with `--write` unless you pass `read-only`.",
+    source: "PR3b Comment Sicko uses the general agent rule",
+    file: "skills/no-comments/SKILL.md",
+    phrase: "Spawn Comment Sicko, the `comment-sicko` agent, on the `comment sicko` role per `../flatpaper-mode/references/spawning.md`.",
   },
   {
-    source: "#38 a Codex swarm worker is a codex-run.sh command",
+    source: "PR3b Codex swarm workers follow spawning.md",
     file: "skills/swarm/SKILL.md",
-    phrase: "A Codex worker is a background `codex-run.sh` command",
+    phrase: "A Codex worker is a Codex seat per spawning.md.",
   },
   {
     source: "#38 a Codex arena judge runs read-only",
@@ -329,6 +329,26 @@ test("Claude and Codex flatpaper agents keep the same required skill paths", () 
     for (const skill of ["flatpaper-mode", "unslop"]) {
       assert.ok(agent.includes(`\${CLAUDE_PLUGIN_ROOT}/skills/${skill}/SKILL.md`), `${file} names ${skill}`);
     }
+  }
+});
+
+test("every flatpaper agent outside the custom-skill exceptions has a Codex prompt", () => {
+  const exceptions = new Set([
+    "thermo-nuclear-review-subagent.md",
+    "thermo-nuclear-code-quality-review-subagent.md",
+  ]);
+  const agents = readdirSync(join(repo, "agents")).filter((file) => file.endsWith(".md") && !exceptions.has(file));
+  assert.ok(agents.includes("comment-sicko.md"));
+  assert.ok(agents.includes("flatpaper-agent.md"));
+  for (const agent of agents) {
+    assert.ok(existsSync(join(repo, "skills/flatpaper-mode/codex-agents", agent)), `${agent} has a Codex prompt`);
+  }
+});
+
+test("skills delegate Codex execution without naming a bundled runner path", () => {
+  const runner = "codex" + "-run.sh";
+  for (const file of readdirSync(join(repo, "skills"), { recursive: true }).filter((file) => file.endsWith(".md"))) {
+    assert.ok(!readFileSync(join(repo, "skills", file), "utf8").includes(runner), `${file} delegates to the codex-seat skill`);
   }
 });
 

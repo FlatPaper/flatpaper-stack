@@ -305,7 +305,7 @@ test("the user's models.md is never read or written, and its roles stay in the t
   const root = sandbox();
   const home = mkdtempSync(join(tmpdir(), "stamp-models-home-"));
   const userFile = join(home, ".claude/flatpaper-stack/models.md");
-  const user = "# budget: large (xhigh)\nsession hook: off\nfeature, refactoring: claude/opus:xhigh\narena runners: parent:xhigh, codex/gpt-6.1-sol:xhigh\nhardest tasks: parent:max\n";
+  const user = "# budget: large (xhigh)\nsession hook: off\nfeature, refactoring: claude/opus:xhigh\narena runners: parent:xhigh, codex/custom-model:xhigh\nhardest tasks: parent:max\n";
   mkdirSync(dirname(userFile), { recursive: true });
   writeFileSync(userFile, user);
   setDefault(root, "swarm workers", ["claude/haiku:medium"]);
