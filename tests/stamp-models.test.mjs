@@ -112,7 +112,7 @@ test("skills name roles and the template carries defaults", () => {
   assert.ok(!mode.includes("at a raised reasoning level,"), "effort is no longer restated in words");
 
   const fence = templateFence(read(repo, SETUP));
-  for (const line of ["feature, refactoring: claude/sonnet:medium", "bug-fix: parent:medium", "hardest tasks: parent:high", "arena runners: parent:medium, claude/sonnet:medium"]) {
+  for (const line of ["feature, refactoring: claude/sonnet:medium", "bug-fix: parent:medium", "hardest tasks: parent:high", "arena runners: parent:high, claude/sonnet:high"]) {
     assert.ok(fence.includes(line), `template has ${line}`);
   }
 });
