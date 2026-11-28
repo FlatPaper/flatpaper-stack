@@ -81,13 +81,13 @@ thermos reviewers: parent:medium
 comment sicko: claude/sonnet:medium
 how explorer: claude/sonnet:medium
 how explainer: parent:medium
-history explorers: claude/sonnet:medium
+history explorers: claude/haiku:medium
 trail reviewer: parent:medium
-arena runners: parent:medium, claude/sonnet:medium
+arena runners: parent:high, claude/sonnet:high
 arena cross-judge pool:
 swarm workers: claude/sonnet:medium
 swarm hard workers: claude/opus:medium
-interrogate reviewers: parent:medium, claude/sonnet:medium
+interrogate reviewers: parent:high, claude/sonnet:high
 ```
 
 `history explorers` covers the chat-history fan-out in `recall` and `automate-me`. `trail reviewer` is the cross-model reviewer in `show-me-your-work`.
